@@ -129,71 +129,57 @@ def _scrape_rokomari(title: str) -> dict | None:
 #                     'url': f'https://www.wafilife.com{url_str}',
 #                 }
 #                 break
-                
-#         return matched_result
-#     except Exception as exc:
-#         logger.warning('Wafilife scrape failed for "%s": %s', title, exc)
-#         return None
 def _scrape_wafilife(title: str) -> dict | None:
-    """Scrape Wafilife.com using Cloudscraper to bypass Cloudflare bot protection."""
+    """Scrape Wafilife.com for book price using Next.js RSC component stream parsing."""
     try:
         query = title.replace(' ', '+')
         url = f'https://www.wafilife.com/?s={query}&post_type=product'
         
-        # 2. CREATE THE BYPASS SCRAPER
-        scraper = cloudscraper.create_scraper(
-            browser={
-                'browser': 'chrome',
-                'platform': 'windows',
-                'desktop': True
-            }
-        )
+        # We use standard requests but trick it into thinking we are a Next.js client
+        # This completely bypasses standard Cloudflare HTML blocks because it's an API request.
+        rsc_headers = dict(HEADERS)
+        rsc_headers['RSC'] = '1'
+        rsc_headers['Next-Router-State-Tree'] = ''
         
-        # Fetch the page using cloudscraper instead of requests
-        resp = scraper.get(url, timeout=10)
+        resp = requests.get(url, headers=rsc_headers, timeout=TIMEOUT)
         
-        # If Cloudflare still blocks it, silently fail to N/A
-        if resp.status_code != 200:
-            print(f"Wafilife Blocked: Status {resp.status_code}") # Shows in your terminal
+        content = resp.content
+        pattern = rb'\{\"product\"\:\{\"id\"\:\"(?P<id>\d+)\",\"PID\"\:\"(?P<pid>\d+)\",\"name\"\:\"(?P<name>[^\"]+)\",\"slug\"\:\"(?P<slug>[^\"]+)\".*?\"price\"\:?(?P<price>\d+).*?\"productUrl\"\:\"(?P<url>[^\"]+)\"'
+        
+        matches = list(re.finditer(pattern, content))
+        if not matches:
             return None
             
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        
-        # 3. WAFILIFE WOOCOMMERCE SELECTORS
-        # Look for standard WooCommerce product cards
-        cards = soup.select('.product, .product-item, .product-wrapper')
-        
-        for card in cards:
-            # Broaden the search to catch Wafilife's specific title tags
-            title_tag = card.select_one('.woocommerce-loop-product__title, h3 a, h2, .heading-title a')
-            link_tag = card.select_one('a')
+        matched_result = None
+        for m in matches:
+            name_bytes = m.group('name')
+            name_str = name_bytes.decode('utf-8', errors='ignore')
             
-            if not title_tag or not link_tag:
-                continue
-                
-            book_name = title_tag.get_text(strip=True)
+            # Unescape unicode sequences if present
+            if '\\u' in name_str:
+                try:
+                    decoded_raw = name_str.encode('utf-8').decode('unicode_escape')
+                    name_str = decoded_raw.encode('latin1').decode('utf-8')
+                except Exception:
+                    pass
             
-            # Check if this search result matches what we are looking for
-            if _is_related(book_name, title):
-                # Grab the price (WooCommerce usually wraps the active price in an <ins> tag)
-                price_tag = card.select_one('ins .woocommerce-Price-amount, .price .woocommerce-Price-amount, .price')
+            if _is_related(name_str, title):
+                price_bytes = m.group('price')
+                url_bytes = m.group('url')
+                price_str = price_bytes.decode('utf-8', errors='ignore')
+                url_str = url_bytes.decode('utf-8', errors='ignore')
                 
-                price_text = price_tag.get_text(strip=True) if price_tag else None
-                
-                if price_text:
-                    # Clean up the Bengali Taka symbol for a cleaner UI
-                    price_text = price_text.replace('৳', 'TK. ').replace('Tk', 'TK. ')
-                
-                return {
+                matched_result = {
                     'site': 'Wafilife',
-                    'price': price_text,
-                    'book_name': book_name,
-                    'url': link_tag.get('href', url)
+                    'price': f'TK. {price_str}' if price_str else None,
+                    'book_name': name_str,
+                    'url': f'https://www.wafilife.com{url_str}',
                 }
+                break
                 
-        return None
+        return matched_result
     except Exception as exc:
-        print(f"Wafilife scrape error: {exc}") 
+        logger.warning('Wafilife scrape failed: %s', exc)
         return None
     
 def _scrape_niyamahshop(title: str) -> dict | None:
@@ -202,10 +188,13 @@ def _scrape_niyamahshop(title: str) -> dict | None:
         query = title.replace(' ', '+')
         url = f'https://www.niyamahshop.com/?s={query}&post_type=product'
         
-        scraper = cloudscraper.create_scraper(
-            browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True}
-        )
-        resp = scraper.get(url, timeout=TIMEOUT)
+        # We use a custom User-Agent to try to bypass basic blocks
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        }
+        
+        resp = requests.get(url, headers=headers, timeout=TIMEOUT)
         
         if resp.status_code != 200:
             return None
@@ -227,19 +216,15 @@ def _scrape_niyamahshop(title: str) -> dict | None:
                 price_text = None
                 
                 if price_tag:
-                    # 1. Check if the item is on sale (wrapped in <ins>)
                     ins_tag = price_tag.select_one('ins')
                     if ins_tag:
-                        # Grab ONLY the specific amount span inside the discount
                         amount_span = ins_tag.select_one('.woocommerce-Price-amount')
                         price_text = amount_span.get_text(strip=True) if amount_span else ins_tag.get_text(strip=True)
                     else:
-                        # 2. If not on sale, grab the regular amount span
                         amount_span = price_tag.select_one('.woocommerce-Price-amount')
                         price_text = amount_span.get_text(strip=True) if amount_span else price_tag.get_text(strip=True)
                 
                 if price_text:
-                    # Extra safety cleanup just in case
                     price_text = price_text.replace('Current price is:', '').replace('Original price was:', '')
                     price_text = price_text.replace('৳', 'TK. ').replace('Tk', 'TK. ').strip()
                 
@@ -252,30 +237,9 @@ def _scrape_niyamahshop(title: str) -> dict | None:
                 
         return None
     except Exception as exc:
-        print(f'Niyamah Shop scrape failed for "{title}": {exc}')
+        logger.warning('Niyamah Shop scrape failed: %s', exc)
         return None  
-# def get_competitor_prices(book_title: str, cache_ttl: int = 86400) -> list[dict]:
-#     """
-#     Return a list of competitor price results for a given book title.
-#     Results are cached for `cache_ttl` seconds (default 24 h).
 
-#     Returns:
-#         List of dicts: [{site, price, book_name, url}, ...]
-#     """
-#     hashed = hashlib.md5(book_title.encode('utf-8')).hexdigest()
-#     cache_key = f'competitor_prices:{hashed}'
-#     cached = cache.get(cache_key)
-#     if cached is not None:
-#         return cached
-
-#     results = []
-#     for scraper_fn in (_scrape_rokomari, _scrape_wafilife):
-#         result = scraper_fn(book_title)
-#         if result:
-#             results.append(result)
-
-#     cache.set(cache_key, results, cache_ttl)
-#     return results
 def get_competitor_prices(book_title: str, cache_ttl: int = 86400) -> list[dict]:
     """
     Return a list of competitor price results. Cached for 24 hours.
@@ -296,12 +260,12 @@ def get_competitor_prices(book_title: str, cache_ttl: int = 86400) -> list[dict]
     else:
         results.append({'site': 'Rokomari', 'price': None, 'url': '#'})
 
-    # # 2. Wafilife (Kept with N/A fallback)
-    # waf_result = _scrape_wafilife(book_title)
-    # if waf_result:
-    #     results.append(waf_result)
-    # else:
-    #     results.append({'site': 'Wafilife', 'price': None, 'url': '#'})
+    # 2. Wafilife (Restored Next.js RSC parser which bypasses blocks)
+    waf_result = _scrape_wafilife(book_title)
+    if waf_result:
+        results.append(waf_result)
+    else:
+        results.append({'site': 'Wafilife', 'price': None, 'url': '#'})
 
     # 3. Niyamah Shop
     niyamah_result = _scrape_niyamahshop(book_title)
