@@ -114,7 +114,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# (STATICFILES_STORAGE is now defined inside STORAGES below)
 
 # Media files
 MEDIA_URL = '/media/'
@@ -126,8 +126,25 @@ CLOUDINARY_URL = config('CLOUDINARY_URL', default=None)
 if not DEBUG or CLOUDINARY_URL:
     INSTALLED_APPS.append('cloudinary')
     INSTALLED_APPS.append('cloudinary_storage')
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    
+    # Modern Django (4.2+) STORAGES configuration
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    # Fallback for local development if no Cloudinary
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
     # Parse the CLOUDINARY_URL explicitly because django-cloudinary-storage 
     # sometimes fails to read os.environ on Render.
     import re
