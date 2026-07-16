@@ -3,11 +3,25 @@ import logging
 import requests
 import re
 import hashlib
-import cloudscraper
+from decouple import config
 from bs4 import BeautifulSoup
 from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
+
+SCRAPER_API_KEY = config('SCRAPER_API_KEY', default=None)
+
+def _get_page(url: str, headers: dict = None) -> requests.Response:
+    if SCRAPER_API_KEY:
+        payload = {'api_key': SCRAPER_API_KEY, 'url': url}
+        if headers:
+            payload['keep_headers'] = 'true'
+            return requests.get('https://api.scraperapi.com/', params=payload, headers=headers, timeout=20)
+        return requests.get('https://api.scraperapi.com/', params=payload, timeout=20)
+    else:
+        import cloudscraper
+        scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True})
+        return scraper.get(url, headers=headers or {}, timeout=10)
 
 HEADERS = {
     'User-Agent': (
@@ -35,10 +49,7 @@ def _scrape_rokomari(title: str) -> dict | None:
         query = title.replace(' ', '+')
         url = f'https://www.rokomari.com/search?term={query}'
         
-        scraper = cloudscraper.create_scraper(
-            browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True}
-        )
-        resp = scraper.get(url, timeout=TIMEOUT)
+        resp = _get_page(url)
         
         if resp.status_code != 200:
             return None
@@ -141,7 +152,7 @@ def _scrape_wafilife(title: str) -> dict | None:
         rsc_headers['RSC'] = '1'
         rsc_headers['Next-Router-State-Tree'] = ''
         
-        resp = requests.get(url, headers=rsc_headers, timeout=TIMEOUT)
+        resp = _get_page(url, headers=rsc_headers)
         
         content = resp.content
         pattern = rb'\{\"product\"\:\{\"id\"\:\"(?P<id>\d+)\",\"PID\"\:\"(?P<pid>\d+)\",\"name\"\:\"(?P<name>[^\"]+)\",\"slug\"\:\"(?P<slug>[^\"]+)\".*?\"price\"\:?(?P<price>\d+).*?\"productUrl\"\:\"(?P<url>[^\"]+)\"'
@@ -188,13 +199,12 @@ def _scrape_niyamahshop(title: str) -> dict | None:
         query = title.replace(' ', '+')
         url = f'https://www.niyamahshop.com/?s={query}&post_type=product'
         
-        # We use a custom User-Agent to try to bypass basic blocks
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         }
         
-        resp = requests.get(url, headers=headers, timeout=TIMEOUT)
+        resp = _get_page(url, headers=headers)
         
         if resp.status_code != 200:
             return None
