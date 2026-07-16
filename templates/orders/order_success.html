@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed {{ order.order_number }} — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-24 page-gradient-bg">
+  <div class="max-w-lg w-full text-center animate-slide-up">
+
+    <!-- Success icon -->
+    <div class="relative inline-block mb-8">
+      <div class="w-24 h-24 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 shadow-2xl shadow-emerald-500/20 animate-pulse">
+        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>
+      </div>
+    </div>
+
+    <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900 mb-3">
+      Order Confirmed!
+    </h1>
+    <p class="dark:text-gray-400 text-slate-600 mb-8">
+      Your <strong class="dark:text-white text-slate-900">{{ order.order_type }}</strong> order has been placed and is awaiting admin verification. We'll process it within 24 hours.
+    </p>
+
+    <!-- Order Details Card -->
+    <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10 text-left space-y-3 mb-8">
+      <div class="flex justify-between text-sm">
+        <span class="dark:text-gray-400 text-slate-600">Order ID</span>
+        <span class="dark:text-white text-slate-900 font-mono font-bold">{{ order.order_number }}</span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="dark:text-gray-400 text-slate-600">Book</span>
+        <span class="dark:text-white text-slate-900 font-medium text-right max-w-xs truncate">{{ order.book.title }}</span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="dark:text-gray-400 text-slate-600">Type</span>
+        <span class="{% if order.order_type == 'Buy' %}text-primary-400{% else %}text-emerald-400{% endif %} font-medium">{{ order.order_type }}</span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="dark:text-gray-400 text-slate-600">Total</span>
+        <span class="dark:text-white text-slate-900 font-bold">৳{{ order.total_cost|floatformat:0 }}</span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="dark:text-gray-400 text-slate-600">Payment</span>
+        <span class="dark:text-white text-slate-900">{{ order.payment_method }}</span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="dark:text-gray-400 text-slate-600">Status</span>
+        <span class="px-2.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-semibold">{{ order.payment_status }}</span>
+      </div>
+      {% if order.due_date %}
+      <div class="flex justify-between text-sm">
+        <span class="dark:text-gray-400 text-slate-600">Return By</span>
+        <span class="text-emerald-400 font-medium">{{ order.due_date|date:"d M Y" }}</span>
+      </div>
+      {% endif %}
+      <div class="flex justify-between text-sm">
+        <span class="dark:text-gray-400 text-slate-600">Delivery</span>
+        <span class="dark:text-white text-slate-900 text-xs text-right">{{ order.get_delivery_option_display }}</span>
+      </div>
+    </div>
+
+    <!-- CTA Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="{% url 'dashboard' %}"
+         class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-emerald-500 rounded-xl font-semibold transition-all shadow-lg text-white">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Go to Dashboard
+      </a>
+      <a href="{% url 'books' %}"
+         class="inline-flex items-center justify-center gap-2 px-8 py-3.5 glass hover:bg-white/15 rounded-xl font-semibold transition-all border dark:border-white/20 border-black/20 text-white">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Browse More Books
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

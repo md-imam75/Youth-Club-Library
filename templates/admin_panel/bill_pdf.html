@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice - {{ bill.bill_number }}</title>
+  <style>
+    @font-face {
+      font-family: NotoSansBengali;
+      src: url('C:/Users/Lenovo/.gemini/antigravity/scratch/youth_club_library/static/fonts/NotoSansBengali-Regular.ttf');
+    }
+    @font-face {
+      font-family: NotoSansBengali;
+      src: url('C:/Users/Lenovo/.gemini/antigravity/scratch/youth_club_library/static/fonts/NotoSansBengali-Bold.ttf');
+      font-weight: bold;
+    }
+    @page {
+      size: a4;
+      margin: 2cm;
+    }
+    body, table, td, th, div, p, span, h1, h2, h3, h4, h5, h6 {
+      font-family: NotoSansBengali;
+    }
+    body {
+      font-size: 10pt;
+      color: #333333;
+      line-height: 1.4;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 9pt;
+    }
+    th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+      border-bottom: 2px solid #dddddd;
+      color: #555555;
+    }
+    td {
+      border-bottom: 1px solid #eeeeee;
+    }
+    .header-table td {
+      border: none;
+      padding: 0;
+    }
+    .invoice-title {
+      font-size: 20pt;
+      font-weight: bold;
+      color: #0284c7;
+      text-align: right;
+    }
+    .company-name {
+      font-size: 16pt;
+      font-weight: bold;
+      color: #333333;
+    }
+    .company-address {
+      font-size: 8.5pt;
+      color: #666666;
+      margin-top: 5px;
+    }
+    .meta-table td {
+      border: none;
+      padding: 4px 0;
+      font-size: 9pt;
+    }
+    .meta-label {
+      color: #777777;
+      width: 120px;
+      font-weight: bold;
+    }
+    .meta-value {
+      color: #333333;
+    }
+    .text-right {
+      text-align: right;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .summary-table td {
+      border: none;
+      font-size: 9.5pt;
+      padding: 6px 10px;
+    }
+    .summary-label {
+      text-align: right;
+      font-weight: bold;
+      color: #555555;
+    }
+    .summary-value {
+      text-align: right;
+      font-weight: bold;
+    }
+    .grand-total {
+      font-size: 12pt;
+      color: #0284c7;
+      border-top: 2px solid #dddddd;
+      border-bottom: 2px solid #dddddd;
+      padding: 10px;
+    }
+    .footer {
+      margin-top: 50px;
+      border-top: 1px solid #eeeeee;
+      padding-top: 15px;
+      text-align: center;
+      font-size: 8pt;
+      color: #888888;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Section -->
+  <table class="header-table">
+    <tr>
+      <td style="width: 100px; vertical-align: top;">
+        <img src="C:/Users/Lenovo/.gemini/antigravity/scratch/youth_club_library/static/images/logo.png" style="width: 80px; height: 80px;" />
+      </td>
+      <td style="vertical-align: top; padding-left: 15px;">
+        <div class="company-name">Youth Club Library</div>
+        <div class="company-address">
+          Opposite to International Convention Center,<br/>
+          Kazir Dewri, Chattogram
+        </div>
+      </td>
+      <td style="vertical-align: top; text-align: right;">
+        <div class="invoice-title">INVOICE</div>
+        <div style="font-size: 9pt; color: #777777; margin-top: 10px;">
+          Bill No: <strong>{{ bill.bill_number }}</strong><br/>
+          Date: {{ bill.created_at|date:"d M Y, h:i A" }}
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <hr style="border: 0; border-top: 1px solid #dddddd; margin: 20px 0;" />
+
+  <!-- Customer Metadata -->
+  <h3 style="font-size: 11pt; color: #333333; margin-bottom: 10px;">Bill To:</h3>
+  <table class="meta-table" style="width: 50%;">
+    <tr>
+      <td class="meta-label">Customer Name:</td>
+      <td class="meta-value">{{ bill.customer_name }}</td>
+    </tr>
+    {% if bill.customer_mobile %}
+    <tr>
+      <td class="meta-label">Mobile Number:</td>
+      <td class="meta-value">{{ bill.customer_mobile }}</td>
+    </tr>
+    {% endif %}
+    {% if bill.customer_email %}
+    <tr>
+      <td class="meta-label">Email Address:</td>
+      <td class="meta-value">{{ bill.customer_email }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td class="meta-label">Payment Method:</td>
+      <td class="meta-value" style="text-transform: capitalize;">{{ bill.payment_method }}</td>
+    </tr>
+  </table>
+
+  <!-- Items Table -->
+  <table style="margin-top: 20px;">
+    <thead>
+      <tr>
+        <th style="width: 5%;" class="text-center">#</th>
+        <th style="width: 45%;">Item Description</th>
+        <th style="width: 10%;" class="text-center">Qty</th>
+        <th style="width: 15%;" class="text-right">Unit Price</th>
+        <th style="width: 10%;" class="text-center">Discount</th>
+        <th style="width: 15%;" class="text-right">Total Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in bill.items.all %}
+      <tr>
+        <td class="text-center" style="color: #777777;">{{ forloop.counter }}</td>
+        <td>
+          <div style="font-weight: bold; color: #333333;">{{ item.book_title }}</div>
+          <div style="font-size: 7.5pt; color: #666666; margin-top: 2px;">
+            Author: {{ item.author_name|default:"—" }} | Publisher: {{ item.publication_name|default:"—" }}
+          </div>
+        </td>
+        <td class="text-center">{{ item.quantity }}</td>
+        <td class="text-right">
+          {% if item.offer_price %}
+            ৳{{ item.offer_price }}<br/><span style="font-size: 7pt; color: #777777; line-through;">৳{{ item.regular_price }}</span>
+          {% else %}
+            ৳{{ item.regular_price }}
+          {% endif %}
+        </td>
+        <td class="text-center text-emerald-600">
+          {% if item.discount_percent > 0 %}
+            {{ item.discount_percent }}%
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td class="text-right" style="font-weight: bold;">৳{{ item.total_price }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Invoice Calculation Summary -->
+  <table class="summary-table" style="width: 40%; margin-left: 60%; margin-top: 10px;">
+    <tr>
+      <td class="summary-label">Subtotal:</td>
+      <td class="summary-value" id="subtotal-val">
+        <!-- We can calculate it on the fly or just display the total since there is no delivery cost for offline bills -->
+        ৳{{ bill.total_amount }}
+      </td>
+    </tr>
+    <!-- Since xhtml2pdf runs offline, we will pass total amount directly -->
+    <tr class="grand-total">
+      <td class="summary-label" style="color: #0284c7;">Net Payable:</td>
+      <td class="summary-value" style="color: #0284c7;">৳{{ bill.total_amount }}</td>
+    </tr>
+  </table>
+
+  <!-- Thank You Footer -->
+  <div class="footer">
+    Thank you for shopping at Youth Club Library!<br/>
+    If you have any questions about this invoice, contact us at info@youthclublibrary.com
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Manage Social Media Links{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">Manage Social Media Links</h2>
+      <p class="text-xs dark:text-gray-500 text-slate-500 mt-1">Configure active social channels showing in your website footer and home page.</p>
+    </div>
+    <a href="{% url 'admin_social_link_add' %}" class="btn-primary flex items-center gap-2">
+      <span class="text-lg leading-none">+</span> Add Social Link
+    </a>
+  </div>
+
+  <!-- Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
+    <table class="w-full text-sm min-w-[600px]">
+      <thead>
+        <tr class="border-b border-white/8">
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Platform Name</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Destination URL</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Icon Type</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Status</th>
+          <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for link in links %}
+        <tr class="table-row">
+          <td class="px-4 py-3 font-semibold dark:text-white text-slate-900 text-sm">{{ link.name }}</td>
+          <td class="px-4 py-3 dark:text-gray-400 text-slate-600 text-xs font-mono">
+            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">{{ link.url }}</a>
+          </td>
+          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs capitalize">{{ link.icon_type }}</td>
+          <td class="px-4 py-3 text-xs">
+            {% if link.is_active %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
+            {% else %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-500/10 dark:text-gray-400 text-slate-600 border dark:border-white/5 border-black/10">Disabled</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <a href="{% url 'admin_social_link_edit' link.pk %}" class="btn-success text-xs py-1 px-3">Edit</a>
+              <a href="{% url 'admin_social_link_delete' link.pk %}" class="btn-danger text-xs py-1 px-3">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-16 dark:text-gray-500 text-slate-500">No social media links configured. Add some above!</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

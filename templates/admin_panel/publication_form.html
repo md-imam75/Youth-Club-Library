@@ -1,0 +1,53 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+
+  <div class="flex items-center gap-4 mb-8">
+    <a href="{% url 'admin_publications' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
+    <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+
+    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Publication Name <span class="text-red-400">*</span></label>
+        {{ form.name }}
+        {% if form.name.errors %}<p class="text-red-400 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Description / About the Publisher</label>
+        {{ form.description }}
+        {% if form.description.errors %}<p class="text-red-400 text-xs mt-1">{{ form.description.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Publisher Logo</label>
+        {% if pub and pub.logo %}
+        <div class="flex items-center gap-4 mb-3">
+          <img src="{{ pub.logo.url }}" alt="{{ pub.name }}" class="w-16 h-16 rounded object-contain border dark:border-white/10 border-black/10" />
+          <p class="dark:text-gray-500 text-slate-500 text-xs">Current logo — upload a new file to replace it.</p>
+        </div>
+        {% endif %}
+        {{ form.logo }}
+        {% if form.logo.errors %}<p class="text-red-400 text-xs mt-1">{{ form.logo.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Website URL</label>
+        {{ form.website }}
+        {% if form.website.errors %}<p class="text-red-400 text-xs mt-1">{{ form.website.errors|join:", " }}</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
+      <a href="{% url 'admin_publications' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

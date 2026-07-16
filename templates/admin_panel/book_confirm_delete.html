@@ -1,0 +1,26 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Delete Book{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto text-center py-10">
+  <div class="stat-card rounded-3xl p-8 border border-red-500/20">
+    <div class="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center text-red-400 mx-auto mb-5">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </div>
+    <h2 class="text-xl font-bold dark:text-white text-slate-900 mb-2">Delete Book?</h2>
+    <p class="dark:text-gray-400 text-slate-600 text-sm mb-1">You are about to permanently delete:</p>
+    <p class="dark:text-white text-slate-900 font-semibold text-base mb-1">{{ book.title }}</p>
+    {% if book.author %}<p class="dark:text-gray-500 text-slate-500 text-xs mb-6">by {{ book.author.name }}</p>{% endif %}
+    <div class="glass rounded-xl p-3 border border-red-500/20 mb-6 text-xs text-red-400">
+      This cannot be undone. All orders for this book will also be affected.
+    </div>
+    <div class="flex gap-4 justify-center">
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger px-6 py-2.5 text-sm">Yes, Delete</button>
+      </form>
+      <a href="{% url 'admin_books' %}" class="btn-success px-6 py-2.5 text-sm">Cancel</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

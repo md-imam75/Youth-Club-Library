@@ -1,0 +1,56 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+
+  <div class="flex items-center gap-4 mb-8">
+    <a href="{% url 'admin_testimonials' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
+    <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+  </div>
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Reviewer Name <span class="text-red-400">*</span></label>
+        {{ form.name }}
+        {% if form.name.errors %}<p class="text-red-400 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Role / Designation <span class="text-red-400">*</span></label>
+        {{ form.role }}
+        <p class="text-gray-600 text-[10px] mt-1">For example: University Student, Software Engineer, Educator.</p>
+        {% if form.role.errors %}<p class="text-red-400 text-xs mt-1">{{ form.role.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Star Rating <span class="text-red-400">*</span></label>
+        {{ form.rating }}
+        {% if form.rating.errors %}<p class="text-red-400 text-xs mt-1">{{ form.rating.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Review Content <span class="text-red-400">*</span></label>
+        {{ form.review_text }}
+        {% if form.review_text.errors %}<p class="text-red-400 text-xs mt-1">{{ form.review_text.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div class="pt-2">
+        <label class="flex items-center gap-2.5 cursor-pointer">
+          {{ form.is_active }}
+          <span class="text-sm dark:text-gray-300 text-slate-700">Active (visible on home page testimonials)</span>
+        </label>
+        {% if form.is_active.errors %}<p class="text-red-400 text-xs mt-1">{{ form.is_active.errors|join:", " }}</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
+      <a href="{% url 'admin_testimonials' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

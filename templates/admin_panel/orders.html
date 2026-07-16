@@ -1,0 +1,183 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}All Orders{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6">
+
+  <!-- Header + Stats -->
+  <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-2">
+    <div class="stat-card rounded-xl p-4 col-span-2 sm:col-span-1">
+      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Revenue</div>
+      <div class="dark:text-white text-slate-900 font-bold text-lg">৳{{ total_revenue|floatformat:0 }}</div>
+    </div>
+    <a href="?type=Buy" class="stat-card rounded-xl p-4 hover:border-sky-500/40 border border-transparent transition-all {% if order_type == 'Buy' %}border-sky-500/40{% endif %}">
+      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Buy Orders</div>
+      <div class="dark:text-white text-slate-900 font-bold text-lg">{{ buy_count }}</div>
+    </a>
+    <a href="?type=Borrow" class="stat-card rounded-xl p-4 hover:border-emerald-500/40 border border-transparent transition-all {% if order_type == 'Borrow' %}border-emerald-500/40{% endif %}">
+      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Borrows</div>
+      <div class="dark:text-white text-slate-900 font-bold text-lg">{{ borrow_count }}</div>
+    </a>
+    <a href="?status=Pending" class="stat-card rounded-xl p-4 hover:border-yellow-500/40 border border-transparent transition-all {% if pay_status == 'Pending' %}border-yellow-500/40{% endif %}">
+      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Pending</div>
+      <div class="dark:text-white text-slate-900 font-bold text-lg">{{ pending_count }}</div>
+    </a>
+    <a href="?status=Paid" class="stat-card rounded-xl p-4 hover:border-emerald-500/40 border border-transparent transition-all {% if pay_status == 'Paid' %}border-emerald-500/40{% endif %}">
+      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Paid</div>
+      <div class="dark:text-white text-slate-900 font-bold text-lg">{{ paid_count }}</div>
+    </a>
+  </div>
+
+  <!-- Search bar -->
+  <form method="get" class="flex gap-3">
+    {% if order_type %}<input type="hidden" name="type" value="{{ order_type }}" />{% endif %}
+    {% if pay_status %}<input type="hidden" name="status" value="{{ pay_status }}" />{% endif %}
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by book title or user name..."
+           class="form-input flex-1" />
+    <button type="submit" class="btn-primary px-5">Search</button>
+    {% if q or order_type or pay_status %}
+    <a href="?" class="btn-primary px-4" style="background:rgba(255,255,255,0.1);">Clear</a>
+    {% endif %}
+  </form>
+
+  <!-- Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
+    <table class="w-full text-sm min-w-[800px]">
+      <thead>
+        <tr class="border-b border-white/8">
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">#ID</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Customer</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Book</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Type</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Amount</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Payment</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Status</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Date</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% regroup orders by group_number as order_groups %}
+        {% for group in order_groups %}
+        {% with order=group.list.0 %}
+        <tr class="table-row {% if order.is_overdue %}bg-red-500/5{% endif %}">
+          <td class="px-4 py-3 text-sky-400 font-mono text-xs font-semibold">{{ group.grouper }}</td>
+          <td class="px-4 py-3">
+            <div class="dark:text-white text-slate-900 text-xs font-semibold hover:text-sky-400 transition-colors">
+              {% if order.user %}
+                <a href="{% url 'admin_user_detail' order.user.pk %}">{{ order.user.get_full_name }}</a>
+              {% else %}
+                <span class="dark:text-gray-400 text-slate-600">Walk-in: {{ order.customer_name }}</span>
+              {% endif %}
+            </div>
+            <div class="dark:text-gray-500 text-slate-500 text-[10px] font-mono mt-0.5">
+              {% if order.user %}{{ order.user.email }}{% else %}{{ order.customer_email|default:"No Email" }}{% endif %}
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex flex-col gap-1.5">
+              {% for item in group.list %}
+              <div>
+                <div class="dark:text-white text-slate-900 text-xs font-semibold max-w-xs truncate">{{ item.book.title }}</div>
+                <div class="dark:text-gray-500 text-slate-500 text-[10px]">
+                  by {{ item.book.author.name|default:"Unknown" }}
+                  {% if item.quantity > 1 %}
+                  <span class="dark:text-sky-400 text-sky-600 font-bold ml-1">(Qty: {{ item.quantity }})</span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex flex-col gap-1.5 items-start">
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider
+                {% if order.order_type == 'Buy' %}bg-sky-500/10 text-sky-400 border border-sky-500/20
+                {% else %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% endif %}">
+                {{ order.order_type }}
+              </span>
+              {% if order.is_overdue %}
+              <span class="text-red-400 font-bold text-[9px] uppercase tracking-wider bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded">OVERDUE</span>
+              {% elif order.order_type == 'Borrow' and order.due_date and not order.returned_at %}
+              <div class="text-yellow-400 text-[10px] font-medium">Due: {{ order.due_date|date:"d M" }}</div>
+              {% elif order.returned_at %}
+              <div class="text-emerald-400 text-[10px] font-medium">Returned</div>
+              {% endif %}
+            </div>
+          </td>
+          <td class="px-4 py-3 dark:text-white text-slate-900 font-bold text-xs">
+            ৳{{ order.group_total_cost|floatformat:0 }}
+          </td>
+          <td class="px-4 py-3">
+            <div class="dark:text-gray-300 text-slate-700 text-xs font-medium">{{ order.payment_method }}</div>
+            {% if order.transaction_id %}
+            <div class="dark:text-gray-500 text-slate-500 text-[9px] font-mono truncate max-w-24 mt-0.5" title="{{ order.transaction_id }}">{{ order.transaction_id }}</div>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex flex-col gap-1">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold text-center badge-{{ order.payment_status|lower }} w-max">
+                {{ order.payment_status }}
+              </span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold text-center w-max
+                {% if order.order_status == 'Delivered' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                {% elif order.order_status == 'Cancelled' %}bg-red-500/10 text-red-400 border border-red-500/20
+                {% else %}bg-yellow-500/10 text-yellow-400 border border-yellow-500/20{% endif %}">
+                {{ order.order_status }}
+              </span>
+            </div>
+          </td>
+          <td class="px-4 py-3 dark:text-gray-500 text-slate-500 text-xs font-medium">{{ order.created_at|date:"d M Y" }}</td>
+          <td class="px-4 py-3">
+            <div class="flex gap-1.5 flex-wrap items-center">
+              {% if order.order_type == 'Buy' %}
+                {% if order.payment_status == 'Pending' %}
+                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                  {% csrf_token %}<input type="hidden" name="action" value="mark_paid" />
+                  <button type="submit" class="btn-success text-[10px] py-1 px-2.5">Mark Paid</button>
+                </form>
+                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                  {% csrf_token %}<input type="hidden" name="action" value="mark_failed" />
+                  <button type="submit" class="btn-danger text-[10px] py-1 px-2.5">Fail Pay</button>
+                </form>
+                {% endif %}
+              {% endif %}
+
+              {% if order.order_type == 'Borrow' and order.order_status == 'Delivered' and not order.returned_at %}
+              <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                {% csrf_token %}<input type="hidden" name="action" value="mark_returned" />
+                <button type="submit" class="btn-success text-[10px] py-1 px-2.5">Returned</button>
+              </form>
+              {% endif %}
+
+              {% if order.order_status == 'Pending' %}
+                {% if order.order_type == 'Borrow' %}
+                <a href="{% url 'admin_approve_borrow' order.pk %}" class="btn-success text-[10px] py-1 px-2.5 inline-block">Approve Borrow</a>
+                {% else %}
+                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                  {% csrf_token %}<input type="hidden" name="action" value="mark_delivered" />
+                  <button type="submit" class="btn-success text-[10px] py-1 px-2.5">Deliver</button>
+                </form>
+                {% endif %}
+                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                  {% csrf_token %}<input type="hidden" name="action" value="mark_cancelled" />
+                  <button type="submit" class="btn-danger text-[10px] py-1 px-2.5">Cancel</button>
+                </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr>
+          <td colspan="9" class="text-center py-16 dark:text-gray-500 text-slate-500">No orders found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% include "includes/pagination.html" with page_obj=orders %}
+</div>
+{% endblock %}

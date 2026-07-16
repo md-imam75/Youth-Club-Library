@@ -1,0 +1,117 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Books{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6">
+
+  <!-- Unified Navigation Tabs -->
+  <div class="flex border-b dark:border-white/5 border-black/10 gap-2">
+    <a href="{% url 'admin_books' %}" class="px-5 py-3 text-sm font-semibold border-b-2 {% if request.resolver_match.url_name == 'admin_books' %}border-sky-500 text-sky-400{% else %}border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %} transition-all">Books</a>
+    <a href="{% url 'admin_authors' %}" class="px-5 py-3 text-sm font-semibold border-b-2 {% if 'author' in request.resolver_match.url_name %}border-sky-500 text-sky-400{% else %}border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %} transition-all">Authors</a>
+    <a href="{% url 'admin_publications' %}" class="px-5 py-3 text-sm font-semibold border-b-2 {% if 'publication' in request.resolver_match.url_name %}border-sky-500 text-sky-400{% else %}border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %} transition-all">Publications</a>
+    <a href="{% url 'admin_categories' %}" class="px-5 py-3 text-sm font-semibold border-b-2 {% if 'category' in request.resolver_match.url_name %}border-sky-500 text-sky-400{% else %}border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %} transition-all">Categories</a>
+  </div>
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">Manage Books</h2>
+      <div class="flex gap-4 text-xs dark:text-gray-500 text-slate-500 mt-1">
+        <span>{{ total_books }} total</span>
+        <span class="text-emerald-400">{{ in_stock }} in stock</span>
+        <span class="text-red-400">{{ out_of_stock }} out of stock</span>
+        <span class="text-yellow-400">{{ featured }} featured</span>
+      </div>
+    </div>
+    <a href="{% url 'admin_book_add' %}" class="btn-primary flex items-center gap-2">
+      <span class="text-lg leading-none">+</span> Add New Book
+    </a>
+  </div>
+
+  <!-- Search -->
+  <form method="get" class="flex gap-3">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by title or author..."
+           class="form-input flex-1" />
+    <button type="submit" class="btn-primary px-5">Search</button>
+    {% if q %}<a href="?" class="btn-primary px-4" style="background:rgba(255,255,255,0.1);">Clear</a>{% endif %}
+  </form>
+
+  <!-- Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
+    <table class="w-full text-sm min-w-[900px]">
+      <thead>
+        <tr class="border-b border-white/8">
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Book</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Author</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Category</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Price</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Buy Price</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Stock</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Flags</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books %}
+        <tr class="table-row">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              {% if book.cover_image %}
+              <img src="{{ book.cover_image.url }}" alt="" class="w-8 h-12 object-cover rounded flex-shrink-0" />
+              {% else %}
+              <div class="w-8 h-12 rounded flex items-center justify-center flex-shrink-0 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10">
+                <svg class="w-4 h-4 text-sky-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              </div>
+              {% endif %}
+              <div>
+                <div class="dark:text-white text-slate-900 font-medium text-xs max-w-48 truncate">{{ book.title }}</div>
+                {% if book.isbn %}<div class="dark:text-gray-500 text-slate-500 text-xs font-mono">{{ book.isbn }}</div>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs">{{ book.author.name|default:"—" }}</td>
+          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs">{{ book.category.name|default:"—" }}</td>
+          <td class="px-4 py-3">
+            <div class="dark:text-white text-slate-900 text-xs font-bold">৳{{ book.regular_price|floatformat:0 }}</div>
+            {% if book.offer_price %}
+            <div class="text-emerald-400 text-xs">Sale: ৳{{ book.offer_price|floatformat:0 }}</div>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-sky-400 text-xs font-mono">৳{{ book.buying_price|floatformat:0 }}</td>
+          <td class="px-4 py-3">
+            {% if book.stock_quantity > 0 %}
+            <span class="text-emerald-400 font-bold text-xs">{{ book.stock_quantity }}</span>
+            {% else %}
+            <span class="text-red-400 font-bold text-xs">0 — OUT</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex flex-wrap gap-1">
+              {% if book.is_featured %}<span class="px-1.5 py-0.5 rounded text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Featured</span>{% endif %}
+              {% if book.is_new %}<span class="px-1.5 py-0.5 rounded text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">New</span>{% endif %}
+              {% if book.is_upcoming %}<span class="px-1.5 py-0.5 rounded text-xs bg-purple-500/15 text-purple-400 border border-purple-500/20">Coming</span>{% endif %}
+              {% if book.can_borrow %}<span class="px-1.5 py-0.5 rounded text-xs bg-sky-500/15 text-sky-400 border border-sky-500/20">Borrow</span>{% endif %}
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex gap-2">
+              <a href="{% url 'admin_book_edit' book.pk %}" class="btn-warn">Edit</a>
+              <a href="{% url 'admin_book_delete' book.pk %}" class="btn-danger">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center py-16 dark:text-gray-500 text-slate-500">
+            No books found. <a href="{% url 'admin_book_add' %}" class="text-sky-400">Add the first book →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% include "includes/pagination.html" with page_obj=books %}
+</div>
+{% endblock %}

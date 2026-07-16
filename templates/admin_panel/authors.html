@@ -1,0 +1,78 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Manage Authors{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6">
+
+  <!-- Unified Navigation Tabs -->
+  <div class="flex border-b dark:border-white/5 border-black/10 gap-2">
+    <a href="{% url 'admin_books' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all">Books</a>
+    <a href="{% url 'admin_authors' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-sky-500 text-sky-400 transition-all">Authors</a>
+    <a href="{% url 'admin_publications' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all">Publications</a>
+    <a href="{% url 'admin_categories' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all">Categories</a>
+  </div>
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">Manage Authors</h2>
+      <p class="text-xs dark:text-gray-500 text-slate-500 mt-1">{{ authors.paginator.count }} authors total</p>
+    </div>
+    <a href="{% url 'admin_author_add' %}" class="btn-primary flex items-center gap-2">
+      <span class="text-lg leading-none">+</span> Add New Author
+    </a>
+  </div>
+
+  <!-- Search -->
+  <form method="get" class="flex gap-3">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by author name..."
+           class="form-input flex-1" />
+    <button type="submit" class="btn-primary px-5">Search</button>
+    {% if q %}<a href="?" class="btn-primary px-4" style="background:rgba(255,255,255,0.1);">Clear</a>{% endif %}
+  </form>
+
+  <!-- Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
+    <table class="w-full text-sm min-w-[700px]">
+      <thead>
+        <tr class="border-b border-white/8">
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Photo</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Author Name</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Description</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Books Count</th>
+          <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for author in authors %}
+        <tr class="table-row">
+          <td class="px-4 py-3 text-xs">
+            {% if author.image %}
+              <img src="{{ author.image.url }}" alt="{{ author.name }}" class="w-10 h-10 rounded-full object-cover border dark:border-white/10 border-black/10" />
+            {% else %}
+              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-800 border dark:border-white/5 border-black/10 text-[10px] dark:text-gray-500 text-slate-500">No Img</div>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 font-semibold dark:text-white text-slate-900 text-sm">{{ author.name }}</td>
+          <td class="px-4 py-3 dark:text-gray-400 text-slate-600 text-xs max-w-xs truncate">{{ author.description|default:"—" }}</td>
+          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs font-semibold">{{ author.num_books }}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <a href="{% url 'admin_author_edit' author.pk %}" class="btn-success text-xs py-1 px-3">Edit</a>
+              <a href="{% url 'admin_author_delete' author.pk %}" class="btn-danger text-xs py-1 px-3">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-16 dark:text-gray-500 text-slate-500">No authors found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% include "includes/pagination.html" with page_obj=authors %}
+</div>
+{% endblock %}

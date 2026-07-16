@@ -1,0 +1,81 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Manage Categories{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6">
+
+  <!-- Unified Navigation Tabs -->
+  <div class="flex border-b dark:border-white/5 border-black/10 gap-2">
+    <a href="{% url 'admin_books' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all">Books</a>
+    <a href="{% url 'admin_authors' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all">Authors</a>
+    <a href="{% url 'admin_publications' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all">Publications</a>
+    <a href="{% url 'admin_categories' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-sky-500 text-sky-400 transition-all">Categories</a>
+  </div>
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">Manage Categories</h2>
+      <p class="text-xs dark:text-gray-500 text-slate-500 mt-1">{{ categories.paginator.count }} categories total</p>
+    </div>
+    <a href="{% url 'admin_category_add' %}" class="btn-primary flex items-center gap-2">
+      <span class="text-lg leading-none">+</span> Add New Category
+    </a>
+  </div>
+
+  <!-- Search -->
+  <form method="get" class="flex gap-3">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by category name..."
+           class="form-input flex-1" />
+    <button type="submit" class="btn-primary px-5">Search</button>
+    {% if q %}<a href="?" class="btn-primary px-4" style="background:rgba(255,255,255,0.1);">Clear</a>{% endif %}
+  </form>
+
+  <!-- Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
+    <table class="w-full text-sm min-w-[700px]">
+      <thead>
+        <tr class="border-b border-white/8">
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Image</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Category Name</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Slug</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Books Count</th>
+          <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr class="table-row">
+          <td class="px-4 py-3 text-xs">
+            {% if cat.image %}
+              <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-12 h-8 rounded object-cover border dark:border-white/10 border-black/10" />
+            {% else %}
+              <div class="w-12 h-8 rounded flex items-center justify-center bg-gray-800 border dark:border-white/5 border-black/10 text-[10px] dark:text-gray-500 text-slate-500">No Image</div>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 font-semibold dark:text-white text-slate-900 text-sm">
+            {{ cat.name }}
+            {% if cat.description %}<p class="dark:text-gray-500 text-slate-500 text-xs font-normal mt-0.5 max-w-xs truncate">{{ cat.description }}</p>{% endif %}
+          </td>
+          <td class="px-4 py-3 dark:text-gray-400 text-slate-600 text-xs font-mono">{{ cat.slug }}</td>
+          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs font-semibold">{{ cat.num_books }}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <a href="{% url 'admin_category_edit' cat.pk %}" class="btn-success text-xs py-1 px-3">Edit</a>
+              <a href="{% url 'admin_category_delete' cat.pk %}" class="btn-danger text-xs py-1 px-3">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-16 dark:text-gray-500 text-slate-500">No categories found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% include "includes/pagination.html" with page_obj=categories %}
+</div>
+{% endblock %}

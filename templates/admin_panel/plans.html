@@ -1,0 +1,68 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Membership Plans{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">Membership Plans</h2>
+      <p class="dark:text-gray-500 text-slate-500 text-sm">{{ active_count }} active plan{{ active_count|pluralize }}</p>
+    </div>
+    <a href="{% url 'admin_plan_add' %}" class="btn-primary flex items-center gap-2">
+      <span class="text-lg leading-none">+</span> Add Plan
+    </a>
+  </div>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for plan in plans %}
+    <div class="stat-card rounded-2xl p-6 border {% if plan.is_popular %}border-sky-500/40{% else %}dark:border-white/5 border-black/10{% endif %} relative">
+      {% if plan.is_popular %}
+      <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white text-xs font-bold px-3 py-0.5 rounded-full">Most Popular</span>
+      {% endif %}
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h3 class="dark:text-white text-slate-900 font-bold text-base">{{ plan.name }}</h3>
+          <p class="dark:text-gray-500 text-slate-500 text-xs">{{ plan.duration_label }}</p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          {% if plan.is_active %}
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium badge-active">Active</span>
+          {% else %}
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium badge-expired">Inactive</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="text-3xl font-bold dark:text-white text-slate-900 mb-4">৳{{ plan.price|floatformat:0 }}
+        <span class="dark:text-gray-500 text-slate-500 text-sm font-normal">/ {{ plan.duration_label|lower }}</span>
+      </div>
+
+      <!-- Features -->
+      <ul class="space-y-1.5 mb-5">
+        {% for feature in plan.characteristics %}
+        <li class="flex items-start gap-2 text-xs dark:text-gray-400 text-slate-600">
+          <span class="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
+          {{ feature }}
+        </li>
+        {% empty %}
+        <li class="text-gray-600 text-xs">No features listed</li>
+        {% endfor %}
+      </ul>
+
+      <div class="flex gap-2 border-t dark:border-white/5 border-black/10 pt-4">
+        <a href="{% url 'admin_plan_edit' plan.pk %}" class="btn-warn flex-1 text-center">Edit</a>
+        <a href="{% url 'admin_plan_delete' plan.pk %}" class="btn-danger flex-1 text-center">Delete</a>
+      </div>
+      <div class="mt-2 text-center text-gray-600 text-xs">
+        {{ plan.memberships.count }} member{{ plan.memberships.count|pluralize }} on this plan
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-span-3 text-center py-20 dark:text-gray-500 text-slate-500">
+      No plans yet. <a href="{% url 'admin_plan_add' %}" class="text-sky-400">Add your first plan →</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

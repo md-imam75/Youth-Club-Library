@@ -1,0 +1,331 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Create Offline Bill{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center gap-4 mb-4">
+    <a href="{% url 'admin_bill_list' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
+    <h2 class="text-xl font-bold dark:text-white text-slate-900">Create Walk-in Store Bill</h2>
+  </div>
+
+  <form method="post" id="billing-form" onsubmit="prepareSubmission(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {% csrf_token %}
+    <input type="hidden" name="items_json" id="items-json" value="[]" />
+
+    <!-- Left Column: Customer details & payment method -->
+    <div class="space-y-6 lg:col-span-1">
+      <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
+        <h3 class="text-sm font-bold dark:text-gray-400 text-slate-600 uppercase tracking-widest mb-2">Customer details</h3>
+
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Customer Name <span class="text-red-400">*</span></label>
+          <input type="text" name="customer_name" required placeholder="e.g. Abul Kalam" class="form-input" />
+        </div>
+
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Mobile Number (Optional)</label>
+          <input type="text" name="customer_mobile" placeholder="e.g. 018XXXXXXXX" class="form-input" />
+        </div>
+
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Email Address (Optional)</label>
+          <input type="email" name="customer_email" placeholder="e.g. abul@example.com" class="form-input" />
+          <p class="text-[10px] dark:text-gray-500 text-slate-500 mt-1">If provided, the PDF invoice will be automatically emailed to this address.</p>
+        </div>
+      </div>
+
+      <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
+        <h3 class="text-sm font-bold dark:text-gray-400 text-slate-600 uppercase tracking-widest mb-2">Payment Option</h3>
+        
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-2">Select Payment Method</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl border dark:border-white/10 border-black/10 hover:border-emerald-500/50 dark:bg-white/5 bg-black/5 transition-all text-sm font-semibold select-none">
+              <input type="radio" name="payment_method" value="cash" checked class="accent-emerald-500" />
+              Cash
+            </label>
+            <label class="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl border dark:border-white/10 border-black/10 hover:border-pink-500/50 dark:bg-white/5 bg-black/5 transition-all text-sm font-semibold select-none">
+              <input type="radio" name="payment_method" value="bkash" class="accent-pink-500" />
+              bKash
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button type="submit" id="submit-btn" disabled
+                class="w-full py-4 rounded-2xl font-bold text-base transition-all shadow-xl bg-gray-700 dark:text-gray-400 text-slate-600 cursor-not-allowed">
+          Generate Bill & Invoice
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Column: Add Books & calculations -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4 relative">
+        <h3 class="text-sm font-bold dark:text-gray-400 text-slate-600 uppercase tracking-widest">Add Books</h3>
+        
+        <!-- Search input box -->
+        <div class="relative">
+          <input type="text" id="book-search" oninput="handleSearch(event)" placeholder="Search by book title, author, or publication..." class="form-input" autocomplete="off" />
+          
+          <!-- Search results dropdown -->
+          <div id="search-results" class="absolute left-0 right-0 mt-2 bg-slate-900 border dark:border-white/10 border-black/10 rounded-2xl max-h-60 overflow-y-auto hidden z-10 shadow-2xl">
+            <!-- Results injected here -->
+          </div>
+        </div>
+
+        <!-- Selected items table -->
+        <div class="overflow-x-auto pt-2">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/8 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">
+                <th class="text-left py-2">Book Info</th>
+                <th class="text-center py-2">Qty</th>
+                <th class="text-right py-2">Price Details</th>
+                <th class="text-right py-2">Total</th>
+                <th class="text-right py-2"></th>
+              </tr>
+            </thead>
+            <tbody id="bill-items-body">
+              <!-- Dynamically injected items -->
+              <tr id="empty-row">
+                <td colspan="5" class="text-center py-8 dark:text-gray-500 text-slate-500 text-sm">No books added to the bill yet. Use the search bar above to add books.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bill summary / Calculations -->
+      <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-3">
+        <h3 class="text-sm font-bold dark:text-gray-400 text-slate-600 uppercase tracking-widest mb-1">Bill Summary</h3>
+        <div class="flex justify-between text-sm dark:text-gray-400 text-slate-600">
+          <span>Total Original Price:</span>
+          <span id="original-total">৳0.00</span>
+        </div>
+        <div class="flex justify-between text-sm text-emerald-400">
+          <span>Total Discount:</span>
+          <span id="discount-total">-৳0.00</span>
+        </div>
+        <div class="border-t dark:border-white/5 border-black/10 pt-3 flex justify-between items-center text-lg font-bold dark:text-white text-slate-900">
+          <span>Net Payable Amount:</span>
+          <span id="payable-total" class="text-xl text-sky-400">৳0.00</span>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  let selectedItems = [];
+
+  async function handleSearch(e) {
+    const q = e.target.value.trim();
+    const dropdown = document.getElementById('search-results');
+    
+    if (q.length < 2) {
+      dropdown.classList.add('hidden');
+      return;
+    }
+
+    try {
+      const res = await fetch(`{% url 'admin_book_search_ajax' %}?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      
+      dropdown.innerHTML = '';
+      if (data.books && data.books.length > 0) {
+        data.books.forEach(book => {
+          const item = document.createElement('div');
+          item.className = 'flex items-center justify-between p-3 border-b dark:border-white/5 border-black/10 hover:dark:bg-white/5 bg-black/5 cursor-pointer transition-colors';
+          
+          let priceHTML = '';
+          if (book.offer_price) {
+            priceHTML = `<span class="text-emerald-400 font-bold">৳${book.offer_price}</span> <span class="text-xs line-through dark:text-gray-500 text-slate-500 ml-1">৳${book.regular_price}</span>`;
+          } else {
+            priceHTML = `<span class="dark:text-white text-slate-900 font-bold">৳${book.regular_price}</span>`;
+          }
+
+          item.innerHTML = `
+            <div class="text-left">
+              <div class="dark:text-white text-slate-900 font-semibold text-sm">${book.title}</div>
+              <div class="text-xs dark:text-gray-400 text-slate-600 mt-0.5">${book.author} | ${book.publication}</div>
+              <div class="text-[10px] dark:text-gray-500 text-slate-500 mt-0.5">Stock Available: ${book.stock}</div>
+            </div>
+            <div class="text-right">
+              ${priceHTML}
+            </div>
+          `;
+          
+          item.onclick = () => {
+            addBookToBill(book);
+            dropdown.classList.add('hidden');
+            e.target.value = '';
+          };
+          dropdown.appendChild(item);
+        });
+        dropdown.classList.remove('hidden');
+      } else {
+        dropdown.innerHTML = '<div class="p-3 text-center dark:text-gray-500 text-slate-500 text-xs">No books found matching query.</div>';
+        dropdown.classList.remove('hidden');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function addBookToBill(book) {
+    // Check if already added
+    const existing = selectedItems.find(item => item.id === book.id);
+    if (existing) {
+      if (existing.qty >= book.stock) {
+        alert("Cannot add more. Quantity exceeds stock capacity!");
+        return;
+      }
+      existing.qty += 1;
+    } else {
+      if (book.stock <= 0) {
+        alert("Cannot add. Book is out of stock!");
+        return;
+      }
+      selectedItems.push({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        publication: book.publication,
+        regular_price: book.regular_price,
+        offer_price: book.offer_price,
+        effective_price: book.effective_price,
+        discount_percent: book.discount_percent,
+        stock: book.stock,
+        qty: 1
+      });
+    }
+    renderItems();
+  }
+
+  function removeItem(bookId) {
+    selectedItems = selectedItems.filter(item => item.id !== bookId);
+    renderItems();
+  }
+
+  function updateQty(bookId, delta) {
+    const item = selectedItems.find(item => item.id === bookId);
+    if (item) {
+      const newQty = item.qty + delta;
+      if (newQty <= 0) {
+        removeItem(bookId);
+        return;
+      }
+      if (newQty > item.stock) {
+        alert("Quantity exceeds total available stock!");
+        return;
+      }
+      item.qty = newQty;
+      renderItems();
+    }
+  }
+
+  function renderItems() {
+    const tbody = document.getElementById('bill-items-body');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    tbody.innerHTML = '';
+    
+    if (selectedItems.length === 0) {
+      tbody.innerHTML = `
+        <tr id="empty-row">
+          <td colspan="5" class="text-center py-8 dark:text-gray-500 text-slate-500 text-sm">No books added to the bill yet. Use the search bar above to add books.</td>
+        </tr>
+      `;
+      submitBtn.disabled = true;
+      submitBtn.className = 'w-full py-4 rounded-2xl font-bold text-base transition-all shadow-xl bg-gray-700 dark:text-gray-400 text-slate-600 cursor-not-allowed';
+      calculateSummary();
+      return;
+    }
+
+    selectedItems.forEach(item => {
+      const row = document.createElement('tr');
+      row.className = 'border-b dark:border-white/5 border-black/10 align-middle';
+      
+      let priceHTML = '';
+      if (item.offer_price) {
+        priceHTML = `
+          <div class="dark:text-white text-slate-900 font-bold text-xs">৳${item.offer_price}</div>
+          <div class="text-[10px] dark:text-gray-500 text-slate-500 line-through">৳${item.regular_price}</div>
+          <div class="text-[9px] text-emerald-400 font-semibold mt-0.5">-${item.discount_percent}% off</div>
+        `;
+      } else {
+        priceHTML = `<div class="dark:text-white text-slate-900 font-bold text-xs">৳${item.regular_price}</div>`;
+      }
+
+      const itemTotal = (item.effective_price * item.qty).toFixed(2);
+
+      row.innerHTML = `
+        <td class="py-4 pr-3">
+          <div class="font-bold dark:text-white text-slate-900 text-sm max-w-xs truncate">${item.title}</div>
+          <div class="text-xs dark:text-gray-500 text-slate-500 mt-0.5">${item.author} | ${item.publication}</div>
+        </td>
+        <td class="py-4 text-center">
+          <div class="inline-flex items-center gap-1 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 rounded-xl p-1">
+            <button type="button" onclick="updateQty(${item.id}, -1)" class="w-6 h-6 rounded flex items-center justify-center dark:text-gray-400 text-slate-600 hover:dark:bg-white/10 bg-black/5 hover:text-white transition-all font-semibold">-</button>
+            <span class="text-xs dark:text-white text-slate-900 font-bold px-2">${item.qty}</span>
+            <button type="button" onclick="updateQty(${item.id}, 1)" class="w-6 h-6 rounded flex items-center justify-center dark:text-gray-400 text-slate-600 hover:dark:bg-white/10 bg-black/5 hover:text-white transition-all font-semibold">+</button>
+          </div>
+        </td>
+        <td class="py-4 text-right pr-3">
+          ${priceHTML}
+        </td>
+        <td class="py-4 text-right font-bold dark:text-white text-slate-900 text-sm">
+          ৳${itemTotal}
+        </td>
+        <td class="py-4 text-right pl-3">
+          <button type="button" onclick="removeItem(${item.id})" class="text-red-500 hover:text-red-400 text-xs font-semibold">Remove</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.className = 'w-full py-4 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-2xl font-bold text-base transition-all shadow-xl hover:shadow-sky-500/20 active:scale-[0.98]';
+    calculateSummary();
+  }
+
+  function calculateSummary() {
+    let originalTotal = 0;
+    let discountTotal = 0;
+    let payableTotal = 0;
+
+    selectedItems.forEach(item => {
+      originalTotal += item.regular_price * item.qty;
+      payableTotal += item.effective_price * item.qty;
+    });
+
+    discountTotal = originalTotal - payableTotal;
+
+    document.getElementById('original-total').innerText = `৳${originalTotal.toFixed(2)}`;
+    document.getElementById('discount-total').innerText = `-৳${discountTotal.toFixed(2)}`;
+    document.getElementById('payable-total').innerText = `৳${payableTotal.toFixed(2)}`;
+  }
+
+  function prepareSubmission(e) {
+    const payload = selectedItems.map(item => ({
+      id: item.id,
+      qty: item.qty
+    }));
+    document.getElementById('items-json').value = JSON.stringify(payload);
+  }
+
+  // Close dropdown on click outside
+  document.addEventListener('click', function(e) {
+    const results = document.getElementById('search-results');
+    const search = document.getElementById('book-search');
+    if (!results.contains(e.target) && e.target !== search) {
+      results.classList.add('hidden');
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Approve Borrow Request — {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto space-y-6 py-6">
+
+  <!-- Header -->
+  <div>
+    <h2 class="text-2xl font-bold dark:text-white text-slate-900 mb-1">Approve Borrow Request</h2>
+    <p class="dark:text-gray-400 text-slate-600 text-sm">Verify borrower status and specify the day limit to issue the book.</p>
+  </div>
+
+  <!-- Order & Borrower Summary -->
+  <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
+    <h3 class="dark:text-white text-slate-900 font-semibold text-sm border-b dark:border-white/5 border-black/10 pb-2.5">Request Details</h3>
+    
+    <div class="grid grid-cols-2 gap-4 text-xs">
+      <div>
+        <p class="dark:text-gray-500 text-slate-500 uppercase tracking-wider mb-0.5">Order Number</p>
+        <p class="text-sky-400 font-mono font-bold">{{ order.order_number }}</p>
+      </div>
+      <div>
+        <p class="dark:text-gray-500 text-slate-500 uppercase tracking-wider mb-0.5">Request Date</p>
+        <p class="dark:text-white text-slate-900 font-medium">{{ order.created_at|date:"d M Y, H:i" }}</p>
+      </div>
+      <div>
+        <p class="dark:text-gray-500 text-slate-500 uppercase tracking-wider mb-0.5">Borrower Name</p>
+        <p class="dark:text-white text-slate-900 font-semibold">{{ order.user.get_full_name }}</p>
+        <p class="dark:text-gray-400 text-slate-600 mt-0.5">{{ order.user.email }}</p>
+      </div>
+      <div>
+        <p class="dark:text-gray-500 text-slate-500 uppercase tracking-wider mb-0.5">Membership Status</p>
+        {% if order.user.has_active_membership %}
+          <p class="text-emerald-400 font-bold">Active Member</p>
+        {% else %}
+          <p class="text-red-400 font-bold">No Active Membership</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 pt-3 border-t dark:border-white/5 border-black/10">
+      {% if order.book.cover_image %}
+        <img src="{{ order.book.cover_image.url }}" alt="{{ order.book.title }}" class="w-10 h-14 object-cover rounded-lg border dark:border-white/5 border-black/10 flex-shrink-0" />
+      {% else %}
+        <div class="w-10 h-14 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10">
+          <svg class="w-5 h-5 text-sky-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+      {% endif %}
+      <div>
+        <p class="dark:text-white text-slate-900 text-xs font-semibold">{{ order.book.title }}</p>
+        <p class="dark:text-gray-400 text-slate-600 text-[10px] mt-0.5">by {{ order.book.author.name|default:"Unknown" }}</p>
+        <p class="dark:text-gray-500 text-slate-500 text-[10px]">Stock Count: <span class="dark:text-white text-slate-900 font-bold">{{ order.book.stock_quantity }}</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <form method="post" class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-5">
+    {% csrf_token %}
+    
+    <div>
+      <label for="days_limit" class="block text-xs font-semibold dark:text-gray-400 text-slate-600 uppercase tracking-wider mb-2">Days Limit to Return <span class="text-red-400">*</span></label>
+      <input type="number" name="days_limit" id="days_limit" value="14" min="1" max="180" required
+             class="form-input text-base" />
+      <p class="dark:text-gray-500 text-slate-500 text-[10px] mt-1.5">Specify the number of days the user has to read and return the book (default is 14 days).</p>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <button type="submit" class="btn-primary flex-1 text-center py-2.5 font-bold">Approve & Issue Book</button>
+      <a href="{% url 'admin_orders' %}" class="btn-danger py-2.5 font-bold px-5 text-center">Cancel</a>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

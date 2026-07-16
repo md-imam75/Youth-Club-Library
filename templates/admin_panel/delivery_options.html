@@ -1,0 +1,84 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Top Actions -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <p class="text-xs dark:text-gray-400 text-slate-500 uppercase tracking-widest font-bold">Settings</p>
+      <h2 class="text-2xl font-bold dark:text-white text-slate-900 mt-1">Delivery Options</h2>
+    </div>
+    <div>
+      <a href="{% url 'admin_delivery_option_add' %}" class="btn-primary flex items-center gap-2">
+        <span>+</span> Add Delivery Option
+      </a>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="stat-card rounded-2xl overflow-hidden border dark:border-white/5 border-black/10">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b dark:border-white/5 border-black/10 text-[10px] dark:text-gray-400 text-slate-500 uppercase tracking-wider font-bold">
+            <th class="px-6 py-4">Option Label</th>
+            <th class="px-6 py-4">Unique Code</th>
+            <th class="px-6 py-4">Type</th>
+            <th class="px-6 py-4">Cost</th>
+            <th class="px-6 py-4">Status</th>
+            <th class="px-6 py-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y dark:divide-white/5 divide-black/5 text-sm">
+          {% for option in options %}
+          <tr class="table-row">
+            <td class="px-6 py-4 font-semibold dark:text-white text-slate-900">
+              {{ option.label }}
+            </td>
+            <td class="px-6 py-4 font-mono text-xs dark:text-gray-400 text-slate-600">
+              {{ option.code }}
+            </td>
+            <td class="px-6 py-4">
+              {% if option.cost == 0 %}
+              <span class="badge-active">Free</span>
+              {% else %}
+              <span class="badge-pending">Paid</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 font-semibold dark:text-white text-slate-900">
+              {% if option.cost == 0 %}
+              ৳0.00
+              {% else %}
+              ৳{{ option.cost }}
+              {% endif %}
+            </td>
+            <td class="px-6 py-4">
+              {% if option.is_active %}
+              <span class="badge-active">Active</span>
+              {% else %}
+              <span class="badge-expired">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 text-right">
+              <div class="flex items-center justify-end gap-3">
+                <a href="{% url 'admin_delivery_option_edit' option.pk %}" class="btn-success text-xs px-2.5 py-1">Edit</a>
+                <a href="{% url 'admin_delivery_option_delete' option.pk %}" class="btn-danger text-xs px-2.5 py-1">Delete</a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center dark:text-gray-400 text-slate-500">
+              No delivery options found. Click "Add Delivery Option" to create one.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+<!-- templates/partials/book_carousel.html -->
+<!-- Usage: include this partial with books=books carousel_id="featured" upcoming=False -->
+
+<div class="relative" x-data="bookCarousel('{{ carousel_id }}', {{ books|length }})">
+  <!-- Track wrapper -->
+  <div class="overflow-hidden rounded-2xl">
+    <div class="flex gap-5 transition-transform duration-500 ease-in-out"
+         :style="`transform: translateX(-${currentIndex * slideWidth()}px)`"
+         id="track-{{ carousel_id }}">
+
+      {% for book in books %}
+      <div class="flex-shrink-0 w-44 sm:w-52">
+        <div class="book-card relative rounded-2xl overflow-hidden glass h-72 sm:h-80 shadow-xl cursor-pointer group"
+             onclick="window.location.href='{% url 'book_detail' book.pk %}'">
+          <!-- Cover image or placeholder -->
+          {% if book.cover_image %}
+            <img src="{{ book.cover_image.url }}" alt="{{ book.title }}"
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          {% else %}
+            <div class="w-full h-full flex flex-col items-center justify-center p-4 transition-transform duration-500 group-hover:scale-105"
+                 style="background: linear-gradient(135deg, #1e3a5f 0%, #0c4a6e 50%, #065f46 100%);">
+              <svg class="w-10 h-10 text-sky-400/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              <p class="dark:text-white text-slate-900 text-xs text-center font-medium leading-tight">{{ book.title|truncatechars:50 }}</p>
+            </div>
+          {% endif %}
+
+          <!-- Overlay -->
+          <div class="book-overlay absolute inset-0 flex flex-col justify-end p-4"
+               style="background: linear-gradient(to top, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.4) 50%, transparent 100%);">
+            <!-- Badges -->
+            <div class="flex flex-wrap gap-1 mb-2">
+              {% if book.offer_price %}<span class="badge-discount">-{{ book.discount_percent }}%</span>{% endif %}
+              {% if upcoming %}<span class="bg-accent-500/20 text-accent-400 text-xs px-2 py-0.5 rounded-full border border-accent-500/30 font-medium">Soon</span>{% endif %}
+              {% if book.is_new and not upcoming %}<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded-full border border-emerald-500/30 font-medium">New</span>{% endif %}
+            </div>
+
+            <h3 class="dark:text-white text-slate-900 text-sm font-semibold leading-tight mb-1">{{ book.title|truncatechars:45 }}</h3>
+            {% if book.author %}
+            <p class="dark:text-gray-400 text-slate-600 text-xs mb-2">{{ book.author.name|truncatechars:25 }}</p>
+            {% endif %}
+
+            {% if not upcoming %}
+            <div class="flex items-center justify-between">
+              <div>
+                {% if book.offer_price %}
+                  <span class="dark:text-white text-slate-900 font-bold text-sm">৳{{ book.offer_price }}</span>
+                  <span class="dark:text-gray-500 text-slate-500 text-xs line-through ml-1">৳{{ book.regular_price }}</span>
+                {% else %}
+                  <span class="dark:text-white text-slate-900 font-bold text-sm">৳{{ book.regular_price }}</span>
+                {% endif %}
+              </div>
+              {% if book.is_in_stock %}
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              {% else %}
+                <span class="text-xs text-red-400">Out of stock</span>
+              {% endif %}
+            </div>
+            {% else %}
+              <div class="flex items-center gap-1.5 text-accent-400 text-xs font-medium">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Coming Soon
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Navigation arrows -->
+  <button @click="prev()"
+          class="absolute -left-4 top-1/2 -translate-y-1/2 w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-xl z-10 border dark:border-white/20 border-black/20"
+          :class="currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-100'"
+          :disabled="currentIndex === 0">
+    <svg class="w-4 h-4 dark:text-white text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+  </button>
+  <button @click="next()"
+          class="absolute -right-4 top-1/2 -translate-y-1/2 w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-xl z-10 border dark:border-white/20 border-black/20"
+          :class="currentIndex >= maxIndex() ? 'opacity-30 cursor-not-allowed' : 'opacity-100'"
+          :disabled="currentIndex >= maxIndex()">
+    <svg class="w-4 h-4 dark:text-white text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+  </button>
+
+  <!-- Dots -->
+  <div class="flex justify-center gap-2 mt-6">
+    <template x-for="i in Math.ceil({{ books|length }} / visibleCount())" :key="i">
+      <button @click="currentIndex = (i-1)"
+              class="w-2 h-2 rounded-full transition-all"
+              :class="currentIndex === (i-1) ? 'bg-primary-500 w-6' : 'bg-white/20 hover:bg-white/40'"></button>
+    </template>
+  </div>
+</div>

@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="pt-24 pb-16 min-h-screen page-flat-bg">
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+    <!-- ─── USER PROFILE HEADER BANNER ──────────────────────────────────────── -->
+    <div class="glass rounded-3xl p-6 sm:p-8 border dark:border-white/10 border-black/10 shadow-xl relative overflow-hidden">
+      <!-- Background Decorative Light Glows -->
+      <div class="absolute -right-16 -top-16 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 relative z-10">
+        <!-- User Info Left Side -->
+        <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
+          <!-- Avatar -->
+          {% if user.profile_image %}
+            <img src="{{ user.profile_image.url }}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 dark:border-white/10 border-black/10 shadow-lg shadow-black/20" alt="{{ user.get_full_name }}" />
+          {% else %}
+            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-sky-500 to-emerald-500 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold font-display shadow-lg shadow-sky-500/20">
+              {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+            </div>
+          {% endif %}
+
+          <div class="space-y-1.5 max-w-md">
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+              <h1 class="font-display text-2xl sm:text-3xl font-bold dark:text-white text-slate-900">
+                {{ user.get_full_name }}
+              </h1>
+              {% if membership and membership.status == 'Active' %}
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">Active Member</span>
+              {% endif %}
+            </div>
+            <p class="dark:text-gray-400 text-slate-600 text-sm font-medium">{{ user.email }}</p>
+            {% if user.bio %}
+              <p class="dark:text-gray-400 text-slate-600 text-xs italic mt-2">{{ user.bio }}</p>
+            {% else %}
+              <p class="dark:text-gray-500 text-slate-500 text-xs italic mt-2">No bio written yet.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Quick Stats Right Side -->
+        <div class="grid grid-cols-2 gap-4 w-full md:w-auto">
+          <div class="glass bg-white/5 rounded-2xl p-4 border dark:border-white/5 border-black/5 text-center min-w-28">
+            <span class="dark:text-gray-400 text-slate-600 text-xs font-semibold uppercase tracking-wider block mb-1">Purchases</span>
+            <span class="text-2xl font-bold dark:text-white text-slate-900">{{ bought_orders.count }}</span>
+          </div>
+          <div class="glass bg-white/5 rounded-2xl p-4 border dark:border-white/5 border-black/5 text-center min-w-28">
+            <span class="dark:text-gray-400 text-slate-600 text-xs font-semibold uppercase tracking-wider block mb-1">Borrowed</span>
+            <span class="text-2xl font-bold dark:text-white text-slate-900">{{ borrowed_orders.count }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── MAIN CONTENT 3-COLUMN GRID ──────────────────────────────────────── -->
+    <div class="grid lg:grid-cols-3 gap-8 items-start" x-data="{ tab: 'bought' }">
+
+      <!-- LEFT COLUMN: MEMBERSHIP STATUS DETAILS -->
+      <div class="lg:col-span-1 space-y-6">
+        
+        <div class="glass rounded-2xl p-6 border {% if membership and membership.status == 'Active' %}border-emerald-500/30{% elif membership and membership.status == 'Pending' %}border-yellow-500/30{% else %}dark:border-white/10 border-black/10{% endif %}">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-base font-bold dark:text-white text-slate-900 uppercase tracking-wider">Membership</h3>
+            {% if membership %}
+              {% if membership.status == 'Active' %}
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">Active</span>
+              {% elif membership.status == 'Pending' %}
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 uppercase">Pending</span>
+              {% else %}
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 uppercase">Expired</span>
+              {% endif %}
+            {% else %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 dark:text-gray-400 text-slate-600 border dark:border-white/5 border-black/5 uppercase">None</span>
+            {% endif %}
+          </div>
+
+          {% if membership %}
+          <div class="space-y-4">
+            <div class="flex justify-between text-sm">
+              <span class="dark:text-gray-400 text-slate-600 font-medium">Membership ID</span>
+              <span class="dark:text-white text-slate-900 font-mono font-bold">{{ membership.unique_membership_id }}</span>
+            </div>
+            {% if membership.plan %}
+            <div class="flex justify-between text-sm">
+              <span class="dark:text-gray-400 text-slate-600 font-medium">Current Plan</span>
+              <span class="dark:text-white text-slate-900 font-bold">{{ membership.plan.name }}</span>
+            </div>
+            {% endif %}
+            {% if membership.status == 'Active' and membership.expires_at %}
+            <div class="flex justify-between text-sm">
+              <span class="dark:text-gray-400 text-slate-600 font-medium">Expiration Date</span>
+              <span class="dark:text-white text-slate-900 font-bold">{{ membership.expires_at|date:"d M Y" }}</span>
+            </div>
+            <div class="mt-4 pt-2 border-t dark:border-white/5 border-black/5">
+              <div class="flex justify-between text-xs dark:text-gray-400 text-slate-600 mb-1.5 font-medium">
+                <span>Time remaining</span>
+                <span class="font-bold {% if membership.days_remaining < 10 %}text-red-400{% else %}text-emerald-400{% endif %}">{{ membership.days_remaining }} days</span>
+              </div>
+              <div class="h-2 dark:bg-white/10 bg-black/5 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all {% if membership.days_remaining < 10 %}bg-red-500{% else %}bg-gradient-to-r from-sky-500 to-emerald-500{% endif %}"
+                     style="width: {% widthratio membership.days_remaining membership.plan.duration_days 100 %}%"></div>
+              </div>
+            </div>
+            {% elif membership.status == 'Pending' %}
+            <div class="text-xs text-yellow-400 bg-yellow-500/5 border border-yellow-500/10 rounded-xl p-4 mt-2 flex items-start gap-2.5">
+              <svg class="w-4 h-4 flex-shrink-0 text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Your request is pending verification. It will be activated shortly after staff approval.</span>
+            </div>
+            {% endif %}
+
+            {% if membership.status != 'Active' %}
+            <a href="{% url 'membership' %}"
+               class="block w-full text-center py-2.5 mt-2 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-md">
+              {% if membership.status == 'Expired' %}Renew Membership{% else %}View Plans{% endif %}
+            </a>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="space-y-4">
+            <p class="text-sm dark:text-gray-400 text-slate-600">You don't have an active library membership. Join to gain borrow privileges!</p>
+            <a href="{% url 'membership' %}"
+               class="block w-full text-center py-2.5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-sky-500/20 pulse-cta">
+              Become a Member
+            </a>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: INTERACTIVE TABS & SECTIONS -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Tabs Navigation -->
+        <div class="flex flex-wrap gap-2 border-b dark:border-white/5 border-black/5 pb-0.5">
+          <button @click="tab='bought'"
+                  :class="tab==='bought' ? 'border-b-2 border-sky-500 text-sky-400' : 'dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900'"
+                  class="px-5 py-3 text-sm font-bold transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            Purchases ({{ bought_orders.count }})
+          </button>
+          <button @click="tab='borrowed'"
+                  :class="tab==='borrowed' ? 'border-b-2 border-emerald-500 text-emerald-400' : 'dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900'"
+                  class="px-5 py-3 text-sm font-bold transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Borrows ({{ borrowed_orders.count }})
+          </button>
+          <button @click="tab='settings'"
+                  :class="tab==='settings' ? 'border-b-2 border-purple-500 text-purple-400' : 'dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900'"
+                  class="px-5 py-3 text-sm font-bold transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Edit Profile
+          </button>
+        </div>
+
+        <!-- ─── BOUGHT TAB PANEL ────────────────────────────────────────────── -->
+        <div x-show="tab==='bought'" class="space-y-5">
+          {% regroup bought_orders by group_number as order_groups %}
+          {% for group in order_groups %}
+          {% with first_order=group.list.0 %}
+          <div class="glass rounded-2xl p-5 sm:p-6 border dark:border-white/10 border-black/10 hover:border-sky-500/20 transition-all space-y-4 shadow-sm hover:shadow-md">
+            <!-- Order Header -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b dark:border-white/5 border-black/5 text-xs">
+              <div class="flex items-center gap-3">
+                <span class="dark:text-white text-slate-900 font-bold text-sm">Order #{{ group.grouper }}</span>
+                <span class="dark:text-gray-500 text-slate-500">{{ first_order.created_at|date:"d M Y, h:i A" }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="dark:text-white text-slate-900 font-bold text-sm">Total: ৳{{ first_order.group_total_cost|floatformat:0 }}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                  {% if first_order.payment_status == 'Paid' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                  {% elif first_order.payment_status == 'Failed' %}bg-red-500/10 text-red-400 border border-red-500/20
+                  {% else %}bg-yellow-500/10 text-yellow-400 border border-yellow-500/20{% endif %}">
+                  ● {{ first_order.payment_status }}
+                </span>
+                {% if first_order.payment_status == 'Paid' %}
+                <a href="{% url 'order_download_invoice' first_order.pk %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold transition-all border border-sky-500/20">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  Invoice
+                </a>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="divide-y dark:divide-white/5 divide-black/5 space-y-4">
+              {% for order in group.list %}
+              <div class="flex items-start gap-4 pt-4 {% if forloop.first %}pt-0{% endif %}">
+                {% if order.book.cover_image %}
+                  <img src="{{ order.book.cover_image.url }}" class="w-11 h-16 object-cover rounded-xl flex-shrink-0 border dark:border-white/5 border-black/5" alt="{{ order.book.title }}" />
+                {% else %}
+                  <div class="w-11 h-16 rounded-xl flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-primary-500/10 to-emerald-500/10 border dark:border-white/5 border-black/5">
+                    <svg class="w-6 h-6 text-sky-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                  </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                  <h4 class="dark:text-white text-slate-900 font-semibold text-sm truncate">{{ order.book.title }}</h4>
+                  <p class="dark:text-gray-400 text-slate-600 text-xs mt-0.5">{{ order.book.author.name }}</p>
+                  <div class="flex items-center gap-3 mt-1.5 text-xs dark:text-gray-400 text-slate-600">
+                    <span>Qty: <strong class="dark:text-white text-slate-900">{{ order.quantity }}</strong></span>
+                    <span>•</span>
+                    <span>Price: <strong class="dark:text-white text-slate-900">৳{{ order.book_price|floatformat:0 }}</strong></span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            
+            <!-- Delivery & Payment Info Footer -->
+            <div class="text-[11px] dark:text-gray-500 text-slate-500 border-t dark:border-white/5 border-black/5 pt-3 flex justify-between items-center">
+              <span>Method: <strong class="dark:text-white text-slate-800">{{ first_order.payment_method }}</strong></span>
+              <span>Delivery: <strong class="dark:text-white text-slate-800">{{ first_order.get_delivery_option_display }}</strong></span>
+            </div>
+          </div>
+          {% endwith %}
+          {% empty %}
+          <div class="text-center py-16 glass rounded-2xl border dark:border-white/10 border-black/10">
+            <div class="w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-4 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10">
+              <svg class="w-8 h-8 dark:text-gray-400 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <p class="dark:text-gray-400 text-slate-600 text-sm">No purchases yet.</p>
+            <a href="{% url 'books' %}" class="mt-4 inline-block text-sky-400 text-sm hover:text-sky-300 font-semibold">Browse books →</a>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- ─── BORROWED TAB PANEL ──────────────────────────────────────────── -->
+        <div x-show="tab==='borrowed'" class="space-y-5">
+          {% for order in borrowed_orders %}
+          <div class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10 hover:border-emerald-500/20 transition-all shadow-sm hover:shadow-md">
+            <div class="flex items-start gap-4">
+              {% if order.book.cover_image %}
+                <img src="{{ order.book.cover_image.url }}" class="w-14 h-20 object-cover rounded-xl flex-shrink-0 border dark:border-white/5 border-black/5" alt="{{ order.book.title }}" />
+              {% else %}
+                <div class="w-14 h-20 rounded-xl flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-primary-500/10 to-emerald-500/10 border dark:border-white/5 border-black/5">
+                  <svg class="w-7 h-7 text-emerald-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                </div>
+              {% endif %}
+              <div class="flex-1 min-w-0 space-y-1.5">
+                <h4 class="dark:text-white text-slate-900 font-semibold text-sm truncate">{{ order.book.title }}</h4>
+                <p class="dark:text-gray-400 text-slate-600 text-xs">{{ order.book.author.name }}</p>
+                <div class="flex flex-wrap gap-3 mt-3 text-xs items-center">
+                  <span class="dark:text-gray-400 text-slate-600">Order {{ order.order_number }}</span>
+                  {% if order.order_status == 'Pending' %}
+                    <span class="text-yellow-400 flex items-center gap-1 font-semibold">
+                      <svg class="w-3.5 h-3.5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      Pending Approval
+                    </span>
+                  {% elif order.order_status == 'Cancelled' %}
+                    <span class="text-red-400 flex items-center gap-1 font-semibold">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      Cancelled
+                    </span>
+                  {% elif order.returned_at %}
+                    <span class="text-emerald-400 flex items-center gap-1 font-semibold">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                      Returned {{ order.returned_at|date:"d M Y" }}
+                    </span>
+                  {% elif order.is_overdue %}
+                    <span class="text-red-400 flex items-center gap-1 font-semibold">
+                      <svg class="w-3.5 h-3.5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                      Overdue! ({{ order.days_overdue }} days overdue)
+                    </span>
+                  {% elif order.due_date %}
+                    <span class="text-yellow-400 flex items-center gap-1 font-semibold">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                      Due: {{ order.due_date|date:"d M Y" }} ({{ order.days_remaining }} days left)
+                    </span>
+                  {% endif %}
+                  <span class="dark:text-gray-500 text-slate-500 font-medium">Borrowed {{ order.created_at|date:"d M Y" }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-16 glass rounded-2xl border dark:border-white/10 border-black/10">
+            <div class="w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-4 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10">
+              <svg class="w-8 h-8 dark:text-gray-400 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+            <p class="dark:text-gray-400 text-slate-600 text-sm">No borrowed books.</p>
+            {% if not user.has_active_membership %}
+              <a href="{% url 'membership' %}" class="mt-4 inline-block text-emerald-400 text-sm hover:text-emerald-300 font-semibold">Get a membership to borrow →</a>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- ─── EDIT PROFILE TAB PANEL ──────────────────────────────────────── -->
+        <div x-show="tab==='settings'" class="glass rounded-2xl p-6 sm:p-8 border dark:border-white/10 border-black/10 shadow-lg">
+          <div class="mb-6">
+            <h3 class="text-lg font-bold dark:text-white text-slate-900">Update Profile Details</h3>
+            <p class="dark:text-gray-500 text-slate-500 text-xs">Keep your email, name, phone, and delivery address up to date.</p>
+          </div>
+
+          <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label class="text-xs dark:text-gray-400 text-slate-600 mb-1.5 block font-semibold">First Name</label>
+                <input type="text" name="first_name" value="{{ user.first_name }}" class="form-input" placeholder="First Name" />
+              </div>
+              <div>
+                <label class="text-xs dark:text-gray-400 text-slate-600 mb-1.5 block font-semibold">Last Name</label>
+                <input type="text" name="last_name" value="{{ user.last_name }}" class="form-input" placeholder="Last Name" />
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs dark:text-gray-400 text-slate-600 mb-1.5 block font-semibold">Phone Number</label>
+              <input type="tel" name="phone" value="{{ user.phone }}" class="form-input" placeholder="e.g. 01712345678" />
+            </div>
+
+            <div>
+              <label class="text-xs dark:text-gray-400 text-slate-600 mb-1.5 block font-semibold">Delivery Address</label>
+              <textarea name="address" class="form-input" rows="3" placeholder="Full address for shipping books">{{ user.address }}</textarea>
+            </div>
+
+            <div>
+              <label class="text-xs dark:text-gray-400 text-slate-600 mb-1.5 block font-semibold">Bio</label>
+              <textarea name="bio" class="form-input" rows="3" placeholder="A brief description of yourself">{{ user.bio }}</textarea>
+            </div>
+
+            <div>
+              <label class="text-xs dark:text-gray-400 text-slate-600 mb-1.5 block font-semibold">Profile Picture</label>
+              <div class="flex items-center gap-4">
+                {% if user.profile_image %}
+                  <img src="{{ user.profile_image.url }}" class="w-12 h-12 rounded-xl object-cover border dark:border-white/5 border-black/5" />
+                {% endif %}
+                <input type="file" name="profile_image" accept="image/*" class="form-input py-1.5" />
+              </div>
+            </div>
+
+            <div class="pt-4 border-t dark:border-white/5 border-black/5 flex justify-end">
+              <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-md">
+                Save Profile Changes
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

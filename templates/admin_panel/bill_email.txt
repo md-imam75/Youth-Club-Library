@@ -1,0 +1,14 @@
+Dear {{ bill.customer_name }},
+
+Thank you for buying from Youth Club Library. We have successfully generated your invoice for the walk-in store purchase.
+
+Invoice Details:
+- Bill Number: {{ bill.bill_number }}
+- Total Amount Paid: ৳{{ bill.total_amount }}
+- Payment Method: {{ bill.payment_method|capfirst }}
+- Date: {{ bill.created_at|date:"d M Y, h:i A" }}
+
+Your official PDF receipt is attached to this email.
+
+Best regards,
+Youth Club Library Team

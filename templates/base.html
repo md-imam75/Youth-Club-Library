@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <title>{% block title %}{{ page_title }} — {{ SITE_NAME }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Youth Club Library — Read. Learn. Grow. Your community library for books, knowledge and wisdom.{% endblock %}" />
+
+  <!-- Google Fonts: Space Grotesk (headings) + Plus Jakarta Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            primary:  { DEFAULT: '#0ea5e9', 50:'#f0f9ff', 100:'#e0f2fe', 500:'#0ea5e9', 600:'#0284c7', 700:'#0369a1', 900:'#0c4a6e' },
+            accent:   { DEFAULT: '#f59e0b', 400:'#fbbf24', 500:'#f59e0b', 600:'#d97706' },
+            emerald:  { DEFAULT: '#10b981', 400:'#34d399', 500:'#10b981', 600:'#059669' },
+            navy:     { DEFAULT: '#0f172a', 800:'#1e293b', 900:'#0f172a' },
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'glow':  'glow 2s ease-in-out infinite alternate',
+            'slide-up': 'slideUp 0.6s ease-out',
+            'fade-in': 'fadeIn 0.8s ease-out',
+            'counter': 'counter 2s ease-out',
+          },
+          keyframes: {
+            float:    { '0%,100%': {transform:'translateY(0)'}, '50%': {transform:'translateY(-20px)'} },
+            glow:     { from: {boxShadow:'0 0 20px rgba(14,165,233,0.3)'}, to: {boxShadow:'0 0 40px rgba(14,165,233,0.7)'} },
+            slideUp:  { from: {opacity:0,transform:'translateY(30px)'}, to: {opacity:1,transform:'translateY(0)'} },
+            fadeIn:   { from: {opacity:0}, to: {opacity:1} },
+          },
+          backgroundImage: {
+            'hero-gradient': 'linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #0c4a6e 80%, #0f172a 100%)',
+            'card-gradient': 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Alpine.js -->
+  <script>
+    // Shared carousel component — used by all book_carousel.html partials.
+    // x-data="bookCarousel('featured', 12)"
+    function bookCarousel(id, totalBooks) {
+      return {
+        currentIndex: 0,
+        total: totalBooks,
+        autoplayInterval: null,
+        init() {
+          this.autoplayInterval = setInterval(() => {
+            if (this.currentIndex < this.maxIndex()) this.currentIndex++;
+            else this.currentIndex = 0;
+          }, 4000);
+        },
+        visibleCount() {
+          if (window.innerWidth >= 1024) return 5;
+          if (window.innerWidth >= 768)  return 4;
+          if (window.innerWidth >= 640)  return 3;
+          return 2;
+        },
+        slideWidth() {
+          return window.innerWidth >= 640 ? 220 : 190;
+        },
+        maxIndex() {
+          return Math.max(0, this.total - this.visibleCount());
+        },
+        prev() { if (this.currentIndex > 0) this.currentIndex--; },
+        next() { if (this.currentIndex < this.maxIndex()) this.currentIndex++; },
+      };
+    }
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 3px; }
+
+    /* Modern file input button styling */
+    input[type="file"] {
+      color: #94a3b8;
+      font-size: 0.875rem;
+    }
+    input[type="file"]::file-selector-button {
+      background: rgba(14, 165, 233, 0.08);
+      border: 1px solid rgba(14, 165, 233, 0.25);
+      color: #38bdf8;
+      padding: 0.55rem 1.1rem;
+      border-radius: 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      margin-right: 1rem;
+    }
+    input[type="file"]::file-selector-button:hover {
+      background: rgba(14, 165, 233, 0.18);
+      border-color: rgba(14, 165, 233, 0.4);
+    }
+
+    /* Glass morphism */
+    .glass {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+    }
+    .dark .glass {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: none;
+    }
+    .glass-dark {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .dark .glass-dark {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* Book card hover effect */
+    .book-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .book-card:hover { transform: translateY(-8px) scale(1.02); }
+    .book-card:hover .book-overlay { opacity: 1; }
+    .book-overlay { opacity: 0; transition: opacity 0.3s ease; }
+
+    /* Form inputs */
+    .form-input {
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      color: #0f172a;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .dark .form-input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: white;
+    }
+    .form-input:focus {
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14,165,233,0.2);
+    }
+    .form-input::placeholder { color: rgba(0, 0, 0, 0.4); }
+    .dark .form-input::placeholder { color: rgba(255,255,255,0.35); }
+    .form-input option { background: white; color: #0f172a; }
+    .dark .form-input option { background: #1e293b; color: white; }
+
+    /* Gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, #0ea5e9 0%, #10b981 50%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Navbar scroll effect */
+    .navbar-scroll { background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(20px); }
+    .dark .navbar-scroll { background: rgba(15,23,42,0.95) !important; }
+
+    /* Carousel */
+    .carousel-track { display: flex; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
+
+    /* Star rating */
+    .star-rating { color: #f59e0b; }
+
+    /* Badge */
+    .badge-discount {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white; font-size: 0.7rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px;
+    }
+
+    /* Pulse animation for CTA */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14,165,233,0.5); }
+      70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(14,165,233,0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14,165,233,0); }
+    }
+    .pulse-cta { animation: pulse-ring 2.5s infinite; }
+
+    /* Nav active indicator dot */
+    .nav-active-dot {
+      position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+      width: 4px; height: 4px; border-radius: 50%;
+      background: linear-gradient(90deg, #0ea5e9, #10b981);
+    }
+
+    /* Nav link hover underline */
+    .nav-link::after {
+      content: ''; position: absolute; bottom: 2px; left: 50%;
+      width: 0; height: 2px; border-radius: 999px;
+      background: linear-gradient(90deg, #0ea5e9, #10b981);
+      transition: width 0.25s, left 0.25s;
+    }
+    .nav-link:hover::after { width: 60%; left: 20%; }
+
+    /* Dynamic Theme Section Backgrounds */
+    .hero-bg {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 40%, #cbd5e1 70%, #f8fafc 100%);
+    }
+    .dark .hero-bg {
+      background: linear-gradient(135deg, #0f172a 0%, #0c1a35 40%, #072748 70%, #0f172a 100%);
+    }
+    .section-bg-1 {
+      background: #ffffff;
+    }
+    .dark .section-bg-1 {
+      background: #0a1628;
+    }
+    .section-bg-2 {
+      background: #f8fafc;
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
+    .dark .section-bg-2 {
+      background: #080b15;
+      border-top: 1px solid rgba(255,255,255,0.03);
+    }
+    .section-bg-3 {
+      background: #f8fafc;
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
+    .dark .section-bg-3 {
+      background: #090f1e;
+      border-top: 1px solid rgba(255,255,255,0.03);
+    }
+    .section-bg-stats {
+      background: #ffffff;
+    }
+    .dark .section-bg-stats {
+      background: linear-gradient(180deg, #080f1d 0%, #060c18 100%);
+    }
+    .stats-grid {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    .dark .stats-grid {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .stats-card-bg {
+      background: #ffffff;
+    }
+    .dark .stats-card-bg {
+      background: #080f1d;
+    }
+    .page-gradient-bg {
+      background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+    }
+    .dark .page-gradient-bg {
+      background: linear-gradient(135deg, #0f172a, #0c1a35);
+    }
+    .page-flat-bg {
+      background: #f1f5f9;
+    }
+    .dark .page-flat-bg {
+      background: #0a1223;
+    }
+    .membership-gradient-bg {
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    }
+    .dark .membership-gradient-bg {
+      background: linear-gradient(180deg, #0a1628 0%, #080f1d 100%);
+    }
+    .brand-text-gradient {
+      color: #000000;
+    }
+    .dark .brand-text-gradient {
+      background: linear-gradient(135deg, #fff 0%, #e0f2fe 40%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="dark:bg-navy-900 bg-slate-50 dark:text-white text-slate-900 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- ─── NAVBAR ─────────────────────────────────────────────────────────────── -->
+  <nav id="navbar"
+       class="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+       x-data="{ open: false, scrolled: false, isDark: document.documentElement.classList.contains('dark'), toggleTheme() { this.isDark = !this.isDark; if (this.isDark) { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark'); } else { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light'); } } }"
+       @scroll.window="scrolled = window.scrollY > 50"
+       :class="scrolled ? 'navbar-scroll shadow-2xl' : 'bg-transparent'">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 lg:h-[72px]">
+
+        <!-- ── BRAND LOGO ───────────────────────────────────────────────── -->
+        <a href="{% url 'home' %}" class="flex items-center gap-3 group flex-shrink-0">
+          {% load static %}
+          <!-- Logo image -->
+          <div class="relative w-10 h-10 flex-shrink-0">
+            <img src="{% static 'images/logo.png' %}?v=2" alt="YCL Logo"
+                 class="w-10 h-10 object-contain rounded-xl group-hover:scale-110 transition-transform duration-300 dark:drop-shadow-[0_0_8px_rgba(14,165,233,0.6)] drop-shadow-[0_2px_8px_rgba(14,165,233,0.25)]" />
+          </div>
+          <!-- Brand name -->
+          <div class="hidden sm:flex flex-col leading-none">
+            <span class="brand-text-gradient font-display font-bold text-[17px] tracking-tight">
+              Youth Club
+            </span>
+            <span class="text-[10px] font-semibold tracking-[0.22em] uppercase mt-0.5"
+                  style="background:linear-gradient(90deg,#0ea5e9,#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+              Library
+            </span>
+          </div>
+        </a>
+
+        <!-- ── DESKTOP NAV LINKS ─────────────────────────────────────────── -->
+        <div class="hidden lg:flex items-center gap-0.5">
+          {% with request.resolver_match.url_name as url_name %}
+          <a href="{% url 'home' %}"
+             class="nav-link relative px-4 py-2 text-sm font-semibold transition-colors duration-200
+             {% if url_name == 'home' %}dark:text-white text-slate-900{% else %}dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %}">
+            Home
+            {% if url_name == 'home' %}<span class="nav-active-dot"></span>{% endif %}
+          </a>
+          <a href="{% url 'about' %}"
+             class="nav-link relative px-4 py-2 text-sm font-semibold transition-colors duration-200
+             {% if url_name == 'about' %}dark:text-white text-slate-900{% else %}dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %}">
+            About Us
+            {% if url_name == 'about' %}<span class="nav-active-dot"></span>{% endif %}
+          </a>
+          <a href="{% url 'books' %}"
+             class="nav-link relative px-4 py-2 text-sm font-semibold transition-colors duration-200
+             {% if url_name == 'books' %}dark:text-white text-slate-900{% else %}dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %}">
+            Books
+            {% if url_name == 'books' %}<span class="nav-active-dot"></span>{% endif %}
+          </a>
+          <a href="{% url 'authors' %}"
+             class="nav-link relative px-4 py-2 text-sm font-semibold transition-colors duration-200
+             {% if url_name == 'authors' %}dark:text-white text-slate-900{% else %}dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %}">
+            Authors
+            {% if url_name == 'authors' %}<span class="nav-active-dot"></span>{% endif %}
+          </a>
+          <a href="{% url 'publications' %}"
+             class="nav-link relative px-4 py-2 text-sm font-semibold transition-colors duration-200
+             {% if url_name == 'publications' %}dark:text-white text-slate-900{% else %}dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %}">
+            Publications
+            {% if url_name == 'publications' %}<span class="nav-active-dot"></span>{% endif %}
+          </a>
+          <a href="{% url 'membership' %}"
+             class="relative px-4 py-2 text-sm font-semibold transition-colors duration-200
+             {% if url_name == 'membership' %}dark:text-white text-slate-900{% else %}dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %}">
+            Membership
+            {% if url_name == 'membership' %}<span class="nav-active-dot"></span>{% endif %}
+          </a>
+          {% endwith %}
+        </div>
+
+        <!-- ── AUTH BUTTONS ──────────────────────────────────────────────── -->
+        <div class="hidden lg:flex items-center gap-2.5">
+          <!-- Theme Toggle Button -->
+          <button @click="toggleTheme()" class="p-2.5 rounded-xl dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors duration-200" title="Toggle Theme">
+            <!-- Sun Icon (shown in dark mode) -->
+            <svg x-show="isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+            <!-- Moon Icon (shown in light mode) -->
+            <svg x-show="!isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </button>
+
+          {% if user.is_authenticated %}
+            <!-- Cart Icon -->
+            <a href="{% url 'cart' %}" class="relative p-2.5 mr-1 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors duration-200" title="View Cart">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              {% if cart_count > 0 %}
+              <span class="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-primary-500 to-emerald-500 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-[#0a1223]">
+                {{ cart_count }}
+              </span>
+              {% endif %}
+            </a>
+            <!-- Avatar + name -->
+            <a href="{% url 'dashboard' %}"
+               class="flex items-center gap-2.5 px-3.5 py-2 rounded-full text-sm font-semibold transition-all duration-200 hover:dark:bg-white/10 bg-black/5"
+               style="border:1px solid rgba(255,255,255,0.12);">
+              {% if user.profile_image %}
+                <img src="{{ user.profile_image.url }}" class="w-6 h-6 rounded-full object-cover ring-2 ring-sky-500/50" alt="avatar" />
+              {% else %}
+                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold dark:text-white text-slate-900"
+                     style="background:linear-gradient(135deg,#0ea5e9,#10b981);">
+                  {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                </div>
+              {% endif %}
+              <span class="dark:text-gray-200 text-slate-800">{{ user.get_full_name|truncatechars:14 }}</span>
+            </a>
+            <!-- Staff badge -->
+            {% if user.is_staff %}
+            <a href="{% url 'admin_dashboard' %}"
+               class="px-3.5 py-2 text-xs font-bold rounded-full transition-all duration-200 hover:opacity-90"
+               style="background:linear-gradient(135deg,rgba(14,165,233,0.18),rgba(16,185,129,0.14));border:1px solid rgba(14,165,233,0.35);color:#38bdf8;letter-spacing:0.02em;">
+              <svg class="w-3 h-3 mr-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Admin
+            </a>
+            {% endif %}
+            <a href="{% url 'account_logout' %}"
+               class="px-4 py-2 text-sm font-medium dark:text-gray-500 text-slate-500 hover:text-red-400 transition-colors duration-200">
+              Logout
+            </a>
+          {% else %}
+            <a href="{% url 'account_login' %}"
+               class="px-4 py-2 text-sm font-semibold dark:text-gray-300 text-slate-700 hover:dark:text-white text-slate-900 transition-colors duration-200">
+              Sign in
+            </a>
+            <a href="{% url 'account_signup' %}"
+               class="px-5 py-2.5 text-sm font-bold rounded-full dark:text-white text-slate-900 transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-sky-500/25 hover:-translate-y-px"
+               style="background:linear-gradient(135deg,#0284c7,#0ea5e9,#10b981);">
+              Join Free →
+            </a>
+          {% endif %}
+        </div>
+
+        <!-- ── MOBILE HAMBURGER ──────────────────────────────────────────── -->
+        <button @click="open = !open"
+                class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 dark:text-gray-300 text-slate-700 hover:text-white hover:dark:bg-white/10 bg-black/5"
+                id="mobile-menu-btn">
+          <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          <svg x-show="open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- ── MOBILE MENU ─────────────────────────────────────────────────────── -->
+    <div x-show="open"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 -translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-2"
+         class="lg:hidden border-t dark:border-white/8 border-black/10 dark:bg-slate-900/95 bg-white/95 backdrop-blur-xl">
+      <div class="max-w-7xl mx-auto px-4 py-5 space-y-1">
+        <!-- Mobile Theme Toggle -->
+        <button @click="toggleTheme()" class="flex w-full items-center gap-3 px-4 py-3 rounded-xl dark:text-gray-300 text-slate-700 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold">
+          <span x-show="isDark" class="flex items-center gap-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+            Light Mode
+          </span>
+          <span x-show="!isDark" class="flex items-center gap-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            Dark Mode
+          </span>
+        </button>
+        <a href="{% url 'home' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-gray-300 text-slate-700 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Home</a>
+        <a href="{% url 'about' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-gray-300 text-slate-700 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> About Us</a>
+        <a href="{% url 'books' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-gray-300 text-slate-700 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg> Books</a>
+        <a href="{% url 'authors' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-gray-300 text-slate-700 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg> Authors</a>
+        <a href="{% url 'publications' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-gray-300 text-slate-700 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg> Publications</a>
+        <a href="{% url 'membership' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-gray-300 text-slate-700 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg> Membership</a>
+        <div class="h-px bg-white/8 my-2"></div>
+        {% if user.is_authenticated %}
+          <a href="{% url 'cart' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sky-400 hover:text-white hover:bg-white/8 transition-all font-semibold text-sm">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            My Cart ({% if cart_count %}{{ cart_count }}{% else %}0{% endif %})
+          </a>
+          <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-gray-300 text-slate-700 hover:text-white hover:bg-white/8 transition-all font-semibold text-sm"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> My Dashboard</a>
+          {% if user.is_staff %}
+          <a href="{% url 'admin_dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-400 hover:text-white hover:bg-white/8 transition-all font-semibold text-sm"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Admin Panel</a>
+          {% endif %}
+          <a href="{% url 'account_logout' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-white/8 transition-all text-sm font-semibold"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Logout</a>
+        {% else %}
+          <a href="{% url 'account_login' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-gray-300 text-slate-700 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg> Sign In</a>
+          <a href="{% url 'account_signup' %}" class="block px-4 py-3 rounded-xl dark:text-white text-slate-900 font-bold text-center text-sm mt-1"
+             style="background:linear-gradient(135deg,#0284c7,#0ea5e9,#10b981);">Join Free →</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── DJANGO MESSAGES ──────────────────────────────────────────────────────── -->
+  {% if messages %}
+  <div class="fixed top-20 right-4 z-50 space-y-3 max-w-sm w-full" id="messages-container">
+    {% for message in messages %}
+    <div class="glass-dark rounded-xl p-4 shadow-2xl border-l-4 animate-slide-up flex items-start gap-3
+      {% if message.tags == 'success' %}border-emerald-500{% elif message.tags == 'error' %}border-red-500{% elif message.tags == 'warning' %}border-yellow-500{% else %}border-primary-500{% endif %}"
+         id="msg-{{ forloop.counter }}">
+      <span class="flex-shrink-0 mt-0.5">
+        {% if message.tags == 'success' %}<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>{% elif message.tags == 'error' %}<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>{% elif message.tags == 'warning' %}<svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>{% else %}<svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>{% endif %}
+      </span>
+      <div class="flex-1">
+        <p class="text-sm dark:text-gray-200 text-slate-800 leading-relaxed">{{ message }}</p>
+      </div>
+      <button onclick="this.closest('div[id^=msg]').remove()" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 ml-2 flex-shrink-0">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  <script>
+    setTimeout(() => {
+      document.querySelectorAll('[id^="msg-"]').forEach(el => {
+        el.style.transition = 'opacity 0.5s';
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 500);
+      });
+    }, 5000);
+  </script>
+  {% endif %}
+
+  <!-- ─── MAIN CONTENT ─────────────────────────────────────────────────────────── -->
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ─── FOOTER ───────────────────────────────────────────────────────────────── -->
+  <footer style="background:linear-gradient(to bottom,#060d1a,#080f1d);" class="mt-20 relative overflow-hidden">
+
+    <!-- Top gradient border -->
+    <div class="h-px w-full" style="background:linear-gradient(90deg,transparent,#0ea5e9 30%,#10b981 70%,transparent);"></div>
+
+    <!-- Subtle background orbs -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+      <div class="absolute -bottom-40 -left-40 w-96 h-96 rounded-full opacity-5 blur-3xl" style="background:radial-gradient(circle,#0ea5e9,transparent);"></div>
+      <div class="absolute -top-20 right-20 w-64 h-64 rounded-full opacity-5 blur-3xl" style="background:radial-gradient(circle,#10b981,transparent);"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <!-- Main footer grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 pt-16 pb-12">
+
+        <!-- ── Brand column ───────────────────────────────────────────────── -->
+        <div class="lg:col-span-1 space-y-5">
+          <a href="{% url 'home' %}" class="inline-flex items-center gap-3 group">
+            {% load static %}
+            <img src="{% static 'images/logo.png' %}" alt="YCL Logo"
+                 class="w-11 h-11 object-contain rounded-xl drop-shadow-[0_0_10px_rgba(14,165,233,0.5)] group-hover:scale-110 transition-transform duration-300" />
+            <div class="flex flex-col leading-none">
+              <span class="font-display font-bold text-lg tracking-tight"
+                    style="background:linear-gradient(135deg,#fff 0%,#e0f2fe 40%,#38bdf8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+                Youth Club
+              </span>
+              <span class="text-[9px] font-bold tracking-[0.25em] uppercase mt-0.5"
+                    style="background:linear-gradient(90deg,#0ea5e9,#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+                Library
+              </span>
+            </div>
+          </a>
+          <p class="text-slate-400 text-sm leading-relaxed max-w-xs">
+            Chattogram's premier community library. Read, learn, and grow with thousands of titles available to buy or borrow.
+          </p>
+          <!-- Social icons -->
+          <div class="flex flex-wrap gap-3 pt-1">
+            {% for link in active_social_links %}
+            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="footer-social-btn" aria-label="{{ link.name }}">
+              {% if link.icon_type == 'facebook' %}
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              {% elif link.icon_type == 'instagram' %}
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              {% elif link.icon_type == 'whatsapp' %}
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              {% elif link.icon_type == 'telegram' %}
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .02c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.89 8.243l-1.996 9.417c-.15.666-.547.83-.105.516l-3.04-2.24-1.467 1.412c-.162.162-.3.3-.612.3l.218-3.1 5.642-5.1c.245-.218-.053-.34-.378-.124l-6.974 4.39-3.003-.94c-.653-.204-.666-.653.136-.967l11.73-4.522c.542-.197 1.017.127.848.868z"/></svg>
+              {% elif link.icon_type == 'linkedin' %}
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+              {% else %}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+              {% endif %}
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- ── Explore ──────────────────────────────────────────────────── -->
+        <div>
+          <h4 class="font-display font-semibold text-white text-sm tracking-wider uppercase mb-5 flex items-center gap-2">
+            <span class="w-5 h-px" style="background:linear-gradient(90deg,#0ea5e9,#10b981);"></span>
+            Explore
+          </h4>
+          <ul class="space-y-3">
+            <li><a href="{% url 'home' %}" class="footer-link">Home</a></li>
+            <li><a href="{% url 'about' %}" class="footer-link">About Us</a></li>
+            <li><a href="{% url 'books' %}" class="footer-link">All Books</a></li>
+            <li><a href="{% url 'authors' %}" class="footer-link">Authors</a></li>
+            <li><a href="{% url 'publications' %}" class="footer-link">Publications</a></li>
+            <li><a href="{% url 'categories' %}" class="footer-link">Categories</a></li>
+          </ul>
+        </div>
+
+        <!-- ── Membership ─────────────────────────────────────────────── -->
+        <div>
+          <h4 class="font-display font-semibold text-white text-sm tracking-wider uppercase mb-5 flex items-center gap-2">
+            <span class="w-5 h-px" style="background:linear-gradient(90deg,#0ea5e9,#10b981);"></span>
+            Membership
+          </h4>
+          <ul class="space-y-3">
+            <li><a href="{% url 'membership' %}" class="footer-link">View Plans</a></li>
+            {% if user.is_authenticated %}
+              <li><a href="{% url 'dashboard' %}" class="footer-link">My Dashboard</a></li>
+              <li><a href="{% url 'dashboard' %}" class="footer-link">Order History</a></li>
+            {% else %}
+              <li><a href="{% url 'account_signup' %}" class="footer-link">Register Free</a></li>
+              <li><a href="{% url 'account_login' %}" class="footer-link">Sign In</a></li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <!-- ── Contact ─────────────────────────────────────────────────── -->
+        <div>
+          <h4 class="font-display font-semibold text-white text-sm tracking-wider uppercase mb-5 flex items-center gap-2">
+            <span class="w-5 h-px" style="background:linear-gradient(90deg,#0ea5e9,#10b981);"></span>
+            Contact
+          </h4>
+          <ul class="space-y-4">
+            <li class="flex items-start gap-3.5 group">
+              <span class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 bg-sky-500/10 border border-sky-500/25 group-hover:bg-sky-500/20 group-hover:scale-110 text-sky-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </span>
+              <span class="text-slate-300 text-sm leading-relaxed pt-1 select-all group-hover:text-white transition-colors">Opposite to International Convention Center, Kazir Dewri, Chattogram</span>
+            </li>
+            <li class="flex items-center gap-3.5 group">
+              <a href="tel:{{ BKASH_NUMBER }}" class="flex items-center gap-3.5 w-full">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 bg-emerald-500/10 border border-emerald-500/25 group-hover:bg-emerald-500/20 group-hover:scale-110 text-emerald-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                </span>
+                <span class="text-slate-300 text-sm group-hover:text-white transition-colors">{{ BKASH_NUMBER }}</span>
+              </a>
+            </li>
+            <li class="flex items-center gap-3.5 group">
+              <a href="mailto:info@youthclublibrary.com" class="flex items-center gap-3.5 w-full">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 bg-amber-500/10 border border-amber-500/25 group-hover:bg-amber-500/20 group-hover:scale-110 text-amber-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </span>
+                <span class="text-slate-300 text-sm group-hover:text-white transition-colors">info@youthclublibrary.com</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="border-t dark:border-white/5 border-black/10 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-slate-500 text-xs">© {{ "now"|date:"Y" }} <span class="text-slate-400 font-medium">Youth Club Library</span>. All rights reserved.</p>
+        <div class="flex items-center gap-1 text-slate-500 text-xs">
+          <span>Built with</span>
+          <span class="text-red-500 mx-0.5">♥</span>
+          <span>for readers of Chattogram</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    .footer-link {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      color: #94a3b8; font-size: 0.875rem; font-weight: 500;
+      transition: color 0.2s, gap 0.2s;
+    }
+    .footer-link::before { content: '›'; opacity: 0; transition: opacity 0.2s; }
+    .footer-link:hover { color: #ffffff; gap: 0.5rem; }
+    .footer-link:hover::before { opacity: 1; }
+    .footer-social-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 2.25rem; height: 2.25rem; border-radius: 0.625rem;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      color: #94a3b8; transition: all 0.2s;
+    }
+    .footer-social-btn:hover {
+      background: rgba(14,165,233,0.12); border-color: rgba(14,165,233,0.3);
+      color: #38bdf8; transform: translateY(-2px);
+    }
+  </style>
+
+
+
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

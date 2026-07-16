@@ -1,0 +1,72 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl" x-data="{ cost: '{{ form.cost.value|default_if_none:"0.00" }}', isFree: {{ form.cost.value|default_if_none:0 }} == 0 }">
+
+  <div class="flex items-center gap-4 mb-8">
+    <a href="{% url 'admin_delivery_options' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
+    <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+  </div>
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
+      
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5 font-medium uppercase tracking-wider">Option Display Label <span class="text-red-400">*</span></label>
+        {{ form.label }}
+        <p class="text-gray-500 text-[10px] mt-1">For example: Free Delivery — Kazir Dewri, Home Delivery Inside CTG.</p>
+        {% if form.label.errors %}<p class="text-red-400 text-xs mt-1">{{ form.label.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5 font-medium uppercase tracking-wider">Unique Code <span class="text-red-400">*</span></label>
+        {{ form.code }}
+        <p class="text-gray-500 text-[10px] mt-1">A lowercase identifier with underscores (no spaces). For example: free_kazir_dewri, inside_ctg.</p>
+        {% if form.code.errors %}<p class="text-red-400 text-xs mt-1">{{ form.code.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <!-- Pricing Type Toggle (Free vs Paid) -->
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-2.5 font-medium uppercase tracking-wider">Delivery Option Type</label>
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button" @click="isFree = true; cost = '0.00';"
+                  :class="isFree ? 'border-primary-500 bg-primary-500/10' : 'dark:border-white/10 border-black/10'"
+                  class="glass rounded-xl p-3 border-2 transition-all text-center text-sm font-semibold dark:text-white text-slate-900">
+            🎁 Free Option
+          </button>
+          <button type="button" @click="isFree = false;"
+                  :class="!isFree ? 'border-amber-500 bg-amber-500/10' : 'dark:border-white/10 border-black/10'"
+                  class="glass rounded-xl p-3 border-2 transition-all text-center text-sm font-semibold dark:text-white text-slate-900">
+            💳 Paid Option
+          </button>
+        </div>
+      </div>
+
+      <!-- Delivery Cost input -->
+      <div x-show="!isFree" x-transition>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5 font-medium uppercase tracking-wider">Delivery Charge (৳) <span class="text-red-400">*</span></label>
+        <input type="number" name="cost" x-model="cost" step="0.01" class="form-input" placeholder="e.g. 80.00" />
+        {% if form.cost.errors %}<p class="text-red-400 text-xs mt-1">{{ form.cost.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <input type="hidden" name="cost" x-bind:value="cost" x-show="isFree" />
+
+      <div class="pt-2">
+        <label class="flex items-center gap-2.5 cursor-pointer">
+          {{ form.is_active }}
+          <span class="text-sm dark:text-gray-300 text-slate-700 font-medium">Active (visible on user checkout forms)</span>
+        </label>
+        {% if form.is_active.errors %}<p class="text-red-400 text-xs mt-1">{{ form.is_active.errors|join:", " }}</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
+      <a href="{% url 'admin_delivery_options' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

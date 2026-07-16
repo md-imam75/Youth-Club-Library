@@ -1,0 +1,107 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Book Requests{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">Book Requests</h2>
+      <p class="text-xs dark:text-gray-500 text-slate-500 mt-1">Review and manage book purchase/sourcing requests from readers.</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by name, contact, or book title..."
+           class="form-input sm:col-span-2" />
+    
+    <div class="flex gap-2">
+      <select name="status" class="form-input flex-1">
+        <option value="">— All Statuses —</option>
+        {% for code, label in status_choices %}
+          <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-primary px-5">Filter</button>
+      {% if q or selected_status %}
+        <a href="?" class="btn-primary px-4 flex items-center justify-center" style="background:rgba(255,255,255,0.1);">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
+    <table class="w-full text-sm min-w-[850px]">
+      <thead>
+        <tr class="border-b border-white/8">
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Date / ID</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Customer</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Requested Items</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Status</th>
+          <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in requests %}
+        <tr class="table-row">
+          <td class="px-4 py-3 text-xs">
+            <div class="font-mono dark:text-gray-400 text-slate-600">REQ#{{ req.id }}</div>
+            <div class="dark:text-gray-500 text-slate-500 mt-0.5">{{ req.created_at|date:"d M Y, h:i A" }}</div>
+          </td>
+          <td class="px-4 py-3 text-xs">
+            <div class="font-semibold dark:text-white text-slate-900 text-sm">{{ req.name }}</div>
+            <div class="dark:text-gray-400 text-slate-600 mt-1">📞 {{ req.phone }}</div>
+            {% if req.email %}<div class="dark:text-gray-500 text-slate-500">✉️ {{ req.email }}</div>{% endif %}
+            {% if req.address %}<div class="text-gray-600 mt-1 max-w-xs truncate" title="{{ req.address }}">📍 {{ req.address }}</div>{% endif %}
+          </td>
+          <td class="px-4 py-3 text-xs">
+            <ul class="space-y-1">
+              {% for item in req.items.all %}
+              <li class="dark:text-gray-300 text-slate-700">
+                <span class="font-bold dark:text-white text-slate-900">"{{ item.book_title }}"</span>
+                {% if item.author %}by {{ item.author }}{% endif %}
+                {% if item.publication %}({{ item.publication }}){% endif %}
+                <span class="text-sky-400 font-bold ml-1">x{{ item.quantity }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+          </td>
+          <td class="px-4 py-3 text-xs">
+            {% if req.status == 'Pending' %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">Pending Review</span>
+            {% elif req.status == 'Reviewed' %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Reviewed</span>
+            {% else %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Completed</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right text-xs">
+            <div class="flex items-center justify-end gap-3">
+              <!-- Action status dropdown Form -->
+              <form method="post" action="{% url 'admin_book_request_action' req.pk %}" class="flex items-center gap-1.5">
+                {% csrf_token %}
+                <select name="status" onchange="this.form.submit()" class="form-input py-1 px-2.5 text-xs rounded-lg" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
+                  {% for val, name in status_choices %}
+                    <option value="{{ val }}" {% if req.status == val %}selected{% endif %}>Set: {{ name }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+              <a href="{% url 'admin_book_request_delete' req.pk %}" class="btn-danger text-xs py-1 px-3">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-16 dark:text-gray-500 text-slate-500">No book requests found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% include "includes/pagination.html" with page_obj=requests %}
+</div>
+{% endblock %}

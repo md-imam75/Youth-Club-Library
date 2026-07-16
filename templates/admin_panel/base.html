@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <title>{% block title %}Admin Panel{% endblock %} — Youth Club Library</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, body { font-family: 'Inter', sans-serif; }
+    .glass {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .dark .glass {
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #475569;
+      transition: all 0.25s ease;
+      margin-bottom: 0.25rem;
+    }
+    .dark .sidebar-link {
+      color: #94a3b8;
+    }
+    .sidebar-link:hover {
+      color: #0f172a;
+      background-color: rgba(0, 0, 0, 0.03);
+    }
+    .dark .sidebar-link:hover {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(16, 185, 129, 0.04));
+      color: #0ea5e9;
+      border-left: 3px solid #0ea5e9;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      font-weight: 600;
+    }
+    .dark .sidebar-link.active {
+      color: #38bdf8;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+      transition: all 0.25s ease;
+    }
+    .dark .stat-card {
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    }
+    .stat-card:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.4);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9, #10b981);
+      color: #fff;
+      font-weight: 600;
+      padding: 0.5rem 1.25rem;
+      border-radius: 0.75rem;
+      transition: all 0.25s ease;
+      font-size: 0.875rem;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+    }
+    .btn-primary:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(14, 165, 233, 0.25);
+    }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #f87171;
+      font-weight: 600;
+      padding: 0.4rem 1rem;
+      border-radius: 0.75rem;
+      transition: all 0.25s ease;
+      font-size: 0.8rem;
+    }
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.16);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+    .btn-success {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      font-weight: 600;
+      padding: 0.4rem 1rem;
+      border-radius: 0.75rem;
+      transition: all 0.25s ease;
+      font-size: 0.8rem;
+    }
+    .btn-success:hover {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    .btn-warn {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      color: #fbbf24;
+      font-weight: 600;
+      padding: 0.4rem 1rem;
+      border-radius: 0.75rem;
+      transition: all 0.25s ease;
+      font-size: 0.8rem;
+    }
+    .btn-warn:hover {
+      background: rgba(245, 158, 11, 0.16);
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+    .badge-pending  { background: rgba(245, 158, 11, 0.08); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); padding: 2px 8px; border-radius: 9999px; font-weight: 500; font-size: 0.7rem; }
+    .badge-paid     { background: rgba(16, 185, 129, 0.08); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 9999px; font-weight: 500; font-size: 0.7rem; }
+    .badge-active   { background: rgba(16, 185, 129, 0.08); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 9999px; font-weight: 500; font-size: 0.7rem; }
+    .badge-expired  { background: rgba(239, 68, 68, 0.08); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); padding: 2px 8px; border-radius: 9999px; font-weight: 500; font-size: 0.7rem; }
+    .badge-failed   { background: rgba(239, 68, 68, 0.08); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); padding: 2px 8px; border-radius: 9999px; font-weight: 500; font-size: 0.7rem; }
+    .form-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 0.75rem;
+      padding: 0.65rem 0.875rem;
+      color: #0f172a;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+    .dark .form-input {
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #f1f5f9;
+    }
+    .form-input:focus {
+      border-color: rgba(14, 165, 233, 0.4);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    }
+    .dark .form-input:focus {
+      background: rgba(15, 23, 42, 0.65);
+    }
+    .form-input option { background: white; color: #0f172a; }
+    .dark .form-input option { background: #0f172a; color: #f1f5f9; }
+    .table-row { border-bottom: 1px solid rgba(0, 0, 0, 0.05); transition: all 0.2s ease; }
+    .dark .table-row { border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
+    .table-row:hover { background: rgba(0, 0, 0, 0.02); }
+    .dark .table-row:hover { background: rgba(255, 255, 255, 0.015); }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    .dark ::-webkit-scrollbar-track { background: #070d19; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb { background: #1e293b; }
+    
+    /* Modern file input button styling */
+    input[type="file"] {
+      color: #94a3b8;
+      font-size: 0.875rem;
+    }
+    input[type="file"]::file-selector-button {
+      background: rgba(14, 165, 233, 0.08);
+      border: 1px solid rgba(14, 165, 233, 0.25);
+      color: #38bdf8;
+      padding: 0.55rem 1.1rem;
+      border-radius: 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      margin-right: 1rem;
+    }
+    input[type="file"]::file-selector-button:hover {
+      background: rgba(14, 165, 233, 0.18);
+      border-color: rgba(14, 165, 233, 0.4);
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="dark:bg-[#050a14] bg-slate-50 dark:text-slate-100 text-slate-900 min-h-screen" x-data="{ sidebarOpen: true, isDark: document.documentElement.classList.contains('dark'), toggleTheme() { this.isDark = !this.isDark; if (this.isDark) { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark'); } else { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light'); } } }">
+
+<div class="flex min-h-screen">
+
+  <!-- ── SIDEBAR ────────────────────────────────────────────────────────────── -->
+  <aside :class="sidebarOpen ? 'w-64' : 'w-16' flex-shrink-0 flex flex-col transition-all duration-300 border-r dark:border-white/5 border-black/10 dark:bg-[#060c17]/70 bg-white/70 backdrop-blur-xl">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-4 py-5 border-b dark:border-white/5 border-black/10">
+      {% load static %}
+      <img src="{% static 'images/logo.png' %}?v=2" alt="YCL Logo" class="w-9 h-9 object-contain rounded-full border dark:border-white/10 border-black/10" />
+      <div x-show="sidebarOpen" class="overflow-hidden">
+        <div class="dark:text-white text-slate-900 font-bold text-sm leading-tight">YCL Admin</div>
+        <div class="dark:text-gray-500 text-slate-500 text-xs">Staff Panel</div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1.5">
+      <a href="{% url 'admin_dashboard' %}"
+         class="sidebar-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span x-show="sidebarOpen">Dashboard</span>
+      </a>
+
+      <div class="px-4 pt-6 pb-1.5" x-show="sidebarOpen">
+        <p class="text-[10px] dark:text-gray-500 text-slate-500 uppercase tracking-widest font-bold">Members</p>
+      </div>
+
+      <a href="{% url 'admin_memberships' %}"
+         class="sidebar-link {% if request.resolver_match.url_name == 'admin_memberships' %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        <span x-show="sidebarOpen">Membership Requests</span>
+      </a>
+
+      <a href="{% url 'admin_users' %}"
+         class="sidebar-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span x-show="sidebarOpen">User Details</span>
+      </a>
+
+      <a href="{% url 'admin_plans' %}"
+         class="sidebar-link {% if 'plan' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        <span x-show="sidebarOpen">Membership Plans</span>
+      </a>
+
+      <div class="px-4 pt-6 pb-1.5" x-show="sidebarOpen">
+        <p class="text-[10px] dark:text-gray-500 text-slate-500 uppercase tracking-widest font-bold">Catalog</p>
+      </div>
+
+      <a href="{% url 'admin_books' %}"
+         class="sidebar-link {% if 'book' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        <span x-show="sidebarOpen">Books</span>
+      </a>
+
+      <div class="px-4 pt-6 pb-1.5" x-show="sidebarOpen">
+        <p class="text-[10px] dark:text-gray-500 text-slate-500 uppercase tracking-widest font-bold">Orders</p>
+      </div>
+
+      <a href="{% url 'admin_orders' %}"
+         class="sidebar-link {% if request.resolver_match.url_name == 'admin_orders' and request.GET.type != 'Borrow' %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        <span x-show="sidebarOpen">All Orders</span>
+      </a>
+
+      <a href="{% url 'admin_orders' %}?type=Borrow"
+         class="sidebar-link {% if request.resolver_match.url_name == 'admin_orders' and request.GET.type == 'Borrow' %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        <span x-show="sidebarOpen">Borrow Requests</span>
+      </a>
+
+      <a href="{% url 'admin_book_requests' %}"
+         class="sidebar-link {% if 'admin_book_request' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0H4m16 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2v-1m16 0H4"/></svg>
+        <span x-show="sidebarOpen">Book Requests</span>
+      </a>
+
+      <div class="px-4 pt-6 pb-1.5" x-show="sidebarOpen">
+        <p class="text-[10px] dark:text-gray-500 text-slate-500 uppercase tracking-widest font-bold">Billing & Reports</p>
+      </div>
+
+      <a href="{% url 'admin_bill_list' %}"
+         class="sidebar-link {% if 'billing' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span x-show="sidebarOpen">Walk-in Bills</span>
+      </a>
+
+      <a href="{% url 'admin_sales_report' %}"
+         class="sidebar-link {% if request.resolver_match.url_name == 'admin_sales_report' %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"/></svg>
+        <span x-show="sidebarOpen">Sales Reports</span>
+      </a>
+
+      <div class="px-4 pt-6 pb-1.5" x-show="sidebarOpen">
+        <p class="text-[10px] dark:text-gray-500 text-slate-500 uppercase tracking-widest font-bold">Settings</p>
+      </div>
+
+      <a href="{% url 'admin_social_links' %}"
+         class="sidebar-link {% if 'social_link' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        <span x-show="sidebarOpen">Social Media Links</span>
+      </a>
+
+      <a href="{% url 'admin_testimonials' %}"
+         class="sidebar-link {% if 'testimonial' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <span x-show="sidebarOpen">Manage Testimonials</span>
+      </a>
+
+      <a href="{% url 'admin_delivery_options' %}"
+         class="sidebar-link {% if 'delivery_option' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>
+        <span x-show="sidebarOpen">Delivery Options</span>
+      </a>
+    </nav>
+
+    <!-- Bottom: link back to site -->
+    <div class="p-4 border-t dark:border-white/5 border-black/10">
+      <a href="{% url 'home' %}" class="sidebar-link">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span x-show="sidebarOpen">Home</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── MAIN AREA ──────────────────────────────────────────────────────────── -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top bar -->
+    <header class="flex items-center justify-between px-6 py-4 border-b dark:border-white/5 border-black/10 dark:bg-[#080f1d] bg-slate-50">
+      <div class="flex items-center gap-4">
+        <button @click="sidebarOpen = !sidebarOpen"
+                class="w-8 h-8 flex items-center justify-center rounded-lg hover:dark:bg-white/10 bg-black/5 transition-colors dark:text-gray-400 text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <h1 class="dark:text-white text-slate-900 font-semibold text-base">{{ page_title|default:"Admin Panel" }}</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- Pending alerts badge -->
+        {% if pending_memberships %}
+        <a href="{% url 'admin_memberships' %}?status=Pending"
+           class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold badge-pending">
+          <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+          {{ pending_memberships }} Pending
+        </a>
+        {% endif %}
+        <div class="flex items-center gap-3">
+          <!-- Theme Toggle Button -->
+          <button @click="toggleTheme()" class="p-2 rounded-lg hover:dark:bg-white/10 bg-black/5 transition-colors dark:text-gray-400 text-slate-600" title="Toggle Theme">
+            <!-- Sun Icon (shown in dark mode) -->
+            <svg x-show="isDark" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+            <!-- Moon Icon (shown in light mode) -->
+            <svg x-show="!isDark" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </button>
+
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white">
+            {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+          </div>
+          <div class="hidden sm:block">
+            <div class="dark:text-white text-slate-900 text-xs font-medium">{{ request.user.get_full_name }}</div>
+            <div class="dark:text-gray-500 text-slate-500 text-xs">{% if request.user.is_superuser %}Super Admin{% else %}Staff{% endif %}</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Flash messages -->
+    {% if messages %}
+    <div class="px-6 pt-4 space-y-2">
+      {% for msg in messages %}
+      <div class="flex items-center gap-3 p-3 rounded-xl border text-sm
+        {% if msg.tags == 'success' %}border-emerald-500/30 bg-emerald-500/10 text-emerald-400
+        {% elif msg.tags == 'error' %}border-red-500/30 bg-red-500/10 text-red-400
+        {% elif msg.tags == 'warning' %}border-yellow-500/30 bg-yellow-500/10 text-yellow-400
+        {% else %}border-sky-500/30 bg-sky-500/10 text-sky-400{% endif %}">
+        <span class="flex-1">{{ msg }}</span>
+        <button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Page content -->
+    <main class="flex-1 p-6 overflow-auto">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

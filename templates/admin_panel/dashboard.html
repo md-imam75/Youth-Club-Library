@@ -1,0 +1,221 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-7xl">
+
+  <!-- ── STATS GRID ─────────────────────────────────────────────────────────── -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+    <!-- Total Revenue -->
+    <div class="stat-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Total Revenue</span>
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm font-bold">৳</div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">৳{{ total_revenue|floatformat:0 }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">৳{{ month_revenue|floatformat:0 }} this month</div>
+    </div>
+
+    <!-- Books -->
+    <div class="stat-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Books</span>
+        <div class="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">{{ total_books }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">in catalog</div>
+    </div>
+
+    <!-- Total Users -->
+    <div class="stat-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Total Users</span>
+        <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">{{ total_users }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">{{ active_memberships }} active members</div>
+    </div>
+
+    <!-- Pending -->
+    <div class="stat-card rounded-2xl p-5 {% if pending_memberships > 0 %}border border-yellow-500/30{% endif %}">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Pending Requests</span>
+        <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">{{ pending_memberships }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">membership requests + {{ pending_orders }} orders</div>
+    </div>
+
+    <!-- Sales Orders -->
+    <div class="stat-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Sales Orders</span>
+        <div class="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">{{ total_buy_orders }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">purchase orders total</div>
+    </div>
+
+    <!-- Borrows -->
+    <div class="stat-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Borrows</span>
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">{{ total_borrow_orders }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">borrow orders total</div>
+    </div>
+
+    <!-- Overdue -->
+    <div class="stat-card rounded-2xl p-5 {% if overdue_borrows > 0 %}border border-red-500/30{% endif %}">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Overdue</span>
+        <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold {% if overdue_borrows > 0 %}text-red-400{% else %}dark:text-white text-slate-900{% endif %}">{{ overdue_borrows }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">overdue borrow returns</div>
+    </div>
+
+    <!-- Active Members -->
+    <div class="stat-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Active Members</span>
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">{{ active_memberships }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">active memberships</div>
+    </div>
+  </div>
+
+  <!-- ── QUICK ACTIONS ──────────────────────────────────────────────────────── -->
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <a href="{% url 'admin_book_add' %}"
+       class="stat-card rounded-2xl p-5 flex items-center gap-4 hover:border-sky-500/40 border border-transparent transition-all group">
+      <div class="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center text-sky-400 text-xl font-bold group-hover:scale-110 transition-transform">+</div>
+      <div>
+        <div class="dark:text-white text-slate-900 font-semibold text-sm">Add Book</div>
+        <div class="dark:text-gray-500 text-slate-500 text-xs">Add new to catalog</div>
+      </div>
+    </a>
+    <a href="{% url 'admin_memberships' %}?status=Pending"
+       class="stat-card rounded-2xl p-5 flex items-center gap-4 hover:border-yellow-500/40 border {% if pending_memberships > 0 %}border-yellow-500/30{% else %}border-transparent{% endif %} transition-all group">
+      <div class="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center text-yellow-400 group-hover:scale-110 transition-transform">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      </div>
+      <div>
+        <div class="dark:text-white text-slate-900 font-semibold text-sm">Review Requests</div>
+        <div class="dark:text-gray-500 text-slate-500 text-xs">{{ pending_memberships }} pending</div>
+      </div>
+    </a>
+    <a href="{% url 'admin_orders' %}?status=Pending"
+       class="stat-card rounded-2xl p-5 flex items-center gap-4 hover:border-emerald-500/40 border border-transparent transition-all group">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+      </div>
+      <div>
+        <div class="dark:text-white text-slate-900 font-semibold text-sm">Mark Payments</div>
+        <div class="dark:text-gray-500 text-slate-500 text-xs">{{ pending_orders }} unpaid orders</div>
+      </div>
+    </a>
+    <a href="{% url 'admin_plan_add' %}"
+       class="stat-card rounded-2xl p-5 flex items-center gap-4 hover:border-purple-500/40 border border-transparent transition-all group">
+      <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+      </div>
+      <div>
+        <div class="dark:text-white text-slate-900 font-semibold text-sm">Add Plan</div>
+        <div class="dark:text-gray-500 text-slate-500 text-xs">New membership tier</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+
+    <!-- ── PENDING MEMBERSHIPS ─────────────────────────────────────────────── -->
+    <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b dark:border-white/5 border-black/10">
+        <h3 class="dark:text-white text-slate-900 font-semibold text-sm">Pending Membership Requests</h3>
+        <a href="{% url 'admin_memberships' %}" class="text-xs text-sky-400 hover:text-sky-300">View all →</a>
+      </div>
+      <div class="divide-y divide-white/5">
+        {% for m in recent_memberships %}
+        <div class="flex items-center justify-between p-5 hover:dark:bg-white/5 bg-black/5 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+              {{ m.user.first_name|first|upper }}{{ m.user.last_name|first|upper }}
+            </div>
+            <div>
+              <div class="dark:text-white text-slate-900 text-xs font-semibold">{{ m.user.get_full_name }}</div>
+              <div class="dark:text-gray-400 text-slate-600 text-xs mt-0.5">{{ m.plan.name|default:"No plan" }} · <span class="text-emerald-400 font-medium">{{ m.payment_method }}</span></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <form method="post" action="{% url 'admin_membership_action' m.pk %}" class="inline-block">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="approve" />
+              <button type="submit" class="btn-success text-xs px-2.5 py-1">Approve</button>
+            </form>
+            <form method="post" action="{% url 'admin_membership_action' m.pk %}" class="inline-block">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="decline" />
+              <button type="submit" class="btn-danger text-xs px-2.5 py-1">Decline</button>
+            </form>
+          </div>
+        </div>
+        {% empty %}
+        <div class="p-8 text-center dark:text-gray-500 text-slate-500 text-sm">No pending requests</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── RECENT ORDERS ───────────────────────────────────────────────────── -->
+    <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b dark:border-white/5 border-black/10">
+        <h3 class="dark:text-white text-slate-900 font-semibold text-sm">Recent Orders</h3>
+        <a href="{% url 'admin_orders' %}" class="text-xs text-sky-400 hover:text-sky-300">View all →</a>
+      </div>
+      <div class="divide-y divide-white/5">
+        {% for order in recent_orders %}
+        <div class="flex items-center justify-between p-5 hover:dark:bg-white/5 bg-black/5 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="px-2 py-1 rounded-lg dark:bg-white/5 bg-black/5 flex items-center justify-center text-[9px] font-mono font-bold dark:text-gray-400 text-slate-600 flex-shrink-0 border dark:border-white/10 border-black/10">
+              {{ order.order_number }}
+            </div>
+            <div>
+              <div class="dark:text-white text-slate-900 text-xs font-semibold">{{ order.book.title|truncatechars:35 }}</div>
+              <div class="dark:text-gray-400 text-slate-600 text-[10px] mt-0.5">{% if order.user %}{{ order.user.get_full_name }}{% else %}Walk-in: {{ order.customer_name }}{% endif %} · <span class="text-sky-400 font-medium">{{ order.order_type }}</span>{% if order.quantity > 1 %} (Qty: {{ order.quantity }}){% endif %} · {{ order.created_at|date:"d M, H:i" }}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 flex-shrink-0">
+            <span class="dark:text-white text-slate-900 text-xs font-bold">৳{{ order.total_cost|floatformat:0 }}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold
+              {% if order.payment_status == 'Paid' %}badge-paid
+              {% elif order.payment_status == 'Failed' %}badge-failed
+              {% else %}badge-pending{% endif %}">
+              {{ order.payment_status }}
+            </span>
+          </div>
+        </div>
+        {% empty %}
+        <div class="p-8 text-center dark:text-gray-500 text-slate-500 text-sm">No orders yet</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

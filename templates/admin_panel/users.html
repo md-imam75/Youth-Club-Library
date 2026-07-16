@@ -1,0 +1,91 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h2 class="text-2xl font-bold dark:text-white text-slate-900 mb-1">User Management</h2>
+      <p class="dark:text-gray-400 text-slate-600 text-sm">View user borrow statistics, returns, and profile summaries.</p>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <form method="get" class="flex gap-3">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by name, email, or username..."
+           class="form-input flex-1" />
+    <button type="submit" class="btn-primary px-5">Search</button>
+    {% if q %}
+    <a href="?" class="btn-primary px-4" style="background:rgba(255,255,255,0.1);">Clear</a>
+    {% endif %}
+  </form>
+
+  <!-- Users Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
+    <table class="w-full text-sm min-w-[700px]">
+      <thead>
+        <tr class="border-b border-white/8 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">
+          <th class="text-left px-4 py-3">User</th>
+          <th class="text-left px-4 py-3">Email</th>
+          <th class="text-left px-4 py-3">Status</th>
+          <th class="text-left px-4 py-3">Role</th>
+          <th class="text-left px-4 py-3">Joined Date</th>
+          <th class="text-left px-4 py-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr class="table-row">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              {% if u.profile_image %}
+                <img src="{{ u.profile_image.url }}" class="w-8 h-8 rounded-full object-cover border dark:border-white/10 border-black/10" alt="avatar" />
+              {% else %}
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold dark:text-white text-slate-900"
+                     style="background:linear-gradient(135deg,#0ea5e9,#10b981);">
+                  {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                </div>
+              {% endif %}
+              <div>
+                <div class="dark:text-white text-slate-900 text-xs font-semibold">{{ u.get_full_name }}</div>
+                <div class="dark:text-gray-500 text-slate-500 text-[10px] font-mono">@{{ u.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs">{{ u.email }}</td>
+          <td class="px-4 py-3">
+            {% if u.has_active_membership %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold badge-active">Active Member</span>
+            {% else %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold dark:text-gray-400 text-slate-600 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10">No Plan</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-xs">
+            {% if u.is_staff %}
+              <span class="text-emerald-400 font-semibold">Staff / Admin</span>
+            {% else %}
+              <span class="dark:text-gray-400 text-slate-600">Library User</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 dark:text-gray-500 text-slate-500 text-xs">{{ u.date_joined|date:"d M Y" }}</td>
+          <td class="px-4 py-3">
+            <a href="{% url 'admin_user_detail' u.pk %}" class="btn-primary text-xs py-1 px-3" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);">
+              View Statistics
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center py-16 dark:text-gray-500 text-slate-500">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% include "includes/pagination.html" with page_obj=users %}
+</div>
+{% endblock %}

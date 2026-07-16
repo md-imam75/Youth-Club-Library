@@ -1,0 +1,54 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+
+  <div class="flex items-center gap-4 mb-8">
+    <a href="{% url 'admin_categories' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
+    <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+
+    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Category Name <span class="text-red-400">*</span></label>
+        {{ form.name }}
+        {% if form.name.errors %}<p class="text-red-400 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Description</label>
+        {{ form.description }}
+        {% if form.description.errors %}<p class="text-red-400 text-xs mt-1">{{ form.description.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Category Image</label>
+        {% if cat and cat.image %}
+        <div class="flex items-center gap-4 mb-3">
+          <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-16 h-10 object-cover border dark:border-white/10 border-black/10 rounded" />
+          <p class="dark:text-gray-500 text-slate-500 text-xs">Current image — upload a new file to replace it.</p>
+        </div>
+        {% endif %}
+        {{ form.image }}
+        {% if form.image.errors %}<p class="text-red-400 text-xs mt-1">{{ form.image.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">URL Slug (optional)</label>
+        {{ form.slug }}
+        <p class="text-gray-600 text-xs mt-1">Short identifier used in URLs. Leave blank to generate automatically from name.</p>
+        {% if form.slug.errors %}<p class="text-red-400 text-xs mt-1">{{ form.slug.errors|join:", " }}</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
+      <a href="{% url 'admin_categories' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

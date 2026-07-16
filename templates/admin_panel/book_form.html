@@ -1,0 +1,308 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_head %}
+<!-- Tom Select CSS -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet" />
+<style>
+  /* Custom modern overrides for Tom Select matching the glassmorphic dark theme and responsive light theme */
+  .ts-control {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 0.75rem !important;
+    color: #0f172a !important;
+    padding: 0.65rem 0.875rem !important;
+    font-size: 0.875rem !important;
+    transition: all 0.3s ease !important;
+    box-shadow: none !important;
+  }
+  .dark .ts-control {
+    background: rgba(15, 23, 42, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #f1f5f9 !important;
+  }
+  .ts-control input {
+    color: #0f172a !important;
+    font-family: inherit !important;
+  }
+  .dark .ts-control input {
+    color: #f1f5f9 !important;
+  }
+  .ts-wrapper.single .ts-control::after {
+    border-color: #94a3b8 transparent transparent transparent !important;
+    right: 15px !important;
+  }
+  .ts-wrapper.single.focus .ts-control {
+    border-color: rgba(14, 165, 233, 0.4) !important;
+    background: rgba(0, 0, 0, 0.04) !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+  }
+  .dark .ts-wrapper.single.focus .ts-control {
+    background: rgba(15, 23, 42, 0.65) !important;
+  }
+  .ts-dropdown {
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 0.75rem !important;
+    color: #0f172a !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    padding: 0.25rem !important;
+    margin-top: 5px !important;
+    z-index: 1000 !important;
+  }
+  .dark .ts-dropdown {
+    background: #0f172a !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #f1f5f9 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  }
+  .ts-dropdown .active {
+    background: rgba(14, 165, 233, 0.1) !important;
+    color: #0284c7 !important;
+  }
+  .dark .ts-dropdown .active {
+    background: rgba(14, 165, 233, 0.15) !important;
+    color: #38bdf8 !important;
+  }
+  .ts-dropdown .option {
+    padding: 0.55rem 0.75rem !important;
+    border-radius: 0.5rem !important;
+    cursor: pointer !important;
+    font-size: 0.875rem !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl">
+
+  <!-- Header -->
+  <div class="flex items-center gap-4 mb-8">
+    <a href="{% url 'admin_books' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+      <p class="dark:text-gray-500 text-slate-500 text-sm">All fields marked * are required.</p>
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- Basic Info -->
+    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10">
+      <h3 class="dark:text-white text-slate-900 font-semibold mb-5 flex items-center gap-2">
+        <span class="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400 text-xs">1</span>
+        Basic Information
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Title <span class="text-red-400">*</span></label>
+          {{ form.title }}
+          {% if form.title.errors %}<p class="text-red-400 text-xs mt-1">{{ form.title.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div class="grid sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Author</label>
+            {{ form.author }}
+          </div>
+          <div>
+            <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Publication</label>
+            {{ form.publication }}
+          </div>
+          <div>
+            <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Category</label>
+            {{ form.category }}
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Description</label>
+          {{ form.description }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Details -->
+    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10">
+      <h3 class="dark:text-white text-slate-900 font-semibold mb-5 flex items-center gap-2">
+        <span class="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400 text-xs">2</span>
+        Book Details
+      </h3>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">ISBN</label>
+          {{ form.isbn }}
+        </div>
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Pages</label>
+          {{ form.pages }}
+        </div>
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Language</label>
+          {{ form.language }}
+        </div>
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Edition</label>
+          {{ form.edition }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing -->
+    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10">
+      <h3 class="dark:text-white text-slate-900 font-semibold mb-5 flex items-center gap-2">
+        <span class="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs">3</span>
+        Pricing & Stock
+      </h3>
+      <div class="grid sm:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Regular Price (৳) <span class="text-red-400">*</span></label>
+          {{ form.regular_price }}
+          {% if form.regular_price.errors %}<p class="text-red-400 text-xs mt-1">{{ form.regular_price.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Offer / Sale Price (৳)</label>
+          {{ form.offer_price }}
+        </div>
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Buying / Cost Price (৳) <span class="text-red-400">*</span></label>
+          {{ form.buying_price }}
+          <p class="text-gray-600 text-xs mt-1">Internal — not shown to customers</p>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Stock Quantity</label>
+          {{ form.stock_quantity }}
+        </div>
+        <div class="flex items-center gap-3 mt-5">
+          <label class="flex items-center gap-2 cursor-pointer">
+            {{ form.can_borrow }}
+            <span class="text-sm dark:text-gray-300 text-slate-700">Allow borrowing</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flags & Cover -->
+    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10">
+      <h3 class="dark:text-white text-slate-900 font-semibold mb-5 flex items-center gap-2">
+        <span class="w-6 h-6 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400 text-xs">4</span>
+        Display Flags & Cover Image
+      </h3>
+      <div class="flex flex-wrap gap-6 mb-5">
+        <label class="flex items-center gap-2 cursor-pointer">
+          {{ form.is_featured }}
+          <span class="text-sm dark:text-gray-300 text-slate-700">Featured (shown on homepage)</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          {{ form.is_new }}
+          <span class="text-sm dark:text-gray-300 text-slate-700">New arrival</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          {{ form.is_upcoming }}
+          <span class="text-sm dark:text-gray-300 text-slate-700">Coming soon</span>
+        </label>
+      </div>
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Cover Image</label>
+        {% if book and book.cover_image %}
+        <div class="flex items-center gap-4 mb-3">
+          <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-16 h-24 object-cover rounded-lg" />
+          <p class="dark:text-gray-500 text-slate-500 text-xs">Current cover — upload a new file to replace it.</p>
+        </div>
+        {% endif %}
+        {{ form.cover_image }}
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="flex items-center gap-4">
+      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
+      <a href="{% url 'admin_books' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Tom Select JS -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const authorSelect = document.getElementById('id_author');
+    const pubSelect = document.getElementById('id_publication');
+    const catSelect = document.getElementById('id_category');
+
+    const ajaxCreateHandler = (modelType) => {
+      return function(input, callback) {
+        fetch('{% url "admin_create_ajax" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model_type: modelType,
+            name: input
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            callback({ value: data.id, text: data.name });
+          } else {
+            alert('Error creating item: ' + data.error);
+            callback(false);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Network error. Please try again.');
+          callback(false);
+        });
+      };
+    };
+
+    const renderOptionCreate = (data, escape) => {
+      return '<div class="create p-2 text-xs text-sky-400 font-semibold hover:bg-sky-500/10 cursor-pointer">➕ Add new: <strong>' + escape(data.input) + '</strong></div>';
+    };
+
+    if (authorSelect) {
+      new TomSelect(authorSelect, {
+        placeholder: 'Search/Select Author...',
+        sortField: { field: 'text', direction: 'asc' },
+        create: ajaxCreateHandler('author'),
+        createFilter: function(input) { return input.trim().length > 0; },
+        render: {
+          option_create: renderOptionCreate
+        }
+      });
+    }
+
+    if (pubSelect) {
+      new TomSelect(pubSelect, {
+        placeholder: 'Search/Select Publication...',
+        sortField: { field: 'text', direction: 'asc' },
+        create: ajaxCreateHandler('publication'),
+        createFilter: function(input) { return input.trim().length > 0; },
+        render: {
+          option_create: renderOptionCreate
+        }
+      });
+    }
+
+    if (catSelect) {
+      new TomSelect(catSelect, {
+        placeholder: 'Search/Select Category...',
+        sortField: { field: 'text', direction: 'asc' },
+        create: ajaxCreateHandler('category'),
+        createFilter: function(input) { return input.trim().length > 0; },
+        render: {
+          option_create: renderOptionCreate
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

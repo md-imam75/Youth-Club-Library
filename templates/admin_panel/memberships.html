@@ -1,0 +1,113 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Membership Requests{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6">
+
+  <!-- Header + Filters -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">Membership Requests</h2>
+      <div class="flex gap-4 mt-2 text-sm">
+        <a href="?" class="{% if not status_filter %}text-sky-400 font-semibold{% else %}dark:text-gray-500 text-slate-500 hover:dark:text-white text-slate-900{% endif %}">All</a>
+        <a href="?status=Pending" class="{% if status_filter == 'Pending' %}text-yellow-400 font-semibold{% else %}dark:text-gray-500 text-slate-500 hover:dark:text-white text-slate-900{% endif %}">Pending ({{ pending_count }})</a>
+        <a href="?status=Active" class="{% if status_filter == 'Active' %}text-emerald-400 font-semibold{% else %}dark:text-gray-500 text-slate-500 hover:dark:text-white text-slate-900{% endif %}">Active ({{ active_count }})</a>
+        <a href="?status=Expired" class="{% if status_filter == 'Expired' %}text-red-400 font-semibold{% else %}dark:text-gray-500 text-slate-500 hover:dark:text-white text-slate-900{% endif %}">Expired/Declined ({{ expired_count }})</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-white/8">
+          <th class="text-left px-5 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider font-semibold">Member</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider font-semibold">ID</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider font-semibold">Plan</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider font-semibold">Payment</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider font-semibold">Txn ID</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider font-semibold">Date</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider font-semibold">Status</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider font-semibold">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in memberships %}
+        <tr class="table-row">
+          <td class="px-5 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                {{ m.user.first_name|first|upper }}{{ m.user.last_name|first|upper }}
+              </div>
+              <div>
+                <div class="dark:text-white text-slate-900 font-medium">{{ m.user.get_full_name }}</div>
+                <div class="dark:text-gray-500 text-slate-500 text-xs">{{ m.user.email }}</div>
+                {% if m.user.phone %}<div class="dark:text-gray-500 text-slate-500 text-xs">{{ m.user.phone }}</div>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3 font-mono text-xs text-sky-400">{{ m.unique_membership_id }}</td>
+          <td class="px-4 py-3 dark:text-white text-slate-900 text-xs">{{ m.plan.name|default:"—" }}
+            {% if m.plan %}<div class="dark:text-gray-500 text-slate-500">{{ m.plan.duration_label }}</div>{% endif %}
+          </td>
+          <td class="px-4 py-3">
+            <span class="text-xs {% if m.payment_method == 'bKash' %}text-pink-400{% else %}dark:text-gray-300 text-slate-700{% endif %}">
+              {{ m.payment_method }}
+            </span>
+            {% if m.plan %}<div class="dark:text-white text-slate-900 text-xs font-bold">৳{{ m.plan.price|floatformat:0 }}</div>{% endif %}
+          </td>
+          <td class="px-4 py-3 font-mono text-xs dark:text-gray-400 text-slate-600 max-w-xs truncate">{{ m.transaction_id|default:"—" }}</td>
+          <td class="px-4 py-3 dark:text-gray-400 text-slate-600 text-xs">
+            {{ m.created_at|date:"d M Y" }}
+            {% if m.status == 'Active' and m.expires_at %}
+            <div class="text-emerald-400">Expires: {{ m.expires_at|date:"d M Y" }}</div>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium badge-{{ m.status|lower }}">
+              {{ m.status }}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            {% if m.status == 'Pending' %}
+            <div class="flex gap-2">
+              <form method="post" action="{% url 'admin_membership_action' m.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve" />
+                <button type="submit" class="btn-success">Approve</button>
+              </form>
+              <form method="post" action="{% url 'admin_membership_action' m.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="decline" />
+                <button type="submit" class="btn-danger">Decline</button>
+              </form>
+            </div>
+            {% elif m.status == 'Expired' %}
+            <form method="post" action="{% url 'admin_membership_action' m.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="approve" />
+              <button type="submit" class="btn-warn">Re-activate</button>
+            </form>
+            {% else %}
+            <form method="post" action="{% url 'admin_membership_action' m.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="decline" />
+              <button type="submit" class="btn-danger">Revoke</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center py-16 dark:text-gray-500 text-slate-500">No membership records found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% include "includes/pagination.html" with page_obj=memberships %}
+</div>
+{% endblock %}

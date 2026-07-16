@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Apply for {{ plan.name }} Membership — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-24 page-gradient-bg">
+  <div class="w-full max-w-md">
+    <div class="glass rounded-3xl p-8 border dark:border-white/10 border-black/10 shadow-2xl">
+      <div class="text-center mb-8">
+        <h1 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-1">Apply for <span class="gradient-text">{{ plan.name }}</span></h1>
+        <p class="dark:text-gray-400 text-slate-600 text-sm">৳{{ plan.price }} · {{ plan.duration_label }}</p>
+      </div>
+
+      <form method="post" x-data="{ paymentMethod: 'Offline' }" class="space-y-5">
+        {% csrf_token %}
+        <input type="hidden" name="plan" value="{{ plan.id }}" />
+
+        <div class="grid grid-cols-2 gap-3">
+          <label class="cursor-pointer">
+            <input type="radio" name="payment_method" value="Offline" x-model="paymentMethod" class="sr-only" />
+            <div :class="paymentMethod === 'Offline' ? 'border-primary-500 bg-primary-500/10' : 'dark:border-white/20 border-black/20' glass rounded-xl p-4 border-2 text-center transition-all">
+              <div class="text-2xl mb-1">🏪</div>
+              <div class="text-sm font-medium dark:text-white text-slate-900">Offline</div>
+            </div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="payment_method" value="bKash" x-model="paymentMethod" class="sr-only" />
+            <div :class="paymentMethod === 'bKash' ? 'border-pink-500 bg-pink-500/10' : 'dark:border-white/20 border-black/20' glass rounded-xl p-4 border-2 text-center transition-all">
+              <div class="text-2xl mb-1">📱</div>
+              <div class="text-sm font-medium dark:text-white text-slate-900">bKash</div>
+            </div>
+          </label>
+        </div>
+
+        <div x-show="paymentMethod === 'bKash'" x-transition class="glass rounded-xl p-4 border border-pink-500/20 bg-pink-500/5">
+          <p class="text-xs text-pink-300 font-semibold mb-2">Send to: <span class="dark:text-white text-slate-900 font-mono">{{ BKASH_NUMBER }}</span></p>
+          <p class="text-xs dark:text-gray-400 text-slate-600">Reference: <strong class="dark:text-white text-slate-900">YCL Membership</strong></p>
+        </div>
+
+        <div x-show="paymentMethod === 'bKash'" x-transition>
+          <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">Transaction ID <span class="text-pink-400">*</span></label>
+          <input type="text" name="transaction_id" placeholder="bKash Transaction ID" class="form-input" />
+        </div>
+
+        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-primary-600 to-emerald-600 hover:from-primary-500 hover:to-emerald-500 rounded-xl font-bold text-white transition-all shadow-lg">
+          Submit Application →
+        </button>
+        <a href="{% url 'membership' %}" class="block text-center text-sm dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors mt-2">← Back to plans</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

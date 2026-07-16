@@ -1,0 +1,46 @@
+{% if page_obj.has_other_pages %}
+<div class="flex items-center justify-center gap-2 mt-12 py-4">
+  
+  <!-- Previous Page Arrow -->
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+       class="w-10 h-10 rounded-xl flex items-center justify-center border dark:border-white/10 border-black/10 dark:bg-white/5 bg-black/5 dark:text-gray-400 text-slate-600 hover:text-white hover:border-sky-500/50 hover:bg-sky-500/10 transition-all"
+       aria-label="Previous Page">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </a>
+  {% else %}
+    <span class="w-10 h-10 rounded-xl flex items-center justify-center border dark:border-white/5 border-black/10 bg-white/3 text-gray-600 cursor-not-allowed">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </span>
+  {% endif %}
+
+  <!-- Page Numbers -->
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span class="w-10 h-10 rounded-xl flex items-center justify-center font-bold dark:text-white text-slate-900 shadow-lg shadow-sky-500/20"
+            style="background: linear-gradient(135deg, #0ea5e9, #10b981);">
+        {{ num }}
+      </span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+         class="w-10 h-10 rounded-xl flex items-center justify-center border dark:border-white/10 border-black/10 dark:bg-white/5 bg-black/5 dark:text-gray-400 text-slate-600 hover:text-white hover:border-sky-500/50 hover:bg-sky-500/10 transition-all font-semibold">
+        {{ num }}
+      </a>
+    {% endif %}
+  {% endfor %}
+
+  <!-- Next Page Arrow -->
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+       class="w-10 h-10 rounded-xl flex items-center justify-center border dark:border-white/10 border-black/10 dark:bg-white/5 bg-black/5 dark:text-gray-400 text-slate-600 hover:text-white hover:border-sky-500/50 hover:bg-sky-500/10 transition-all"
+       aria-label="Next Page">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+  {% else %}
+    <span class="w-10 h-10 rounded-xl flex items-center justify-center border dark:border-white/5 border-black/10 bg-white/3 text-gray-600 cursor-not-allowed">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </span>
+  {% endif %}
+
+</div>
+{% endif %}

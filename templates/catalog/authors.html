@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="pt-24 pb-16 min-h-screen page-flat-bg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+      <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900 mb-2"><span class="gradient-text">Authors</span></h1>
+      <p class="dark:text-gray-400 text-slate-600">{{ authors.paginator.count }} author{{ authors.paginator.count|pluralize }} in our catalog</p>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+      {% for author in authors %}
+      <a href="{% url 'books_by_author' author.pk %}"
+         class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10 hover:border-primary-500/30 transition-all text-center group">
+        {% if author.image %}
+          <img src="{{ author.image.url }}" alt="{{ author.name }}" class="w-20 h-20 rounded-full object-cover mx-auto mb-3 group-hover:scale-105 transition-transform" />
+        {% else %}
+          <div class="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center bg-gradient-to-br from-primary-500/20 to-emerald-500/20 border dark:border-white/10 border-black/10 group-hover:scale-105 transition-transform">
+            <svg class="w-8 h-8 text-primary-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </div>
+        {% endif %}
+        <h3 class="dark:text-white text-slate-900 font-semibold text-sm truncate">{{ author.name }}</h3>
+        <p class="dark:text-gray-500 text-slate-500 text-xs mt-1">{{ author.num_books }} book{{ author.num_books|pluralize }}</p>
+      </a>
+      {% empty %}
+      <div class="col-span-5 text-center py-16 dark:text-gray-500 text-slate-500">No authors yet.</div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% include "includes/pagination.html" with page_obj=authors %}
+  </div>
+</div>
+{% endblock %}

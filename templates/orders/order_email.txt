@@ -1,0 +1,22 @@
+Payment Confirmed!
+
+Dear {{ order.customer_name|default:order.user.get_full_name }},
+
+We are pleased to inform you that your payment for Order {{ order.order_number }} has been verified and confirmed.
+
+Your invoice has been generated and is attached to this email as a PDF. You can also view and download it at any time directly from your account dashboard on our website.
+
+Order Summary:
+------------------------
+Book Title: {{ order.book.title }}
+Quantity: {{ order.quantity }}
+Amount Paid: ৳{{ order.total_cost|floatformat:0 }}
+Payment Method: {{ order.payment_method }}
+
+Your book is now being prepared for delivery or pick up, depending on the delivery option you selected.
+
+Thank you for choosing Youth Club Library!
+
+--
+Youth Club Library
+Kazir Dewri, Chattogram.

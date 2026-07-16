@@ -1,0 +1,66 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Manage Testimonials{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">Manage Testimonials</h2>
+      <p class="text-xs dark:text-gray-500 text-slate-500 mt-1">Configure active customer testimonials displayed on the home page.</p>
+    </div>
+    <a href="{% url 'admin_testimonial_add' %}" class="btn-primary flex items-center gap-2">
+      <span class="text-lg leading-none">+</span> Add Testimonial
+    </a>
+  </div>
+
+  <!-- Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
+    <table class="w-full text-sm min-w-[700px]">
+      <thead>
+        <tr class="border-b border-white/8">
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Reviewer Name</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Role/Designation</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Rating</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Review Content</th>
+          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Status</th>
+          <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for testimonial in testimonials %}
+        <tr class="table-row">
+          <td class="px-4 py-3 font-semibold dark:text-white text-slate-900 text-sm">{{ testimonial.name }}</td>
+          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs">{{ testimonial.role }}</td>
+          <td class="px-4 py-3 text-xs">
+            <span class="text-amber-400 font-extrabold flex items-center gap-1">
+              {{ testimonial.rating }} ★
+            </span>
+          </td>
+          <td class="px-4 py-3 dark:text-gray-400 text-slate-600 text-xs max-w-xs truncate">{{ testimonial.review_text }}</td>
+          <td class="px-4 py-3 text-xs">
+            {% if testimonial.is_active %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
+            {% else %}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-500/10 dark:text-gray-400 text-slate-600 border dark:border-white/5 border-black/10">Disabled</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <a href="{% url 'admin_testimonial_edit' testimonial.pk %}" class="btn-success text-xs py-1 px-3">Edit</a>
+              <a href="{% url 'admin_testimonial_delete' testimonial.pk %}" class="btn-danger text-xs py-1 px-3">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center py-16 dark:text-gray-500 text-slate-500">No testimonials configured yet. Add some above!</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

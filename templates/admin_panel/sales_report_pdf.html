@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sales Report - {{ report_type|title }}</title>
+  <style>
+    @font-face {
+      font-family: NotoSansBengali;
+      src: url('C:/Users/Lenovo/.gemini/antigravity/scratch/youth_club_library/static/fonts/NotoSansBengali-Regular.ttf');
+    }
+    @font-face {
+      font-family: NotoSansBengali;
+      src: url('C:/Users/Lenovo/.gemini/antigravity/scratch/youth_club_library/static/fonts/NotoSansBengali-Bold.ttf');
+      font-weight: bold;
+    }
+    @page {
+      size: a4 landscape;
+      margin: 1.5cm;
+    }
+    body, table, td, th, div, p, span, h1, h2, h3, h4, h5, h6 {
+      font-family: NotoSansBengali;
+    }
+    body {
+      font-size: 9pt;
+      color: #333333;
+      line-height: 1.4;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 6px 8px;
+      text-align: left;
+      font-size: 8.5pt;
+    }
+    th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+      border-bottom: 2px solid #dddddd;
+      color: #555555;
+    }
+    td {
+      border-bottom: 1px solid #eeeeee;
+    }
+    .header-table td {
+      border: none;
+      padding: 0;
+    }
+    .report-title {
+      font-size: 18pt;
+      font-weight: bold;
+      color: #0284c7;
+      text-align: right;
+    }
+    .company-name {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #333333;
+    }
+    .text-right {
+      text-align: right;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .metrics-table {
+      margin: 20px 0;
+    }
+    .metrics-table td {
+      border: 1px solid #dddddd;
+      background-color: #fcfcfc;
+      padding: 12px;
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #333333;
+      margin-top: 4px;
+    }
+    .metric-label {
+      font-size: 8pt;
+      color: #666666;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+    .profit-val {
+      color: #10b981;
+    }
+    .footer {
+      margin-top: 30px;
+      border-top: 1px solid #eeeeee;
+      padding-top: 10px;
+      text-align: center;
+      font-size: 7.5pt;
+      color: #888888;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <table class="header-table">
+    <tr>
+      <td style="width: 70px; vertical-align: top;">
+        <img src="C:/Users/Lenovo/.gemini/antigravity/scratch/youth_club_library/static/images/logo.png" style="width: 50px; height: 50px;" />
+      </td>
+      <td style="vertical-align: top; padding-left: 10px;">
+        <div class="company-name">Youth Club Library — Staff Dashboard</div>
+        <div style="font-size: 8pt; color: #666666; margin-top: 3px;">
+          Sales Analytics & Profit Margins Report
+        </div>
+      </td>
+      <td style="vertical-align: top; text-align: right;">
+        <div class="report-title">{{ report_type|upper }} SALES REPORT</div>
+        <div style="font-size: 8pt; color: #777777; margin-top: 5px;">
+          Period: <strong>{{ start_date|date:"d M Y" }}</strong> to <strong>{{ end_date|date:"d M Y" }}</strong><br/>
+          Generated: {{ generated_at|date:"d M Y, h:i A" }}
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Metrics Grid -->
+  <table class="metrics-table">
+    <tr>
+      <td style="width: 25%;">
+        <div class="metric-label">Total Sales Count</div>
+        <div class="metric-value">{{ total_orders }}</div>
+      </td>
+      <td style="width: 25%;">
+        <div class="metric-label">Books Sold</div>
+        <div class="metric-value">{{ total_items }}</div>
+      </td>
+      <td style="width: 25%;">
+        <div class="metric-label">Gross Revenue</div>
+        <div class="metric-value">৳{{ total_revenue|floatformat:0 }}</div>
+      </td>
+      <td style="width: 25%; background-color: #f0fdf4;">
+        <div class="metric-label" style="color: #047857;">Net Profit</div>
+        <div class="metric-value profit-val">৳{{ total_profit|floatformat:0 }}</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Items Table -->
+  <h3>Detailed Itemized Sales</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 12%;">Bill/Order #</th>
+        <th style="width: 15%;">Customer</th>
+        <th style="width: 33%;">Book Title</th>
+        <th style="width: 6%;" class="text-center">Qty</th>
+        <th style="width: 11%;" class="text-right">Sale Price</th>
+        <th style="width: 11%;" class="text-right">Cost Price</th>
+        <th style="width: 12%;" class="text-right">Net Profit</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td style="font-family: monospace;">{{ order.order_number }}</td>
+        <td>
+          {% if order.user %}
+            {{ order.user.get_full_name }}
+          {% else %}
+            Walk-in: {{ order.customer_name }}
+          {% endif %}
+        </td>
+        <td>
+          <strong>{{ order.book.title }}</strong><br/>
+          <span style="font-size: 7.5pt; color: #666666;">by {{ order.book.author.name|default:"Unknown" }}</span>
+        </td>
+        <td class="text-center">{{ order.quantity }}</td>
+        <td class="text-right">
+          <strong>৳{{ order.item_revenue|floatformat:0 }}</strong><br/>
+          <span style="font-size: 7pt; color: #777777;">৳{{ order.book_price|floatformat:0 }}/unit</span>
+        </td>
+        <td class="text-right">
+          ৳{{ order.item_cogs|floatformat:0 }}<br/>
+          <span style="font-size: 7pt; color: #777777;">৳{{ order.book.buying_price|floatformat:0 }}/unit</span>
+        </td>
+        <td class="text-right" style="color: #047857; font-weight: bold;">
+          ৳{{ order.item_profit|floatformat:0 }}<br/>
+          <span style="font-size: 7pt; color: #047857; font-weight: normal;">৳{{ order.unit_profit|floatformat:0 }}/unit</span>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" class="text-center" style="padding: 30px; color: #666666;">
+          No sales recorded for this period.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Thank You Footer -->
+  <div class="footer">
+    Youth Club Library Staff Report — Confidential. Generated automatically by YCL Library Management System.
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,203 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-7xl">
+
+  <!-- Header & Actions -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+      <p class="dark:text-gray-500 text-slate-500 text-sm">Analyze your offline and online library sales and net profits.</p>
+    </div>
+    <!-- Download PDF Button -->
+    <a href="{% url 'admin_sales_report_pdf' %}?report_type={{ report_type }}&date={{ selected_date_str }}&month={{ selected_month_str }}"
+       class="px-5 py-2.5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg hover:shadow-sky-500/25 inline-flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Download PDF Report
+    </a>
+  </div>
+
+  <!-- Filters Panel -->
+  <div class="stat-card rounded-2xl p-5 border dark:border-white/5 border-black/10">
+    <form method="get" class="flex flex-wrap items-end gap-5">
+      <!-- Report Type Toggle -->
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-2 font-medium uppercase tracking-wider">Report Period</label>
+        <div class="flex rounded-xl bg-black/5 dark:bg-white/5 p-1 border dark:border-white/5 border-black/5 w-max" x-data="{ rtype: '{{ report_type }}' }">
+          <button type="button" @click="rtype='daily'; $el.form.report_type.value='daily'; $el.form.submit()"
+                  :class="rtype === 'daily' ? 'bg-sky-500 text-white shadow' : 'dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900'"
+                  class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all">
+            Daily
+          </button>
+          <button type="button" @click="rtype='weekly'; $el.form.report_type.value='weekly'; $el.form.submit()"
+                  :class="rtype === 'weekly' ? 'bg-sky-500 text-white shadow' : 'dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900'"
+                  class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all">
+            Weekly
+          </button>
+          <button type="button" @click="rtype='monthly'; $el.form.report_type.value='monthly'; $el.form.submit()"
+                  :class="rtype === 'monthly' ? 'bg-sky-500 text-white shadow' : 'dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900'"
+                  class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all">
+            Monthly
+          </button>
+          <input type="hidden" name="report_type" value="{{ report_type }}" />
+        </div>
+      </div>
+
+      <!-- Date Input (Daily / Weekly) -->
+      {% if report_type == 'daily' or report_type == 'weekly' %}
+      <div class="w-48">
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-2 font-medium uppercase tracking-wider">
+          {% if report_type == 'daily' %}Select Date{% else %}Select Week Start{% endif %}
+        </label>
+        <input type="date" name="date" value="{{ selected_date_str }}" onchange="this.form.submit()" class="form-input py-2 text-sm" />
+      </div>
+      {% endif %}
+
+      <!-- Month Input (Monthly) -->
+      {% if report_type == 'monthly' %}
+      <div class="w-48">
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-2 font-medium uppercase tracking-wider">Select Month</label>
+        <input type="month" name="month" value="{{ selected_month_str }}" onchange="this.form.submit()" class="form-input py-2 text-sm" />
+      </div>
+      {% endif %}
+
+      <div class="text-xs dark:text-gray-500 text-slate-500 pb-2.5 italic">
+        Showing sales between: <strong>{{ start_date|date:"d M Y" }}</strong> and <strong>{{ end_date|date:"d M Y" }}</strong>
+      </div>
+    </form>
+  </div>
+
+  <!-- METRIC CARDS -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+    <!-- Total Orders -->
+    <div class="stat-card rounded-2xl p-5 border dark:border-white/5 border-black/10">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Total Sales count</span>
+        <div class="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">{{ total_orders }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">orders finalized</div>
+    </div>
+
+    <!-- Items Sold -->
+    <div class="stat-card rounded-2xl p-5 border dark:border-white/5 border-black/10">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Books Sold</span>
+        <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">{{ total_items }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">copies delivered</div>
+    </div>
+
+    <!-- Revenue -->
+    <div class="stat-card rounded-2xl p-5 border dark:border-white/5 border-black/10">
+      <div class="flex items-center justify-between mb-3">
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Revenue</span>
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm font-bold">৳</div>
+      </div>
+      <div class="text-2xl font-bold dark:text-white text-slate-900">৳{{ total_revenue|floatformat:0 }}</div>
+      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">gross book sales</div>
+    </div>
+
+    <!-- Profit -->
+    <div class="stat-card rounded-2xl p-5 border dark:border-emerald-500/20 border-black/10 bg-emerald-500/5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-emerald-400 text-xs font-bold uppercase tracking-wider">Net Profit</span>
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold text-emerald-500">৳{{ total_profit|floatformat:0 }}</div>
+      <div class="text-xs text-emerald-600 dark:text-emerald-400/70 mt-1">revenue - cost price</div>
+    </div>
+
+  </div>
+
+  <!-- DETAILS TABLE -->
+  <div class="stat-card rounded-2xl overflow-hidden border dark:border-white/5 border-black/10">
+    <div class="p-5 border-b dark:border-white/5 border-black/10 flex items-center justify-between">
+      <h3 class="font-bold dark:text-white text-slate-900 text-sm">Detailed Itemized Sales</h3>
+      <span class="px-2.5 py-1 bg-black/5 dark:bg-white/5 rounded-lg text-xs dark:text-gray-400 text-slate-600 font-semibold">{{ orders|length }} Records</span>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b dark:border-white/5 border-black/10 bg-black/[0.02] dark:bg-white/[0.01]">
+            <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Bill/Order #</th>
+            <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Customer</th>
+            <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Book Details</th>
+            <th class="text-center px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Qty</th>
+            <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Sale Price</th>
+            <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Cost Price</th>
+            <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Net Profit</th>
+            <th class="text-center px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr class="table-row">
+            <!-- Order Number -->
+            <td class="px-4 py-3 text-sky-400 font-mono text-xs font-semibold">{{ order.order_number }}</td>
+            
+            <!-- Customer -->
+            <td class="px-4 py-3">
+              <div class="dark:text-white text-slate-900 text-xs font-semibold">
+                {% if order.user %}
+                  {{ order.user.get_full_name }}
+                {% else %}
+                  <span class="dark:text-gray-400 text-slate-500">Walk-in: {{ order.customer_name }}</span>
+                {% endif %}
+              </div>
+            </td>
+            
+            <!-- Book Details -->
+            <td class="px-4 py-3">
+              <div class="dark:text-white text-slate-900 text-xs font-semibold max-w-xs truncate">{{ order.book.title }}</div>
+              <div class="dark:text-gray-500 text-slate-500 text-[10px]">by {{ order.book.author.name|default:"Unknown" }}</div>
+            </td>
+            
+            <!-- Qty -->
+            <td class="px-4 py-3 text-center dark:text-white text-slate-900 text-xs">{{ order.quantity }}</td>
+            
+            <!-- Sale Price -->
+            <td class="px-4 py-3 text-right dark:text-white text-slate-900 text-xs font-bold">
+              ৳{{ order.item_revenue|floatformat:0 }}
+              <div class="dark:text-gray-500 text-slate-500 text-[9px] font-normal">৳{{ order.book_price|floatformat:0 }}/unit</div>
+            </td>
+            
+            <!-- Cost Price (Buying Price) -->
+            <td class="px-4 py-3 text-right dark:text-gray-400 text-slate-600 text-xs">
+              ৳{{ order.item_cogs|floatformat:0 }}
+              <div class="dark:text-gray-500 text-slate-500 text-[9px]">৳{{ order.book.buying_price|floatformat:0 }}/unit</div>
+            </td>
+            
+            <!-- Net Profit -->
+            <td class="px-4 py-3 text-right text-emerald-500 text-xs font-bold">
+              ৳{{ order.item_profit|floatformat:0 }}
+              <div class="text-[9px] font-normal text-emerald-600">৳{{ order.unit_profit|floatformat:0 }}/unit</div>
+            </td>
+            
+            <!-- Date -->
+            <td class="px-4 py-3 text-center dark:text-gray-400 text-slate-600 text-xs">{{ order.created_at|date:"d M Y, h:i A" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center py-16 dark:text-gray-500 text-slate-500 text-sm">
+              No sales recorded for this period.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

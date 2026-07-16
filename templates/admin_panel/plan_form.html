@@ -1,0 +1,63 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+
+  <div class="flex items-center gap-4 mb-8">
+    <a href="{% url 'admin_plans' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
+    <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+  </div>
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Plan Name <span class="text-red-400">*</span></label>
+          {{ form.name }}
+          {% if form.name.errors %}<p class="text-red-400 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Price (৳) <span class="text-red-400">*</span></label>
+          {{ form.price }}
+        </div>
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Duration (days) <span class="text-red-400">*</span></label>
+          {{ form.duration_days }}
+          <p class="text-gray-600 text-xs mt-1">30 = 1 month, 90 = 3 months, 365 = 1 year</p>
+        </div>
+        <div>
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Sort Order</label>
+          {{ form.sort_order }}
+          <p class="text-gray-600 text-xs mt-1">Lower number = shown first</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Plan Features (one per line)</label>
+        {{ form.features_text }}
+        <p class="text-gray-600 text-xs mt-1">Each line becomes a bullet point on the pricing card.</p>
+      </div>
+
+      <div class="flex flex-wrap gap-6 pt-2">
+        <label class="flex items-center gap-2 cursor-pointer">
+          {{ form.is_active }}
+          <span class="text-sm dark:text-gray-300 text-slate-700">Active (visible on pricing page)</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          {{ form.is_popular }}
+          <span class="text-sm dark:text-gray-300 text-slate-700">Mark as "Most Popular"</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
+      <a href="{% url 'admin_plans' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

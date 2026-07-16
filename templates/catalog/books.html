@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}Browse all books at Youth Club Library. Search by title, author or category.{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Page-level overrides */
+  .books-page { background: #f1f5f9; }
+  .dark .books-page { background: #080f1d; }
+
+  /* Search bar glow focus */
+  .search-input:focus { box-shadow: 0 0 0 3px rgba(14,165,233,0.18), 0 0 24px rgba(14,165,233,0.08); }
+
+  /* Book card */
+  .bk-card {
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 1.125rem;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.25s, box-shadow 0.3s;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.02);
+  }
+  .dark .bk-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: none;
+  }
+  .bk-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(14,165,233,0.35);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(14,165,233,0.15);
+  }
+  .bk-cover { position: relative; overflow: hidden; }
+  .bk-cover img, .bk-cover .bk-placeholder {
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .bk-card:hover .bk-cover img,
+  .bk-card:hover .bk-cover .bk-placeholder { transform: scale(1.06); }
+
+  /* Hover action overlay */
+  .bk-action {
+    position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center;
+    padding: 1rem;
+    background: linear-gradient(to top, rgba(8,15,29,0.92) 0%, rgba(8,15,29,0.3) 50%, transparent 100%);
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .bk-card:hover .bk-action { opacity: 1; }
+
+  /* Category pill filter */
+  .filter-pill {
+    padding: 0.4rem 1rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.1); color: #9ca3af;
+    background: rgba(255,255,255,0.04); cursor: pointer;
+    transition: all 0.2s; white-space: nowrap; text-decoration: none; display: inline-block;
+  }
+  .filter-pill:hover, .filter-pill.active {
+    background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.4); color: #38bdf8;
+  }
+
+  /* Badge */
+  .bk-badge {
+    font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    letter-spacing: 0.03em;
+  }
+  .bk-badge-new   { background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.35);color:#34d399; }
+  .bk-badge-hot   { background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.35);color:#f87171; }
+  .bk-badge-feat  { background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.35);color:#fbbf24; }
+  .bk-badge-sale  { background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff; }
+
+  /* Stars */
+  .star-filled { color:#fbbf24; }
+  .star-empty  { color:#374151; }
+
+  /* Shimmer on empty state */
+  @keyframes shimmer { 0%,100%{opacity:.4} 50%{opacity:.8} }
+  .shimmer { animation: shimmer 2s ease-in-out infinite; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="books-page min-h-screen pt-20 pb-20">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- ── PAGE HEADER ─────────────────────────────────────────────────────── -->
+    <div class="py-10">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          {% if query %}
+          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Search Results</p>
+          <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">
+            Results for "<span style="background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">{{ query }}</span>"
+          </h1>
+          {% else %}
+          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Our Collection</p>
+          <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">
+            All <span style="background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Books</span>
+          </h1>
+          {% endif %}
+        </div>
+        <div class="flex items-center gap-3 text-sm">
+          <span class="px-3 py-1.5 rounded-full text-xs font-semibold"
+                style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.25);color:#38bdf8;">
+            {{ total_count }} title{{ total_count|pluralize }} found
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEARCH + FILTERS ────────────────────────────────────────────────── -->
+    <div class="mb-8 space-y-4">
+      <!-- Search bar -->
+      <form method="get" class="flex gap-3">
+        <div class="relative flex-1">
+          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 dark:text-gray-500 text-slate-500 pointer-events-none"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" name="q" value="{{ query }}"
+                 id="search-input"
+                 placeholder="Search by title, author, or publication…"
+                 class="search-input w-full pl-11 pr-4 py-3.5 rounded-2xl text-sm font-medium dark:text-white text-slate-900 placeholder-gray-600 outline-none transition-all"
+                 style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);" />
+        </div>
+        <button type="submit"
+                class="px-7 py-3.5 rounded-2xl text-sm font-bold dark:text-white text-slate-900 transition-all hover:opacity-90 hover:-translate-y-px flex-shrink-0"
+                style="background:linear-gradient(135deg,#0284c7,#0ea5e9);">
+          Search
+        </button>
+        {% if query %}
+        <a href="{% url 'books' %}"
+           class="px-5 py-3.5 rounded-2xl text-sm font-semibold dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all flex-shrink-0 flex items-center"
+           style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Clear
+        </a>
+        {% endif %}
+      </form>
+
+      <!-- Browse filter pills -->
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'books' %}" class="filter-pill {% if not query %}active{% endif %}">All Books</a>
+        <a href="{% url 'authors' %}" class="filter-pill">By Author</a>
+        <a href="{% url 'publications' %}" class="filter-pill">By Publisher</a>
+        <a href="{% url 'categories' %}" class="filter-pill">By Category</a>
+      </div>
+    </div>
+
+    <!-- ── BOOKS GRID ──────────────────────────────────────────────────────── -->
+    {% if books %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+      {% for book in books %}
+      <div class="bk-card group" onclick="window.location.href='{% url 'book_detail' book.pk %}'">
+
+        <!-- Cover -->
+        <div class="bk-cover h-52 sm:h-60">
+          {% if book.cover_image %}
+            <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover" />
+          {% else %}
+            <div class="bk-placeholder w-full h-full flex flex-col items-center justify-center p-4 select-none"
+                 style="background:linear-gradient(135deg,#0d2340 0%,#0c3a5e 50%,#063d2e 100%);">
+              <svg class="w-8 h-8 mb-2 opacity-50 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              <p class="dark:text-white text-slate-900/70 text-[10px] text-center font-medium leading-tight line-clamp-3">{{ book.title }}</p>
+            </div>
+          {% endif %}
+
+          <!-- Badges -->
+          <div class="absolute top-2 left-2 flex flex-col gap-1 z-10">
+            {% if book.offer_price %}<span class="bk-badge bk-badge-sale">-{{ book.discount_percent }}%</span>{% endif %}
+            {% if book.is_featured %}<span class="bk-badge bk-badge-feat">Pick</span>{% endif %}
+            {% if book.is_new %}<span class="bk-badge bk-badge-new">New</span>{% endif %}
+          </div>
+
+          <!-- Hover action -->
+          <div class="bk-action">
+            <a href="{% url 'book_detail' book.pk %}"
+               onclick="event.stopPropagation()"
+               class="w-full text-center py-2 rounded-xl text-xs font-bold dark:text-white text-slate-900 transition-all"
+               style="background:linear-gradient(135deg,#0284c7,#0ea5e9);">
+              View Details →
+            </a>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="p-3">
+          <h3 class="dark:text-white text-slate-900 text-[12px] font-semibold leading-snug truncate mb-0.5 font-display">
+            {{ book.title }}
+          </h3>
+          {% if book.author %}
+          <p class="dark:text-gray-500 text-slate-500 text-[11px] truncate font-medium">{{ book.author.name }}</p>
+          {% endif %}
+
+          <!-- Price row -->
+          <div class="flex items-center justify-between mt-2">
+            <div class="flex items-baseline gap-1.5">
+              {% if book.offer_price %}
+                <span class="dark:text-white text-slate-900 font-bold text-sm">৳{{ book.offer_price|floatformat:0 }}</span>
+                <span class="text-gray-600 text-[10px] line-through">৳{{ book.regular_price|floatformat:0 }}</span>
+              {% else %}
+                <span class="dark:text-white text-slate-900 font-bold text-sm">৳{{ book.regular_price|floatformat:0 }}</span>
+              {% endif %}
+            </div>
+            <!-- Stock dot -->
+            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
+                         {% if book.is_in_stock %}bg-emerald-400{% else %}bg-red-500{% endif %}"
+                  title="{% if book.is_in_stock %}In Stock{% else %}Out of Stock{% endif %}">
+            </span>
+          </div>
+
+          <!-- Star rating -->
+          {% if book.review_count > 0 %}
+          <div class="flex items-center gap-1 mt-1.5">
+            <div class="flex gap-px">
+              {% for i in "12345" %}
+                <span class="text-[10px] {% if forloop.counter <= book.average_rating %}star-filled{% else %}star-empty{% endif %}">★</span>
+              {% endfor %}
+            </div>
+            <span class="text-gray-600 text-[10px]">({{ book.review_count }})</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% include "includes/pagination.html" with page_obj=books %}
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="text-center py-28">
+      <div class="inline-flex flex-col items-center">
+        <div class="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-6 shimmer" style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.15);">
+          <svg class="w-9 h-9 text-sky-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <h3 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-3">
+          {% if query %}No results for "{{ query }}"{% else %}No books yet{% endif %}
+        </h3>
+        <p class="dark:text-gray-500 text-slate-500 text-sm mb-8 max-w-sm">
+          {% if query %}Try a different keyword, or browse all books below.{% else %}Books will appear here once added to the catalog.{% endif %}
+        </p>
+        <div class="flex gap-3 justify-center">
+          {% if query %}
+          <a href="{% url 'books' %}"
+             class="px-6 py-3 rounded-2xl text-sm font-semibold dark:text-white text-slate-900 transition-all hover:opacity-90"
+             style="background:linear-gradient(135deg,#0284c7,#0ea5e9);">
+            ← Browse All Books
+          </a>
+          {% endif %}
+          <a href="{% url 'home' %}"
+             class="px-6 py-3 rounded-2xl text-sm font-semibold dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all"
+             style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">
+            Go Home
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
