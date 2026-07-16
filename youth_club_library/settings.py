@@ -124,18 +124,26 @@ CLOUDINARY_URL = config('CLOUDINARY_URL', default=None)
 
 # In production (DEBUG=False), we MUST use Cloudinary.
 if not DEBUG or CLOUDINARY_URL:
-    import os
-    if CLOUDINARY_URL:
-        os.environ['CLOUDINARY_URL'] = CLOUDINARY_URL
-    
     INSTALLED_APPS.append('cloudinary')
     INSTALLED_APPS.append('cloudinary_storage')
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     
-    # Force HTTPS to prevent browser Mixed Content blocking
-    CLOUDINARY_STORAGE = {
-        'SECURE': True
-    }
+    # Parse the CLOUDINARY_URL explicitly because django-cloudinary-storage 
+    # sometimes fails to read os.environ on Render.
+    import re
+    
+    # Default to empty dict
+    CLOUDINARY_STORAGE = {'SECURE': True}
+    
+    if CLOUDINARY_URL:
+        # Format: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+        match = re.match(r'^cloudinary://([^:]+):([^@]+)@(.+)$', CLOUDINARY_URL)
+        if match:
+            CLOUDINARY_STORAGE.update({
+                'API_KEY': match.group(1),
+                'API_SECRET': match.group(2),
+                'CLOUD_NAME': match.group(3),
+            })
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
