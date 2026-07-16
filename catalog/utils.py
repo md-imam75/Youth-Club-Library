@@ -34,8 +34,15 @@ def _scrape_rokomari(title: str) -> dict | None:
     try:
         query = title.replace(' ', '+')
         url = f'https://www.rokomari.com/search?term={query}'
-        resp = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
-        resp.raise_for_status()
+        
+        scraper = cloudscraper.create_scraper(
+            browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True}
+        )
+        resp = scraper.get(url, timeout=TIMEOUT)
+        
+        if resp.status_code != 200:
+            return None
+            
         soup = BeautifulSoup(resp.text, 'html.parser')
 
         # First result card
@@ -195,15 +202,14 @@ def _scrape_niyamahshop(title: str) -> dict | None:
         query = title.replace(' ', '+')
         url = f'https://www.niyamahshop.com/?s={query}&post_type=product'
         
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Referer': 'https://www.google.com/'
-        }
+        scraper = cloudscraper.create_scraper(
+            browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True}
+        )
+        resp = scraper.get(url, timeout=TIMEOUT)
         
-        resp = requests.get(url, headers=headers, timeout=TIMEOUT)
-        resp.raise_for_status()
-        
+        if resp.status_code != 200:
+            return None
+            
         soup = BeautifulSoup(resp.text, 'html.parser')
         cards = soup.select('.product, .product-item, li.product')
         
