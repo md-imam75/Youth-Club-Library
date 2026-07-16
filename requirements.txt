@@ -1,5 +1,5 @@
 Django>=4.2,<5.2
-django-allauth>=0.61.1
+django-allauth[socialaccount]>=0.61.1
 python-decouple>=3.8
 Pillow>=10.3.0
 
