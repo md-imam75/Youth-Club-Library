@@ -10,3 +10,6 @@ psycopg2-binary>=2.9.9
 whitenoise>=6.6.0
 cloudinary>=1.40.0
 django-cloudinary-storage>=0.3.0
+beautifulsoup4>=4.12.3
+cloudscraper>=1.2.71
+xhtml2pdf>=0.2.11
