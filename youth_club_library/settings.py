@@ -121,9 +121,13 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 CLOUDINARY_URL = config('CLOUDINARY_URL', default=None)
-if CLOUDINARY_URL:
+
+# In production (DEBUG=False), we MUST use Cloudinary.
+if not DEBUG or CLOUDINARY_URL:
     import os
-    os.environ['CLOUDINARY_URL'] = CLOUDINARY_URL
+    if CLOUDINARY_URL:
+        os.environ['CLOUDINARY_URL'] = CLOUDINARY_URL
+    
     INSTALLED_APPS.append('cloudinary')
     INSTALLED_APPS.append('cloudinary_storage')
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
