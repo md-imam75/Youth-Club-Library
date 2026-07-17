@@ -30,7 +30,7 @@
             
             <div class="relative">
               <button type="button" @click="open = !open" @click.away="open = false"
-                      class="form-input flex items-center justify-between text-left cursor-pointer border border-white/15 dark:bg-white/5 bg-black/5 rounded-xl px-4 py-3 text-white w-full">
+                      class="form-input flex items-center justify-between text-left cursor-pointer border dark:border-white/15 border-black/15 dark:bg-white/5 bg-black/5 rounded-xl px-4 py-3 dark:text-white text-slate-900 w-full">
                 <span x-text="selectedLabel" class="text-sm"></span>
                 <svg class="w-5 h-5 dark:text-gray-400 text-slate-600 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
               </button>
@@ -44,15 +44,14 @@
                    x-transition:leave="transition ease-in duration-75"
                    x-transition:leave-start="opacity-100 scale-100"
                    x-transition:leave-end="opacity-0 scale-95"
-                   class="absolute z-50 mt-2 w-full glass rounded-xl border dark:border-white/10 border-black/10 overflow-hidden shadow-2xl"
-                   style="background: rgba(15,23,42,0.98); backdrop-filter: blur(20px);">
-                <div class="max-h-60 overflow-y-auto divide-y divide-white/5">
+                   class="absolute z-50 mt-2 w-full rounded-xl border dark:border-white/10 border-black/10 overflow-hidden shadow-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl">
+                <div class="max-h-60 overflow-y-auto divide-y dark:divide-white/5 divide-black/5">
                   
                 <div class="max-h-60 overflow-y-auto divide-y divide-white/5">
                   <div class="p-2 space-y-0.5">
                     {% for option in delivery_options %}
                     <button type="button" @click="selectedValue = '{{ option.code }}'; selectedLabel = '{{ option.label }}{% if option.cost > 0 %} — ৳{{ option.cost|floatformat:0 }}{% endif %}'; open = false; updateTotal('{{ option.code }}');"
-                            class="w-full text-left px-3 py-2 rounded-lg text-sm dark:text-gray-300 text-slate-700 hover:dark:bg-white/10 bg-black/5 hover:text-white transition-colors">
+                            class="w-full text-left px-3 py-2 rounded-lg text-sm dark:text-gray-300 text-slate-700 hover:dark:bg-white/10 hover:bg-black/5 dark:hover:text-white hover:text-slate-900 transition-colors">
                       {{ option.label }} {% if option.cost > 0 %}— ৳{{ option.cost|floatformat:0 }}{% endif %}
                     </button>
                     {% empty %}
@@ -93,7 +92,7 @@
           </div>
 
           <!-- Payment Method -->
-          <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10" x-data="{ paymentMethod: 'Offline' }">
+          <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10">
             <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5 flex items-center gap-2">
               <span class="w-7 h-7 rounded-lg bg-primary-500/20 flex items-center justify-center text-sm font-bold">3</span>
               Payment Method
@@ -102,7 +101,7 @@
             <div class="grid grid-cols-2 gap-4 mb-5">
               <label class="cursor-pointer">
                 <input type="radio" name="payment_method" value="Offline" x-model="paymentMethod" class="sr-only" />
-                <div :class="paymentMethod === 'Offline' ? 'border-primary-500 bg-primary-500/10' : 'dark:border-white/20 border-black/20 hover:border-white/40' glass rounded-xl p-4 border-2 transition-all text-center">
+                <div class="glass rounded-xl p-4 border-2 transition-all text-center" :class="paymentMethod === 'Offline' ? 'border-primary-500 bg-primary-500/10' : 'dark:border-white/20 border-black/20 hover:border-black/40 dark:hover:border-white/40'">
                   <div class="flex justify-center mb-1">
                     <svg class="w-6 h-6 dark:text-gray-300 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                   </div>
@@ -112,7 +111,7 @@
               </label>
               <label class="cursor-pointer">
                 <input type="radio" name="payment_method" value="bKash" x-model="paymentMethod" class="sr-only" />
-                <div :class="paymentMethod === 'bKash' ? 'border-pink-500 bg-pink-500/10' : 'dark:border-white/20 border-black/20 hover:border-white/40' glass rounded-xl p-4 border-2 transition-all text-center">
+                <div class="glass rounded-xl p-4 border-2 transition-all text-center" :class="paymentMethod === 'bKash' ? 'border-pink-500 bg-pink-500/10' : 'dark:border-white/20 border-black/20 hover:border-black/40 dark:hover:border-white/40'">
                   <div class="flex justify-center mb-1">
                     <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.948V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 7V5z"/></svg>
                   </div>
@@ -230,6 +229,7 @@ function updateTotal(selectedKey) {
 
 function checkoutForm() {
   return {
+    paymentMethod: 'Offline',
     updateTotal(key) { updateTotal(key); }
   };
 }
