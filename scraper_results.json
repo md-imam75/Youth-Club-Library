@@ -1,0 +1,9 @@
+{
+  "rokomari": {
+    "site": "Rokomari",
+    "price": "TK. 590",
+    "book_name": "ইসলাহী নেসাব",
+    "url": "https://www.rokomari.com/book/46371/islami-nesab"
+  },
+  "niyamah_firefox": "HTTPSConnectionPool(host='www.niyamahshop.com', port=443): Max retries exceeded with url: /?s=%E0%A6%87%E0%A6%B8%E0%A6%B2%E0%A6%BE%E0%A6%AE%E0%A7%80+%E0%A6%A8%E0%A7%87%E0%A6%B8%E0%A6%BE%E0%A6%AC&post_type=product (Caused by SSLError(SSLError(1, '[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1010)')))"
+}

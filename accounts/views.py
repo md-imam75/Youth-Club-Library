@@ -9,6 +9,7 @@ from django.utils import timezone
 from .models import CustomUser, MembershipPlan, UserMembership
 from .forms import ProfileUpdateForm, MembershipApplicationForm
 from orders.models import Order
+from catalog.models import BookRequest
 
 
 @login_required
@@ -28,6 +29,9 @@ def dashboard_view(request):
     bought_orders = orders.filter(order_type='Buy')
     borrowed_orders = orders.filter(order_type='Borrow')
 
+    # Book Requests
+    book_requests = BookRequest.objects.filter(user=user).prefetch_related('items').order_by('-created_at')
+
     # Profile form
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
@@ -44,6 +48,7 @@ def dashboard_view(request):
         'membership': membership,
         'bought_orders': bought_orders,
         'borrowed_orders': borrowed_orders,
+        'book_requests': book_requests,
         'form': form,
         'page_title': 'My Dashboard',
     }

@@ -318,6 +318,7 @@ def request_book_view(request):
 
         # Create main request
         book_req = BookRequest.objects.create(
+            user=request.user if request.user.is_authenticated else None,
             name=name,
             address=address,
             phone=phone,

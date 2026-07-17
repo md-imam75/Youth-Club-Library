@@ -268,6 +268,14 @@ class BookRequest(models.Model):
         (STATUS_COMPLETED, 'Completed'),
     ]
 
+    user = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='book_requests',
+        help_text='User who made the request (if logged in)'
+    )
     name = models.CharField(max_length=150)
     address = models.TextField(blank=True)
     phone = models.CharField(max_length=20)

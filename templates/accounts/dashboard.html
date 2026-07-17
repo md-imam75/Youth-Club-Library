@@ -149,6 +149,12 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
             Borrows ({{ borrowed_orders.count }})
           </button>
+          <button @click="tab='requests'"
+                  :class="tab==='requests' ? 'border-b-2 border-orange-500 text-orange-400' : 'dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900'"
+                  class="px-5 py-3 text-sm font-bold transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Requests ({{ book_requests.count }})
+          </button>
           <button @click="tab='settings'"
                   :class="tab==='settings' ? 'border-b-2 border-purple-500 text-purple-400' : 'dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900'"
                   class="px-5 py-3 text-sm font-bold transition-all flex items-center gap-2">
@@ -285,6 +291,45 @@
             {% if not user.has_active_membership %}
               <a href="{% url 'membership' %}" class="mt-4 inline-block text-emerald-400 text-sm hover:text-emerald-300 font-semibold">Get a membership to borrow →</a>
             {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- ─── BOOK REQUESTS TAB PANEL ──────────────────────────────────────── -->
+        <div x-show="tab==='requests'" class="space-y-5">
+          {% for req in book_requests %}
+          <div class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10 hover:border-orange-500/20 transition-all shadow-sm hover:shadow-md">
+            <div class="flex items-center justify-between pb-3 border-b dark:border-white/5 border-black/5 text-xs">
+              <span class="dark:text-gray-500 text-slate-500">{{ req.created_at|date:"d M Y, h:i A" }}</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                {% if req.status == 'Pending' %}bg-yellow-500/10 text-yellow-400 border border-yellow-500/20
+                {% elif req.status == 'Reviewed' %}bg-blue-500/10 text-blue-400 border border-blue-500/20
+                {% elif req.status == 'Completed' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                {% endif %}">
+                ● {{ req.status }}
+              </span>
+            </div>
+            <div class="pt-3">
+              <ul class="space-y-2">
+                {% for item in req.items.all %}
+                <li class="flex justify-between items-start text-sm">
+                  <div class="flex flex-col">
+                    <span class="dark:text-white text-slate-900 font-bold">"{{ item.book_title }}"</span>
+                    {% if item.author %}<span class="dark:text-gray-400 text-slate-600 text-xs mt-0.5">by {{ item.author }}</span>{% endif %}
+                  </div>
+                  <span class="dark:text-gray-400 text-slate-600 text-xs font-semibold bg-black/5 dark:bg-white/5 px-2 py-1 rounded-lg">Qty: {{ item.quantity }}</span>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-16 glass rounded-2xl border dark:border-white/10 border-black/10">
+            <div class="w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-4 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10">
+              <svg class="w-8 h-8 dark:text-gray-400 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </div>
+            <p class="dark:text-gray-400 text-slate-600 text-sm">You haven't requested any books yet.</p>
+            <a href="{% url 'request_book' %}" class="mt-4 inline-block text-orange-400 text-sm hover:text-orange-300 font-semibold">Request a book →</a>
           </div>
           {% endfor %}
         </div>
