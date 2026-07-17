@@ -25,8 +25,14 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 # Trust the X-Forwarded-Proto header from Render's load balancer
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# Enforce HTTPS (prevents POST data loss on HTTP -> HTTPS redirects)
+SECURE_SSL_REDIRECT = not DEBUG
+
 # Allow CSRF POST requests from the Render domain
-CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://*.onrender.com').split(',')
+CSRF_TRUSTED_ORIGINS = [
+    'https://youth-club-library.onrender.com',
+    'https://*.onrender.com'
+]
 
 # Application definition
 INSTALLED_APPS = [
