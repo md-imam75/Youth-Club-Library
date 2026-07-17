@@ -112,6 +112,19 @@ class Book(models.Model):
         decimal_places=2,
         help_text='Internal cost — hidden from customers'
     )
+    
+    # Manual Competitor Pricing
+    wafilife_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Manually enter the price of this book on Wafilife (Optional)'
+    )
+    wafilife_url = models.URLField(
+        blank=True,
+        help_text='Direct link to this book on Wafilife (Optional)'
+    )
 
     stock_quantity = models.IntegerField(default=0)
     can_borrow = models.BooleanField(default=True, help_text='Allow members to borrow this book')

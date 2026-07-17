@@ -52,7 +52,7 @@ class BookAdmin(admin.ModelAdmin):
                        'description', 'isbn', 'pages', 'language', 'edition')
         }),
         ('Pricing (buying_price is internal)', {
-            'fields': ('regular_price', 'offer_price', 'buying_price'),
+            'fields': ('regular_price', 'offer_price', 'buying_price', 'wafilife_price', 'wafilife_url'),
             'classes': ('collapse',),
         }),
         ('Inventory & Flags', {
