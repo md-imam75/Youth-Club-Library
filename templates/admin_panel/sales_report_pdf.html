@@ -6,11 +6,11 @@
   <style>
     @font-face {
       font-family: NotoSansBengali;
-      src: url('C:/Users/Lenovo/.gemini/antigravity/scratch/youth_club_library/static/fonts/NotoSansBengali-Regular.ttf');
+      src: url('{{ font_regular }}');
     }
     @font-face {
       font-family: NotoSansBengali;
-      src: url('C:/Users/Lenovo/.gemini/antigravity/scratch/youth_club_library/static/fonts/NotoSansBengali-Bold.ttf');
+      src: url('{{ font_bold }}');
       font-weight: bold;
     }
     @page {
@@ -105,7 +105,7 @@
   <table class="header-table">
     <tr>
       <td style="width: 70px; vertical-align: top;">
-        <img src="C:/Users/Lenovo/.gemini/antigravity/scratch/youth_club_library/static/images/logo.png" style="width: 50px; height: 50px;" />
+        <img src="{{ logo_path }}" style="width: 50px; height: 50px;" />
       </td>
       <td style="vertical-align: top; padding-left: 10px;">
         <div class="company-name">Youth Club Library — Staff Dashboard</div>

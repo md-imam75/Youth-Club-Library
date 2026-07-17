@@ -961,6 +961,11 @@ def render_to_pdf(template_src, context_dict={}):
     try:
         font_regular = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'NotoSansBengali-Regular.ttf')
         font_bold = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'NotoSansBengali-Bold.ttf')
+        logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
+
+        context_dict['font_regular'] = font_regular
+        context_dict['font_bold'] = font_bold
+        context_dict['logo_path'] = logo_path
 
         if 'NotoSansBengali' not in pdfmetrics.getRegisteredFontNames():
             pdfmetrics.registerFont(TTFont('NotoSansBengali', font_regular))
