@@ -11,17 +11,29 @@ logger = logging.getLogger(__name__)
 
 SCRAPER_API_KEY = config('SCRAPER_API_KEY', default=None)
 
-def _get_page(url: str, headers: dict = None) -> requests.Response:
+def _get_page(url: str, headers: dict = None, render: bool = False, premium: bool = False) -> requests.Response:
     if SCRAPER_API_KEY:
         payload = {'api_key': SCRAPER_API_KEY, 'url': url}
+        
+        # Tell ScraperAPI to forward your custom User-Agent
         if headers:
             payload['keep_headers'] = 'true'
-            return requests.get('https://api.scraperapi.com/', params=payload, headers=headers, timeout=20)
-        return requests.get('https://api.scraperapi.com/', params=payload, timeout=20)
+            
+        # Tell ScraperAPI to wait and execute Javascript (Solves Cloudflare challenges)
+        if render:
+            payload['render'] = 'true'
+            
+        # Optional: Use ScraperAPI's Premium Residential IPs
+        if premium:
+            payload['premium'] = 'true'
+
+        req_headers = headers if headers else {}
+        # Increased timeout because JS rendering takes longer
+        return requests.get('https://api.scraperapi.com/', params=payload, headers=req_headers, timeout=30)
     else:
         import cloudscraper
         scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True})
-        return scraper.get(url, headers=headers or {}, timeout=10)
+        return scraper.get(url, headers=headers or {}, timeout=15)
 
 HEADERS = {
     'User-Agent': (
@@ -49,7 +61,7 @@ def _scrape_rokomari(title: str) -> dict | None:
         query = title.replace(' ', '+')
         url = f'https://www.rokomari.com/search?term={query}'
         
-        resp = _get_page(url)
+        resp = _get_page(url, headers=HEADERS)
         
         if resp.status_code != 200:
             return None
@@ -146,7 +158,7 @@ def _scrape_wafilife(title: str) -> dict | None:
         query = title.replace(' ', '+')
         url = f'https://www.wafilife.com/?s={query}&post_type=product'
         
-        resp = _get_page(url)
+        resp = _get_page(url, headers=HEADERS, render=True)
         
         if resp.status_code != 200:
             return None
@@ -189,7 +201,7 @@ def _scrape_niyamahshop(title: str) -> dict | None:
         query = title.replace(' ', '+')
         url = f'https://www.niyamahshop.com/?s={query}&post_type=product'
         
-        resp = _get_page(url)
+        resp = _get_page(url, headers=HEADERS, render=True)
         
         if resp.status_code != 200:
             return None
