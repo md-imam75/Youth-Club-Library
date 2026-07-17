@@ -141,54 +141,44 @@ def _scrape_rokomari(title: str) -> dict | None:
 #                 }
 #                 break
 def _scrape_wafilife(title: str) -> dict | None:
-    """Scrape Wafilife.com for book price using Next.js RSC component stream parsing."""
+    """Scrape Wafilife.com for book price using standard HTML parsing."""
     try:
         query = title.replace(' ', '+')
         url = f'https://www.wafilife.com/?s={query}&post_type=product'
         
-        # We use standard requests but trick it into thinking we are a Next.js client
-        # This completely bypasses standard Cloudflare HTML blocks because it's an API request.
-        rsc_headers = dict(HEADERS)
-        rsc_headers['RSC'] = '1'
-        rsc_headers['Next-Router-State-Tree'] = ''
+        resp = _get_page(url)
         
-        resp = _get_page(url, headers=rsc_headers)
-        
-        content = resp.content
-        pattern = rb'\{\"product\"\:\{\"id\"\:\"(?P<id>\d+)\",\"PID\"\:\"(?P<pid>\d+)\",\"name\"\:\"(?P<name>[^\"]+)\",\"slug\"\:\"(?P<slug>[^\"]+)\".*?\"price\"\:?(?P<price>\d+).*?\"productUrl\"\:\"(?P<url>[^\"]+)\"'
-        
-        matches = list(re.finditer(pattern, content))
-        if not matches:
+        if resp.status_code != 200:
             return None
             
-        matched_result = None
-        for m in matches:
-            name_bytes = m.group('name')
-            name_str = name_bytes.decode('utf-8', errors='ignore')
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        cards = soup.select('.product, .product-item, .product-wrapper')
+        
+        for card in cards:
+            title_tag = card.select_one('.woocommerce-loop-product__title, h3 a, h2, .heading-title a')
+            link_tag = card.select_one('a')
             
-            # Unescape unicode sequences if present
-            if '\\u' in name_str:
-                try:
-                    decoded_raw = name_str.encode('utf-8').decode('unicode_escape')
-                    name_str = decoded_raw.encode('latin1').decode('utf-8')
-                except Exception:
-                    pass
-            
-            if _is_related(name_str, title):
-                price_bytes = m.group('price')
-                url_bytes = m.group('url')
-                price_str = price_bytes.decode('utf-8', errors='ignore')
-                url_str = url_bytes.decode('utf-8', errors='ignore')
+            if not title_tag or not link_tag:
+                continue
                 
-                matched_result = {
+            book_name = title_tag.get_text(strip=True)
+            
+            if _is_related(book_name, title):
+                price_tag = card.select_one('ins .woocommerce-Price-amount, .price .woocommerce-Price-amount, .price')
+                
+                price_text = price_tag.get_text(strip=True) if price_tag else None
+                
+                if price_text:
+                    price_text = price_text.replace('৳', 'TK. ').replace('Tk', 'TK. ')
+                
+                return {
                     'site': 'Wafilife',
-                    'price': f'TK. {price_str}' if price_str else None,
-                    'book_name': name_str,
-                    'url': f'https://www.wafilife.com{url_str}',
+                    'price': price_text,
+                    'book_name': book_name,
+                    'url': link_tag.get('href', url)
                 }
-                break
                 
-        return matched_result
+        return None
     except Exception as exc:
         logger.warning('Wafilife scrape failed: %s', exc)
         return None
@@ -199,12 +189,7 @@ def _scrape_niyamahshop(title: str) -> dict | None:
         query = title.replace(' ', '+')
         url = f'https://www.niyamahshop.com/?s={query}&post_type=product'
         
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        }
-        
-        resp = _get_page(url, headers=headers)
+        resp = _get_page(url)
         
         if resp.status_code != 200:
             return None

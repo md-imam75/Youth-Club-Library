@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
 from django.contrib import messages
 from django.db.models import Q, Count
 from .models import Author, Publication, Category, Book, BookReview, BookRequest, BookRequestItem, WaitlistEntry, SiteTestimonial
@@ -96,8 +97,7 @@ def book_detail_view(request, pk):
     )
     reviews = book.reviews.select_related('user').all()
 
-    # Competitor prices (cached 24h)
-    competitor_prices = get_competitor_prices(book.title)
+    # Competitor prices will be fetched asynchronously via API
 
     # Handle review submission
     user_review = None
@@ -139,13 +139,19 @@ def book_detail_view(request, pk):
         'book': book,
         'reviews': reviews,
         'user_review': user_review,
-        'competitor_prices': competitor_prices,
         'related_category_books': related_category_books,
         'related_author_books': related_author_books,
         'related_publication_books': related_publication_books,
         'page_title': book.title,
     }
     return render(request, 'catalog/book_detail.html', context)
+
+
+def api_book_prices(request, book_id):
+    """Async API endpoint to fetch competitor prices for a specific book."""
+    book = get_object_or_404(Book, pk=book_id)
+    prices = get_competitor_prices(book.title)
+    return JsonResponse({'prices': prices})
 
 
 def books_by_author_view(request, pk):

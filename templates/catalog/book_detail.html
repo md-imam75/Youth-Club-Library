@@ -73,33 +73,8 @@
             {% endif %}
           </div>
 
-          <!-- Competitor Prices Panel -->
-          {% if competitor_prices %}
-          <div class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10">
-            <h4 class="text-sm font-semibold dark:text-gray-300 text-slate-700 mb-3 flex items-center gap-2">
-              <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-              Prices on Other Sites
-              <span class="text-xs dark:text-gray-500 text-slate-500 font-normal">(cached)</span>
-            </h4>
-            <div class="space-y-3">
-              {% for item in competitor_prices %}
-              <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer"
-                 class="flex items-center justify-between p-3 glass rounded-xl border dark:border-white/5 border-black/10 hover:border-primary-500/30 transition-all group">
-                <div class="flex items-center gap-2">
-                  <div class="w-6 h-6 rounded-full dark:bg-white/10 bg-black/5 flex items-center justify-center text-xs font-bold text-white">
-                    {{ item.site|first }}
-                  </div>
-                  <span class="text-sm dark:text-gray-300 text-slate-700 group-hover:dark:text-white text-slate-900 transition-colors">{{ item.site }}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-semibold dark:text-white text-slate-900">{{ item.price|default:"N/A" }}</span>
-                  <svg class="w-3 h-3 dark:text-gray-500 text-slate-500 group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                </div>
-              </a>
-              {% endfor %}
-            </div>
-          </div>
-          {% endif %}
+          <!-- Competitor Prices Panel (Loaded Asynchronously) -->
+          <div id="competitor-prices-container"></div>
         </div>
       </div>
 
@@ -412,6 +387,74 @@ document.getElementById('star-selector')?.addEventListener('mouseleave', () => {
   document.querySelectorAll('.star-btn').forEach((s, i) => {
     s.style.color = i < val ? '#f59e0b' : '#4b5563';
   });
+});
+
+// Asynchronously load competitor prices
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('competitor-prices-container');
+    if (!container) return;
+    
+    // Show skeleton loader
+    container.innerHTML = `
+      <div class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10">
+        <h4 class="text-sm font-semibold dark:text-gray-300 text-slate-700 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-sky-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          Loading live prices...
+        </h4>
+        <div class="space-y-3">
+          <div class="h-12 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+          <div class="h-12 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+          <div class="h-12 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+        </div>
+      </div>
+    `;
+
+    fetch("{% url 'api_book_prices' book.pk %}")
+        .then(response => response.json())
+        .then(data => {
+            const prices = data.prices;
+            if (!prices || prices.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+              <div class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10">
+                <h4 class="text-sm font-semibold dark:text-gray-300 text-slate-700 mb-3 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                  Prices on Other Sites
+                  <span class="text-xs text-sky-400 font-normal">(live)</span>
+                </h4>
+                <div class="space-y-3">
+            `;
+            
+            prices.forEach(item => {
+                const siteInitial = item.site ? item.site.charAt(0) : '?';
+                const priceText = item.price ? item.price : 'N/A';
+                html += \`
+                  <a href="\${item.url}" target="_blank" rel="noopener noreferrer"
+                     class="flex items-center justify-between p-3 glass rounded-xl border dark:border-white/5 border-black/10 hover:border-primary-500/30 transition-all group">
+                    <div class="flex items-center gap-2">
+                      <div class="w-6 h-6 rounded-full dark:bg-white/10 bg-black/5 flex items-center justify-center text-xs font-bold text-white">
+                        \${siteInitial}
+                      </div>
+                      <span class="text-sm dark:text-gray-300 text-slate-700 group-hover:dark:text-white text-slate-900 transition-colors">\${item.site}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-semibold dark:text-white text-slate-900">\${priceText}</span>
+                      <svg class="w-3 h-3 dark:text-gray-500 text-slate-500 group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </div>
+                  </a>
+                \`;
+            });
+            
+            html += \`</div></div>\`;
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Failed to load competitor prices', err);
+            container.innerHTML = '';
+        });
 });
 </script>
 {% endblock %}
