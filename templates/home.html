@@ -140,25 +140,7 @@
           </a>
         </div>
 
-        <!-- Mini Stats Grid -->
-        <div class="grid grid-cols-4 gap-4 pt-6 border-t dark:border-white/5 border-black/5 max-w-xl">
-          <div>
-            <div class="text-2xl font-bold dark:text-white text-slate-900 counter-num" data-target="{{ total_books }}">0</div>
-            <div class="text-[10px] dark:text-gray-500 text-slate-500 uppercase tracking-widest font-semibold mt-1">Books</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold dark:text-white text-slate-900 counter-num" data-target="{{ total_members }}">0</div>
-            <div class="text-[10px] dark:text-gray-500 text-slate-500 uppercase tracking-widest font-semibold mt-1">Members</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold dark:text-white text-slate-900 counter-num" data-target="{{ total_authors }}">0</div>
-            <div class="text-[10px] dark:text-gray-500 text-slate-500 uppercase tracking-widest font-semibold mt-1">Authors</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold dark:text-white text-slate-900 counter-num" data-target="{{ total_categories }}">0</div>
-            <div class="text-[10px] dark:text-gray-500 text-slate-500 uppercase tracking-widest font-semibold mt-1">Categories</div>
-          </div>
-        </div>
+
       </div>
 
       <!-- Right Column: Interactive 3D Canvas Centerpiece (5 spans) -->
@@ -177,6 +159,31 @@
     <svg class="w-4 h-4 dark:text-gray-500 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
     </svg>
+  </div>
+</section>
+
+
+<!-- ─── STATISTICS SECTION ──────────────────────────────────────────────────────── -->
+<section class="py-12 relative overflow-hidden bg-slate-50 dark:bg-[#0a1120] border-y dark:border-white/5 border-black/5 reveal">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x dark:divide-white/5 divide-black/5">
+      <div>
+        <div class="text-4xl sm:text-5xl font-extrabold dark:text-white text-slate-900 mb-2 counter-num" data-target="{{ total_books }}">0</div>
+        <div class="text-[10px] sm:text-xs font-bold text-sky-500 uppercase tracking-[0.2em]">Books</div>
+      </div>
+      <div>
+        <div class="text-4xl sm:text-5xl font-extrabold dark:text-white text-slate-900 mb-2 counter-num" data-target="{{ total_members }}">0</div>
+        <div class="text-[10px] sm:text-xs font-bold text-sky-500 uppercase tracking-[0.2em]">Members</div>
+      </div>
+      <div>
+        <div class="text-4xl sm:text-5xl font-extrabold dark:text-white text-slate-900 mb-2 counter-num" data-target="{{ total_authors }}">0</div>
+        <div class="text-[10px] sm:text-xs font-bold text-sky-500 uppercase tracking-[0.2em]">Authors</div>
+      </div>
+      <div>
+        <div class="text-4xl sm:text-5xl font-extrabold dark:text-white text-slate-900 mb-2 counter-num" data-target="{{ total_categories }}">0</div>
+        <div class="text-[10px] sm:text-xs font-bold text-sky-500 uppercase tracking-[0.2em]">Categories</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -327,6 +334,36 @@
   </div>
 </section>
 {% endif %}
+
+
+<!-- ─── REQUEST A BOOK SECTION ────────────────────────────────────────────────── -->
+<section class="py-24 px-4 relative overflow-hidden reveal bg-slate-50 dark:bg-[#0a1120] border-t dark:border-white/5 border-black/5">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="relative z-10 premium-glass rounded-3xl p-10 sm:p-16 border dark:border-white/10 border-black/10 shadow-xl overflow-hidden">
+      <!-- Glow spots -->
+      <div class="absolute -top-24 -left-24 w-80 h-80 rounded-full glow-sky blur-3xl opacity-20 pointer-events-none"></div>
+      <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full glow-purple blur-3xl opacity-20 pointer-events-none"></div>
+
+      <div class="relative space-y-6 max-w-2xl mx-auto">
+        <div class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center bg-purple-500/10 border border-purple-500/20 text-purple-500">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <h2 class="font-display text-3xl sm:text-5xl font-extrabold dark:text-white text-slate-900 tracking-tight">
+          Can't find a book?
+        </h2>
+        <p class="dark:text-gray-400 text-slate-600 text-base leading-relaxed">
+          If the book you are looking for is not available in our library, you can request it. We will try our best to bring it for you as soon as possible.
+        </p>
+        <div class="pt-2">
+          <a href="{% url 'request_book' %}"
+             class="inline-flex items-center justify-center gap-2 px-10 py-4 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white rounded-full font-bold text-base transition-all shadow-xl hover:shadow-purple-500/20 pulse-cta">
+            Request a Book
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 
 <!-- ─── UPCOMING BOOKS SECTION ────────────────────────────────────────────────── -->
@@ -901,8 +938,16 @@
       requestAnimationFrame(tick);
     };
 
-    // Hero section counters start immediately
-    document.querySelectorAll('.counter-num').forEach(el => animateCounter(el));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCounter(entry.target);
+          observer.unobserve(entry.target); // only animate once
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.counter-num').forEach(el => observer.observe(el));
   })();
 
   // ─── MEMBERSHIP PLANS CAROUSEL SLIDER ─────────────────────────────────────────
