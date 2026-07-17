@@ -9,17 +9,24 @@ try:
     DEBUG = config('DEBUG', default=True, cast=bool)
     GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID', default='')
     GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
-    BKASH_NUMBER = config('BKASH_NUMBER', default='01XXXXXXXXX')
+    BKASH_NUMBER = config('BKASH_NUMBER', default='01712345678')
 except ImportError:
     SECRET_KEY = 'django-insecure-ycl-dev-key-change-in-production-!@#$%'
     DEBUG = True
     GOOGLE_CLIENT_ID = ''
     GOOGLE_CLIENT_SECRET = ''
-    BKASH_NUMBER = '01XXXXXXXXX'
+    BKASH_NUMBER = '01712345678'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+
+# ─── SECURITY SETTINGS FOR PRODUCTION (RENDER) ───────────────────────────────
+# Trust the X-Forwarded-Proto header from Render's load balancer
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Allow CSRF POST requests from the Render domain
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://*.onrender.com').split(',')
 
 # Application definition
 INSTALLED_APPS = [
