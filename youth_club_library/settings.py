@@ -224,9 +224,12 @@ SOCIALACCOUNT_LOGIN_ON_GET = True      # Allow GET to trigger social login (no e
 SOCIALACCOUNT_QUERY_EMAIL = True       # Always fetch email from Google
 SOCIALACCOUNT_STORE_TOKENS = True      # Store OAuth tokens for later use
 
-# Use http for local dev (change to https in production)
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
+# Use https in production to prevent mobile browser redirect issues
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http' if DEBUG else 'https'
 
+# Security cookies (important for mobile browsers)
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
 
 # Cache (memory cache for development; use Redis/Memcached in production)
 CACHES = {
