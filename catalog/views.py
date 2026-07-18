@@ -55,6 +55,8 @@ def about_view(request):
 def books_view(request):
     """All books grid with search."""
     query = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'newest')
+    
     books = Book.objects.select_related('author', 'publication', 'category').filter(is_upcoming=False)
 
     if query:
@@ -65,7 +67,19 @@ def books_view(request):
             Q(category__name__icontains=query)
         )
 
-    books = books.order_by('-created_at')
+    # Sorting
+    if sort_by == 'price_asc':
+        from django.db.models.functions import Coalesce
+        books = books.annotate(
+            current_price=Coalesce('offer_price', 'regular_price')
+        ).order_by('current_price')
+    elif sort_by == 'price_desc':
+        from django.db.models.functions import Coalesce
+        books = books.annotate(
+            current_price=Coalesce('offer_price', 'regular_price')
+        ).order_by('-current_price')
+    else:
+        books = books.order_by('-created_at')
     total_count = books.count()
 
     # Pagination
@@ -82,6 +96,7 @@ def books_view(request):
     context = {
         'books': page_obj,
         'query': query,
+        'sort_by': sort_by,
         'page_title': 'All Books',
         'total_count': total_count,
     }
