@@ -205,7 +205,7 @@
   </style>
   {% block extra_head %}{% endblock %}
 </head>
-<body class="dark:bg-[#050a14] bg-slate-50 dark:text-slate-100 text-slate-900 min-h-screen" x-data="{ sidebarOpen: true, isDark: document.documentElement.classList.contains('dark'), toggleTheme() { this.isDark = !this.isDark; if (this.isDark) { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark'); } else { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light'); } } }">
+<body class="dark:bg-[#050a14] bg-slate-50 dark:text-slate-100 text-slate-900 min-h-screen" x-data="{ sidebarOpen: window.innerWidth >= 1024, isDark: document.documentElement.classList.contains('dark'), toggleTheme() { this.isDark = !this.isDark; if (this.isDark) { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark'); } else { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light'); } } }" @resize.window="if (window.innerWidth < 1024) { sidebarOpen = false } else { sidebarOpen = true }">
 
 <div class="flex min-h-screen">
 
