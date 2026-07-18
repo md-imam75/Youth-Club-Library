@@ -44,7 +44,6 @@
               <div class="text-xs dark:text-gray-500 text-slate-500 uppercase tracking-wider mb-1">{{ filter_type|title }}</div>
               <h1 class="font-display text-2xl sm:text-3xl font-bold dark:text-white text-slate-900 truncate">{{ filter_obj.name }}</h1>
               <div class="flex items-center gap-4 mt-1">
-                <span class="text-primary-400 text-sm font-medium">{{ books.count }} book{{ books.count|pluralize }}</span>
                 {% if filter_type == 'publication' and filter_obj.website %}
                 <a href="{{ filter_obj.website }}" target="_blank" class="text-xs dark:text-gray-400 text-slate-600 hover:text-primary-400 transition-colors flex items-center gap-1">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
