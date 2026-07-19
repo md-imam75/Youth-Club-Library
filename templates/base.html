@@ -434,17 +434,31 @@
           {% endif %}
         </div>
 
-        <!-- ── MOBILE HAMBURGER ──────────────────────────────────────────── -->
-        <button @click="open = !open"
-                class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 dark:text-gray-300 text-slate-700 hover:text-white hover:dark:bg-white/10 bg-black/5"
-                id="mobile-menu-btn">
-          <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-          <svg x-show="open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
+        <!-- ── MOBILE ACTIONS (Cart + Hamburger) ─────────────────────────── -->
+        <div class="flex lg:hidden items-center gap-2">
+          {% if user.is_authenticated %}
+          <!-- Mobile Cart Icon -->
+          <a href="{% url 'cart' %}" class="relative p-2 mr-1 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors duration-200" title="View Cart">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            {% if cart_count > 0 %}
+            <span class="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-primary-500 to-emerald-500 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white dark:ring-[#0a1223]">
+              {{ cart_count }}
+            </span>
+            {% endif %}
+          </a>
+          {% endif %}
+          
+          <button @click="open = !open"
+                  class="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 dark:text-gray-300 text-slate-700 hover:text-white hover:dark:bg-white/10 bg-black/5"
+                  id="mobile-menu-btn">
+            <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <svg x-show="open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
 
       </div>
     </div>
