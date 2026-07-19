@@ -19,7 +19,11 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',') + [
+    'youthclublibrary.com',
+    'www.youthclublibrary.com',
+    '.youthclublibrary.com'
+]
 
 # ─── SECURITY SETTINGS FOR PRODUCTION (RENDER) ───────────────────────────────
 # Trust the X-Forwarded-Proto header from Render's load balancer
@@ -28,10 +32,14 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Enforce HTTPS (prevents POST data loss on HTTP -> HTTPS redirects)
 SECURE_SSL_REDIRECT = not DEBUG
 
-# Allow CSRF POST requests from the Render domain
+# Allow CSRF POST requests from the Render domain and Custom Domain
 CSRF_TRUSTED_ORIGINS = [
     'https://youth-club-library.onrender.com',
-    'https://*.onrender.com'
+    'https://*.onrender.com',
+    'https://youthclublibrary.com',
+    'https://www.youthclublibrary.com',
+    'http://youthclublibrary.com',
+    'http://www.youthclublibrary.com',
 ]
 
 # Application definition
