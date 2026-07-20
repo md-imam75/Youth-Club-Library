@@ -84,7 +84,7 @@ def books_view(request):
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(books, 12)
+    paginator = Paginator(books, 36)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -172,7 +172,7 @@ def books_by_author_view(request, pk):
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(books, 12)
+    paginator = Paginator(books, 36)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -199,7 +199,7 @@ def books_by_publication_view(request, pk):
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(books, 12)
+    paginator = Paginator(books, 36)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -226,7 +226,7 @@ def books_by_category_view(request, slug):
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(books, 12)
+    paginator = Paginator(books, 36)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
