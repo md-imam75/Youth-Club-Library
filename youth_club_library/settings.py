@@ -5,17 +5,24 @@ import os
 # Try to load from .env file if python-decouple is available
 try:
     from decouple import config
-    SECRET_KEY = config('SECRET_KEY', default='django-insecure-ycl-dev-key-change-in-production-!@#$%')
-    DEBUG = config('DEBUG', default=True, cast=bool)
+    SECRET_KEY = config('SECRET_KEY')  # No default — must be set in env
+    DEBUG = config('DEBUG', default=False, cast=bool)
     GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID', default='')
     GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
-    BKASH_NUMBER = config('BKASH_NUMBER', default='01712345678')
+    BKASH_NUMBER = config('BKASH_NUMBER', default='')
 except ImportError:
-    SECRET_KEY = 'django-insecure-ycl-dev-key-change-in-production-!@#$%'
-    DEBUG = True
-    GOOGLE_CLIENT_ID = ''
-    GOOGLE_CLIENT_SECRET = ''
-    BKASH_NUMBER = '01712345678'
+    import os
+    _key = os.environ.get('SECRET_KEY')
+    if not _key:
+        raise RuntimeError(
+            'SECRET_KEY environment variable is not set. '
+            'Copy .env.example to .env and fill in your values.'
+        )
+    SECRET_KEY = _key
+    DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+    BKASH_NUMBER = os.environ.get('BKASH_NUMBER', '')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

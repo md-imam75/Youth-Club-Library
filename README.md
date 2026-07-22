@@ -2,6 +2,22 @@
 
 A full-stack Django e-commerce and library management system.
 
+---
+
+> ⚠️ **SECURITY NOTICE — GIT HISTORY**
+> If any secrets (API keys, passwords, database URLs) were ever committed to this repository's git history, **those values are permanently visible in old commits** even after removal.
+> **Action required:** Immediately rotate/regenerate the following credentials if they appeared in any past commit:
+> - Django `SECRET_KEY`
+> - Google OAuth `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
+> - Gmail App Password (`EMAIL_HOST_PASSWORD`)
+> - Neon PostgreSQL `DATABASE_URL` (password)
+> - ScraperAPI `SCRAPER_API_KEY`
+> - Any Cloudinary API credentials
+>
+> Generate new values from their respective platforms and update your environment variables on Render.
+
+---
+
 ## Quick Start
 
 ### 1. Create & activate virtual environment
