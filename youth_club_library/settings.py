@@ -246,6 +246,17 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http' if DEBUG else 'https'
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 
+# HttpOnly prevents JavaScript from reading these cookies (XSS protection)
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # Must remain False — Django's JS needs to read CSRF token
+
+# SameSite prevents cross-site request forgery
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Session timeout — 7 days (in seconds). Adjust as needed.
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
+
 # Cache (memory cache for development; use Redis/Memcached in production)
 CACHES = {
     'default': {

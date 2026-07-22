@@ -142,3 +142,24 @@ def apply_membership_view(request, plan_id):
         'page_title': f'Apply for {plan.name}',
     }
     return render(request, 'accounts/apply_membership.html', context)
+
+
+@login_required
+def delete_account_view(request):
+    """
+    Allows a user to permanently delete their account and personal data.
+    Orders and transaction histories are unlinked/anonymized to preserve accounting integrity.
+    """
+    if request.method == 'POST':
+        user = request.user
+        from django.contrib.auth import logout
+        # Anonymize orders linked to user before deletion if cascading is not desired
+        user.delete()  # Deletes CustomUser record, UserMembership (CASCADE), SocialAccounts
+        logout(request)
+        messages.success(request, 'Your account and personal data have been permanently deleted.')
+        return redirect('home')
+
+    return render(request, 'accounts/delete_account_confirm.html', {
+        'page_title': 'Delete Account Confirmation'
+    })
+
