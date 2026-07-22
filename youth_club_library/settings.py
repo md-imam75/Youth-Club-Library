@@ -26,7 +26,7 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',') + [
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',') + [
     'youthclublibrary.com',
     'www.youthclublibrary.com',
     '.youthclublibrary.com'

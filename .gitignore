@@ -10,3 +10,9 @@ __pycache__/
 
 # Static files
 staticfiles/
+
+# Media uploads (user-uploaded files)
+media/
+
+# Scraper test output / temporary data files
+scraper_results.json

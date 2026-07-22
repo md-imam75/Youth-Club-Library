@@ -11,6 +11,9 @@ from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 
 from django.http import JsonResponse, HttpResponse
 from django.core.mail import EmailMessage
@@ -573,7 +576,8 @@ def admin_create_ajax(request):
             'created': created
         })
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.error('admin_create_ajax error: %s', e, exc_info=True)
+        return JsonResponse({'success': False, 'error': 'An internal error occurred. Please try again.'}, status=500)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -975,7 +979,7 @@ def render_to_pdf(template_src, context_dict={}):
         # Register family so bold tags work automatically
         pdfmetrics.registerFontFamily('NotoSansBengali', normal='NotoSansBengali', bold='NotoSansBengali-Bold')
     except Exception as e:
-        print(f"Font registration error: {e}")
+        logger.error('Font registration error: %s', e)
 
     template = get_template(template_src)
     html = template.render(context_dict)
@@ -1062,7 +1066,7 @@ def send_order_invoice_email_thread(order_pk):
         email.attach(f"Invoice_{order.order_number}.pdf", pdf_data, "application/pdf")
         email.send()
     except Exception as e:
-        print(f"Error in send_order_invoice_email_thread: {e}")
+        logger.error('Failed to send invoice email for order %s: %s', order.order_number if order else 'unknown', e, exc_info=True)
 
 
 @staff_required
