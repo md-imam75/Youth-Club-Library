@@ -580,6 +580,13 @@ def admin_create_ajax(request):
         return JsonResponse({'success': False, 'error': 'An internal error occurred. Please try again.'}, status=500)
 
 
+@staff_required
+def publication_discount_ajax(request, pk):
+    """Return a publication's default_discount_percent as JSON (staff only)."""
+    pub = get_object_or_404(Publication, pk=pk)
+    return JsonResponse({'discount': float(pub.default_discount_percent)})
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # AUTHORS CRUD
 # ──────────────────────────────────────────────────────────────────────────────

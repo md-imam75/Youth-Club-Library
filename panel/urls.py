@@ -17,6 +17,7 @@ urlpatterns = [
     path('users/',                  views.admin_users,             name='admin_users'),
     path('users/<int:pk>/',         views.admin_user_detail,       name='admin_user_detail'),
     path('create-ajax/',            views.admin_create_ajax,       name='admin_create_ajax'),
+    path('publication-discount/<int:pk>/', views.publication_discount_ajax, name='publication_discount_ajax'),
     # Books CRUD
     path('books/',                  views.admin_books,             name='admin_books'),
     path('books/add/',              views.admin_book_add,          name='admin_book_add'),

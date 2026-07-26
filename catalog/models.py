@@ -33,6 +33,12 @@ class Publication(models.Model):
     description = models.TextField(blank=True)
     logo = models.ImageField(upload_to='publications/', blank=True, null=True)
     website = models.URLField(blank=True)
+    default_discount_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        help_text='Default discount % applied to new books from this publication (0–100)'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

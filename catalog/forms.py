@@ -59,11 +59,18 @@ class AuthorForm(forms.ModelForm):
 class PublicationForm(forms.ModelForm):
     class Meta:
         model = Publication
-        fields = ['name', 'description', 'logo', 'website']
+        fields = ['name', 'description', 'logo', 'website', 'default_discount_percent']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Publication Name'}),
             'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 4, 'placeholder': 'Brief description'}),
             'website': forms.URLInput(attrs={'class': 'form-input', 'placeholder': 'Website URL (optional)'}),
+            'default_discount_percent': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'e.g. 30 for 30% off',
+                'step': '0.01',
+                'min': '0',
+                'max': '100',
+            }),
         }
 
 

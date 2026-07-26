@@ -163,6 +163,7 @@
         <div>
           <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Offer / Sale Price (৳)</label>
           {{ form.offer_price }}
+          <p id="discount-hint" class="text-xs mt-1 text-emerald-400 hidden"></p>
         </div>
         <div>
           <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Buying / Cost Price (৳) <span class="text-red-400">*</span></label>
@@ -302,6 +303,83 @@
           option_create: renderOptionCreate
         }
       });
+    }
+    // ── Publication Discount Auto-Fill ──────────────────────────────
+    const regularPriceEl = document.getElementById('id_regular_price');
+    const offerPriceEl = document.getElementById('id_offer_price');
+    const discountHint = document.getElementById('discount-hint');
+    let pubDiscount = 0;          // current publication's discount %
+    let userTouchedOffer = false;  // true once admin manually edits offer_price
+
+    // Mark offer_price as manually touched if admin types in it
+    if (offerPriceEl) {
+      offerPriceEl.addEventListener('input', () => { userTouchedOffer = true; });
+    }
+
+    function autoFillOfferPrice() {
+      if (userTouchedOffer || !regularPriceEl || !offerPriceEl) return;
+      const regularPrice = parseFloat(regularPriceEl.value);
+      if (!regularPrice || regularPrice <= 0 || pubDiscount <= 0) return;
+      const calculated = Math.round(regularPrice * (1 - pubDiscount / 100));
+      offerPriceEl.value = calculated;
+    }
+
+    function fetchPubDiscount(pubId) {
+      if (!pubId) {
+        pubDiscount = 0;
+        if (discountHint) discountHint.classList.add('hidden');
+        return;
+      }
+      fetch(`/admin-panel/publication-discount/${pubId}/`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(r => r.json())
+      .then(data => {
+        pubDiscount = data.discount || 0;
+        if (discountHint) {
+          if (pubDiscount > 0) {
+            discountHint.textContent = `📌 Publication default: ${pubDiscount}% off`;
+            discountHint.classList.remove('hidden');
+          } else {
+            discountHint.classList.add('hidden');
+          }
+        }
+        autoFillOfferPrice();
+      })
+      .catch(() => { pubDiscount = 0; });
+    }
+
+    // When publication dropdown changes
+    if (pubSelect) {
+      const pubTom = pubSelect.tomselect;
+      if (pubTom) {
+        pubTom.on('change', function(value) {
+          userTouchedOffer = false;  // reset on new publication selection
+          fetchPubDiscount(value);
+        });
+        // On page load, if editing a book that already has a publication
+        if (pubTom.getValue()) {
+          // Don't auto-fill when editing — just show the hint
+          fetch(`/admin-panel/publication-discount/${pubTom.getValue()}/`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+          .then(r => r.json())
+          .then(data => {
+            pubDiscount = data.discount || 0;
+            if (discountHint && pubDiscount > 0) {
+              discountHint.textContent = `📌 Publication default: ${pubDiscount}% off`;
+              discountHint.classList.remove('hidden');
+            }
+          })
+          .catch(() => {});
+          userTouchedOffer = true; // treat existing values as manual
+        }
+      }
+    }
+
+    // When regular_price changes, recalculate offer_price
+    if (regularPriceEl) {
+      regularPriceEl.addEventListener('input', autoFillOfferPrice);
     }
   });
 </script>
