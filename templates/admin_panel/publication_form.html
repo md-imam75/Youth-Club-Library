@@ -42,6 +42,12 @@
         {{ form.website }}
         {% if form.website.errors %}<p class="text-red-400 text-xs mt-1">{{ form.website.errors|join:", " }}</p>{% endif %}
       </div>
+
+      <div>
+        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Default Discount (%)</label>
+        {{ form.default_discount_percent }}
+        {% if form.default_discount_percent.errors %}<p class="text-red-400 text-xs mt-1">{{ form.default_discount_percent.errors|join:", " }}</p>{% endif %}
+      </div>
     </div>
 
     <div class="flex items-center gap-4">
