@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q, Count
 from .models import Author, Publication, Category, Book, BookReview, BookRequest, BookRequestItem, WaitlistEntry, SiteTestimonial
-from .utils import get_competitor_prices
 from accounts.models import CustomUser, UserMembership, MembershipPlan
 
 
@@ -68,7 +67,15 @@ def books_view(request):
         )
 
     # Sorting
-    if sort_by == 'price_asc':
+    if sort_by == 'featured':
+        books = books.order_by('-is_featured', '-created_at')
+    elif sort_by == 'best_selling':
+        books = books.annotate(sales_count=Count('orders')).order_by('-sales_count', '-created_at')
+    elif sort_by == 'alpha_asc':
+        books = books.order_by('title')
+    elif sort_by == 'alpha_desc':
+        books = books.order_by('-title')
+    elif sort_by == 'price_asc':
         from django.db.models.functions import Coalesce
         books = books.annotate(
             current_price=Coalesce('offer_price', 'regular_price')
@@ -78,7 +85,14 @@ def books_view(request):
         books = books.annotate(
             current_price=Coalesce('offer_price', 'regular_price')
         ).order_by('-current_price')
+    elif sort_by == 'date_asc':
+        books = books.order_by('created_at')
+    elif sort_by == 'relevance':
+        # Leave as default order (if searched) or fallback to newest
+        if not query:
+            books = books.order_by('-created_at')
     else:
+        # Default to newest (date_desc)
         books = books.order_by('-created_at')
     total_count = books.count()
 
@@ -111,8 +125,7 @@ def book_detail_view(request, pk):
     )
     reviews = book.reviews.select_related('user').all()
 
-    # Competitor prices (cached 24h)
-    competitor_prices = get_competitor_prices(book.title)
+    # Competitor prices scraping removed for performance
 
     # Handle review submission
     user_review = None
@@ -154,7 +167,6 @@ def book_detail_view(request, pk):
         'book': book,
         'reviews': reviews,
         'user_review': user_review,
-        'competitor_prices': competitor_prices,
         'related_category_books': related_category_books,
         'related_author_books': related_author_books,
         'related_publication_books': related_publication_books,
