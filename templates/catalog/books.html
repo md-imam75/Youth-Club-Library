@@ -131,9 +131,15 @@
           <div class="relative flex-1 md:flex-none">
             <select name="sort" onchange="this.form.submit()"
                     class="w-full md:w-auto appearance-none bg-white dark:bg-[#0a1223] border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-sm font-semibold dark:text-white text-slate-900 outline-none cursor-pointer hover:border-primary-500/50 transition-colors shadow-sm focus:ring-2 focus:ring-primary-500">
-              <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest Arrivals</option>
-              <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
-              <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+              <option value="featured" {% if sort_by == 'featured' %}selected{% endif %}>Featured</option>
+              <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>Most relevant</option>
+              <option value="best_selling" {% if sort_by == 'best_selling' %}selected{% endif %}>Best selling</option>
+              <option value="alpha_asc" {% if sort_by == 'alpha_asc' %}selected{% endif %}>Alphabetically, A-Z</option>
+              <option value="alpha_desc" {% if sort_by == 'alpha_desc' %}selected{% endif %}>Alphabetically, Z-A</option>
+              <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price, low to high</option>
+              <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price, high to low</option>
+              <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>Date, old to new</option>
+              <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Date, new to old</option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-gray-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
