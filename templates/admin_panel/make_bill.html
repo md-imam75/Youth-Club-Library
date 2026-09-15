@@ -56,7 +56,7 @@
 
       <div class="pt-2">
         <button type="submit" id="submit-btn" disabled
-                class="w-full py-4 rounded-2xl font-bold text-base transition-all shadow-xl bg-gray-700 dark:text-gray-400 text-slate-600 cursor-not-allowed">
+                class="w-full py-4 rounded-2xl font-bold text-base transition-all shadow-xl bg-slate-200 dark:bg-gray-800 text-slate-400 dark:text-gray-500 cursor-not-allowed">
           Generate Bill & Invoice
         </button>
       </div>
@@ -72,7 +72,7 @@
           <input type="text" id="book-search" oninput="handleSearch(event)" placeholder="Search by book title, author, or publication..." class="form-input" autocomplete="off" />
           
           <!-- Search results dropdown -->
-          <div id="search-results" class="absolute left-0 right-0 mt-2 bg-slate-900 border dark:border-white/10 border-black/10 rounded-2xl max-h-60 overflow-y-auto hidden z-10 shadow-2xl">
+          <div id="search-results" class="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border dark:border-white/10 border-black/10 rounded-2xl max-h-60 overflow-y-auto hidden z-10 shadow-2xl">
             <!-- Results injected here -->
           </div>
         </div>
@@ -140,7 +140,7 @@
       if (data.books && data.books.length > 0) {
         data.books.forEach(book => {
           const item = document.createElement('div');
-          item.className = 'flex items-center justify-between p-3 border-b dark:border-white/5 border-black/10 hover:dark:bg-white/5 bg-black/5 cursor-pointer transition-colors';
+          item.className = 'flex items-center justify-between p-3 border-b dark:border-white/5 border-black/10 hover:bg-slate-100 hover:dark:bg-white/5 cursor-pointer transition-colors';
           
           let priceHTML = '';
           if (book.offer_price) {
@@ -242,7 +242,7 @@
         </tr>
       `;
       submitBtn.disabled = true;
-      submitBtn.className = 'w-full py-4 rounded-2xl font-bold text-base transition-all shadow-xl bg-gray-700 dark:text-gray-400 text-slate-600 cursor-not-allowed';
+      submitBtn.className = 'w-full py-4 rounded-2xl font-bold text-base transition-all shadow-xl bg-slate-200 dark:bg-gray-800 text-slate-400 dark:text-gray-500 cursor-not-allowed';
       calculateSummary();
       return;
     }
