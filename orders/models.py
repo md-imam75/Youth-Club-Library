@@ -174,7 +174,7 @@ class OfflineBill(models.Model):
     customer_email = models.EmailField(blank=True)
     payment_method = models.CharField(max_length=10, choices=[('cash', 'Cash'), ('bkash', 'bKash')], default='cash')
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ['-created_at']

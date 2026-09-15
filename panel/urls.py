@@ -56,6 +56,7 @@ urlpatterns = [
     # Offline Billing System
     path('billing/',                     views.admin_bill_list,              name='admin_bill_list'),
     path('billing/make/',                views.admin_make_bill,              name='admin_make_bill'),
+    path('billing/<int:pk>/edit/',       views.admin_bill_edit,              name='admin_bill_edit'),
     path('billing/<int:pk>/pdf/',        views.admin_bill_download_pdf,      name='admin_bill_download_pdf'),
     path('billing/search-books/',        views.admin_book_search_ajax,       name='admin_book_search_ajax'),
 

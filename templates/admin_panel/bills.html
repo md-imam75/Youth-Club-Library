@@ -57,6 +57,9 @@
           <td class="px-4 py-3 dark:text-white text-slate-900 font-bold text-sm">৳{{ bill.total_amount }}</td>
           <td class="px-4 py-3 dark:text-gray-400 text-slate-600 text-xs">{{ bill.created_at|date:"d M Y, h:i A" }}</td>
           <td class="px-4 py-3 text-right">
+            <a href="{% url 'admin_bill_edit' bill.pk %}" class="btn-primary text-xs py-1 px-3 inline-flex items-center gap-1.5 mr-2" style="background:rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24;">
+              ✏️ Edit
+            </a>
             <a href="{% url 'admin_bill_download_pdf' bill.pk %}" class="btn-primary text-xs py-1 px-3 inline-flex items-center gap-1.5" style="background:rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.3); color: #38bdf8;">
               📥 PDF Invoice
             </a>

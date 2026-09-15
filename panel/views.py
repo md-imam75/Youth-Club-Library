@@ -1224,6 +1224,49 @@ def admin_make_bill(request):
 
 
 @staff_required
+def admin_bill_edit(request, pk):
+    """Edit an existing walk-in bill (change total/discount or date)."""
+    bill = get_object_or_404(OfflineBill, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            new_total = float(request.POST.get('total_amount', bill.total_amount))
+            new_date_str = request.POST.get('created_at')
+            
+            from django.utils.dateparse import parse_datetime
+            parsed_date = parse_datetime(new_date_str) if new_date_str else None
+            
+            if parsed_date:
+                bill.created_at = parsed_date
+                # Sync date to all associated Order items
+                Order.objects.filter(bill_number=bill.bill_number).update(created_at=parsed_date)
+                
+            if float(new_total) != float(bill.total_amount):
+                diff = float(bill.total_amount) - new_total
+                bill.total_amount = new_total
+                # Apply the difference to the first order item so sales report is accurate
+                orders = Order.objects.filter(bill_number=bill.bill_number)
+                if orders.exists():
+                    first_order = orders.first()
+                    first_order.total_cost = float(first_order.total_cost) - diff
+                    first_order.save(update_fields=['total_cost'])
+            
+            bill.save()
+            messages.success(request, f"Bill #{bill.bill_number} updated.")
+            return redirect('admin_bill_list')
+        except ValueError:
+            messages.error(request, "Invalid input provided.")
+            return redirect('admin_bill_edit', pk=pk)
+
+    context = {
+        'bill': bill,
+        'page_title': f'Edit Bill {bill.bill_number}',
+    }
+    return render(request, 'admin_panel/bill_edit.html', context)
+
+
+
+@staff_required
 def admin_bill_download_pdf(request, pk):
     """Generate and stream PDF download for a specific offline bill."""
     bill = get_object_or_404(OfflineBill, pk=pk)
