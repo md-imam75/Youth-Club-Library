@@ -170,7 +170,7 @@
           </div>
 
           <button type="submit" id="place-order-btn"
-                  class="w-full py-4 bg-gradient-to-r from-primary-600 to-emerald-600 hover:from-primary-500 hover:to-emerald-500 rounded-2xl font-bold text-lg transition-all shadow-xl hover:shadow-primary-500/30 pulse-cta">
+                  class="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold text-lg transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]">
             {% if order_type == 'borrow' %}Confirm Borrow{% else %}Place Order{% endif %}
           </button>
         </form>
@@ -209,6 +209,10 @@
                 <span class="dark:text-gray-400 text-slate-600">Delivery</span>
                 <span class="dark:text-white text-slate-900" id="summary-delivery">Select option</span>
               </div>
+              <div class="flex justify-between text-pink-400" id="bkash-charge-row" style="display:none;">
+                <span>bKash Charge (1.395%)</span>
+                <span id="bkash-charge-amount">৳0</span>
+              </div>
               <div class="border-t dark:border-white/10 border-black/10 pt-3 flex justify-between font-bold">
                 <span class="dark:text-white text-slate-900">Total</span>
                 <span class="text-xl gradient-text" id="summary-total">৳{{ book_price|floatformat:0 }}</span>
@@ -244,22 +248,49 @@
 <script>
 const deliveryCosts = {{ delivery_costs_json }};
 const bookPrice = {{ book_price }};
+const BKASH_RATE = 13.95 / 1000; // 1.395% cashout charge
 
-function updateTotal(selectedKey) {
-  const cost = deliveryCosts[selectedKey] !== undefined ? deliveryCosts[selectedKey] : 0;
-  const total = bookPrice + cost;
+let currentDeliveryCost = 0;
+let currentPaymentMethod = 'Offline';
+
+function calcBkashCharge(amount) {
+  return Math.round(amount * BKASH_RATE);
+}
+
+function refreshSummary() {
+  const subtotal = bookPrice + currentDeliveryCost;
+  const bkashCharge = currentPaymentMethod === 'bKash' ? calcBkashCharge(subtotal) : 0;
+  const total = subtotal + bkashCharge;
 
   document.getElementById('summary-delivery').textContent =
-    cost === 0 ? '৳0 (Free)' : `৳${cost}`;
+    currentDeliveryCost === 0 ? '৳0 (Free)' : `৳${currentDeliveryCost}`;
+
+  // Show/hide bKash charge row
+  const chargeRow = document.getElementById('bkash-charge-row');
+  if (chargeRow) {
+    chargeRow.style.display = currentPaymentMethod === 'bKash' ? 'flex' : 'none';
+    document.getElementById('bkash-charge-amount').textContent = `৳${bkashCharge}`;
+  }
+
   document.getElementById('summary-total').textContent = `৳${total}`;
-  document.getElementById('bkash-amount') && (
-    document.getElementById('bkash-amount').textContent = `৳${total}`
-  );
+  const bkashAmountEl = document.getElementById('bkash-amount');
+  if (bkashAmountEl) bkashAmountEl.textContent = `৳${total}`;
+}
+
+function updateTotal(selectedKey) {
+  currentDeliveryCost = deliveryCosts[selectedKey] !== undefined ? deliveryCosts[selectedKey] : 0;
+  refreshSummary();
 }
 
 function checkoutForm() {
   return {
     paymentMethod: 'Offline',
+    init() {
+      this.$watch('paymentMethod', (val) => {
+        currentPaymentMethod = val;
+        refreshSummary();
+      });
+    },
     updateTotal(key) { updateTotal(key); }
   };
 }
