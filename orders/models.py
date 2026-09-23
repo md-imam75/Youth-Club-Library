@@ -21,9 +21,11 @@ class Order(models.Model):
 
     PAYMENT_OFFLINE = 'Offline'
     PAYMENT_BKASH = 'bKash'
+    PAYMENT_NAGAD = 'Nagad'
     PAYMENT_METHOD_CHOICES = [
         (PAYMENT_OFFLINE, 'Offline / Cash on Delivery'),
         (PAYMENT_BKASH, 'bKash'),
+        (PAYMENT_NAGAD, 'Nagad'),
     ]
 
     PAYMENT_STATUS_PENDING = 'Pending'

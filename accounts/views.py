@@ -105,9 +105,9 @@ def apply_membership_view(request, plan_id):
         payment_method = request.POST.get('payment_method', 'Offline')
         transaction_id = request.POST.get('transaction_id', '').strip()
 
-        # Validate bKash requires transaction ID
-        if payment_method == 'bKash' and not transaction_id:
-            messages.error(request, 'Transaction ID is required for bKash payments.')
+        # Validate bKash / Nagad requires transaction ID
+        if payment_method in ('bKash', 'Nagad') and not transaction_id:
+            messages.error(request, 'Transaction ID is required for bKash / Nagad payments.')
             return redirect('apply_membership', plan_id=plan_id)
 
         if existing:

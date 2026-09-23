@@ -52,8 +52,8 @@ class CheckoutForm(forms.ModelForm):
         if delivery_key in ('inside_ctg', 'outside_ctg'):
             if not cleaned.get('delivery_address', '').strip():
                 raise forms.ValidationError('Delivery address is required for home delivery.')
-        if method == 'bKash' and not txn_id:
-            raise forms.ValidationError('Transaction ID is required for bKash payments.')
+        if method in ('bKash', 'Nagad') and not txn_id:
+            raise forms.ValidationError('Transaction ID is required for bKash / Nagad payments.')
         return cleaned
 
 

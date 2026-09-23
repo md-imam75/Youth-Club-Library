@@ -10,6 +10,7 @@ try:
     GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID', default='')
     GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
     BKASH_NUMBER = config('BKASH_NUMBER', default='')
+    NAGAD_NUMBER = config('NAGAD_NUMBER', default='')
 except ImportError:
     import os
     _key = os.environ.get('SECRET_KEY')
@@ -23,6 +24,7 @@ except ImportError:
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
     BKASH_NUMBER = os.environ.get('BKASH_NUMBER', '')
+    NAGAD_NUMBER = os.environ.get('NAGAD_NUMBER', '')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

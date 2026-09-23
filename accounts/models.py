@@ -122,9 +122,11 @@ class UserMembership(models.Model):
 
     PAYMENT_OFFLINE = 'Offline'
     PAYMENT_BKASH = 'bKash'
+    PAYMENT_NAGAD = 'Nagad'
     PAYMENT_METHOD_CHOICES = [
         (PAYMENT_OFFLINE, 'Offline'),
         (PAYMENT_BKASH, 'bKash'),
+        (PAYMENT_NAGAD, 'Nagad'),
     ]
 
     user = models.OneToOneField(

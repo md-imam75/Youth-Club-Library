@@ -3,6 +3,7 @@ def site_settings(request):
     from django.conf import settings
     return {
         'BKASH_NUMBER': getattr(settings, 'BKASH_NUMBER', '01XXXXXXXXX'),
+        'NAGAD_NUMBER': getattr(settings, 'NAGAD_NUMBER', '01XXXXXXXXX'),
         'SITE_NAME': 'Youth Club Library',
         'SITE_TAGLINE': 'Read. Learn. Grow.',
     }

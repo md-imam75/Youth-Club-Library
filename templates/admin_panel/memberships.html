@@ -52,7 +52,7 @@
             {% if m.plan %}<div class="dark:text-gray-500 text-slate-500">{{ m.plan.duration_label }}</div>{% endif %}
           </td>
           <td class="px-4 py-3">
-            <span class="text-xs {% if m.payment_method == 'bKash' %}text-pink-400{% else %}dark:text-gray-300 text-slate-700{% endif %}">
+            <span class="text-xs {% if m.payment_method == 'bKash' %}text-[#E2136E] font-semibold{% elif m.payment_method == 'Nagad' %}text-[#F6921E] font-semibold{% else %}dark:text-gray-300 text-slate-700{% endif %}">
               {{ m.payment_method }}
             </span>
             {% if m.plan %}<div class="dark:text-white text-slate-900 text-xs font-bold">৳{{ m.plan.price|floatformat:0 }}</div>{% endif %}

@@ -109,7 +109,15 @@
             ৳{{ order.group_total_cost|floatformat:0 }}
           </td>
           <td class="px-4 py-3">
-            <div class="dark:text-gray-300 text-slate-700 text-xs font-medium">{{ order.payment_method }}</div>
+            <div class="text-xs font-medium">
+              {% if order.payment_method == 'bKash' %}
+                <span class="text-[#E2136E] font-bold">bKash</span>
+              {% elif order.payment_method == 'Nagad' %}
+                <span class="text-[#F6921E] font-bold">Nagad</span>
+              {% else %}
+                <span class="dark:text-gray-300 text-slate-700">{{ order.payment_method }}</span>
+              {% endif %}
+            </div>
             {% if order.transaction_id %}
             <div class="dark:text-gray-500 text-slate-500 text-[9px] font-mono truncate max-w-24 mt-0.5" title="{{ order.transaction_id }}">{{ order.transaction_id }}</div>
             {% endif %}

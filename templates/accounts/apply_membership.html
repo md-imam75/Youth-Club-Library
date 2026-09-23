@@ -14,19 +14,42 @@
         {% csrf_token %}
         <input type="hidden" name="plan" value="{{ plan.id }}" />
 
-        <div class="grid grid-cols-2 gap-3">
+        <!-- 3-option Payment Method Cards -->
+        <div class="grid grid-cols-3 gap-2.5">
           <label class="cursor-pointer">
             <input type="radio" name="payment_method" value="Offline" x-model="paymentMethod" class="sr-only" />
-            <div :class="paymentMethod === 'Offline' ? 'border-primary-500 bg-primary-500/10' : 'dark:border-white/20 border-black/20'" class="glass rounded-xl p-4 border-2 text-center transition-all">
-              <div class="text-2xl mb-1">🏪</div>
-              <div class="text-sm font-medium dark:text-white text-slate-900">Offline</div>
+            <div :class="paymentMethod === 'Offline' ? 'border-sky-500 bg-sky-500/10' : 'dark:border-white/20 border-black/20 hover:border-black/40 dark:hover:border-white/40'" class="glass rounded-xl p-3 border-2 text-center transition-all">
+              <div class="flex justify-center mb-1.5">
+                <div class="w-9 h-9 rounded-full bg-sky-500/15 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+              </div>
+              <div class="text-xs font-bold dark:text-white text-slate-900">Offline</div>
+              <div class="text-[9px] dark:text-gray-400 text-slate-500 mt-0.5">In-Person</div>
             </div>
           </label>
           <label class="cursor-pointer">
             <input type="radio" name="payment_method" value="bKash" x-model="paymentMethod" class="sr-only" />
-            <div :class="paymentMethod === 'bKash' ? 'border-pink-500 bg-pink-500/10' : 'dark:border-white/20 border-black/20'" class="glass rounded-xl p-4 border-2 text-center transition-all">
-              <div class="text-2xl mb-1">📱</div>
-              <div class="text-sm font-medium dark:text-white text-slate-900">bKash</div>
+            <div :class="paymentMethod === 'bKash' ? 'border-[#E2136E] bg-[#E2136E]/10' : 'dark:border-white/20 border-black/20 hover:border-black/40 dark:hover:border-white/40'" class="glass rounded-xl p-3 border-2 text-center transition-all">
+              <div class="flex justify-center mb-1.5">
+                <div class="w-9 h-9 rounded-full bg-[#E2136E]/15 flex items-center justify-center">
+                  <span class="text-[#E2136E] font-black text-sm tracking-tight">b</span>
+                </div>
+              </div>
+              <div class="text-xs font-bold dark:text-white text-slate-900">bKash</div>
+              <div class="text-[9px] dark:text-gray-400 text-slate-500 mt-0.5">Send Money</div>
+            </div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="payment_method" value="Nagad" x-model="paymentMethod" class="sr-only" />
+            <div :class="paymentMethod === 'Nagad' ? 'border-[#F6921E] bg-[#F6921E]/10' : 'dark:border-white/20 border-black/20 hover:border-black/40 dark:hover:border-white/40'" class="glass rounded-xl p-3 border-2 text-center transition-all">
+              <div class="flex justify-center mb-1.5">
+                <div class="w-9 h-9 rounded-full bg-[#F6921E]/15 flex items-center justify-center">
+                  <span class="text-[#F6921E] font-black text-sm tracking-tight">N</span>
+                </div>
+              </div>
+              <div class="text-xs font-bold dark:text-white text-slate-900">Nagad</div>
+              <div class="text-[9px] dark:text-gray-400 text-slate-500 mt-0.5">Send Money</div>
             </div>
           </label>
         </div>
@@ -37,9 +60,13 @@
             <span class="dark:text-gray-400 text-slate-600">Plan Price</span>
             <span class="dark:text-white text-slate-900 font-semibold">৳{{ plan.price|floatformat:0 }}</span>
           </div>
-          <div class="flex justify-between text-pink-400" x-show="paymentMethod === 'bKash'" x-transition>
-            <span>bKash Charge (1.395%)</span>
-            <span x-text="'৳' + bkashCharge"></span>
+          <div class="flex justify-between text-[#E2136E]" x-show="paymentMethod === 'bKash'" x-transition>
+            <span>bKash Charge (৳13.95/1k)</span>
+            <span x-text="'+৳' + bkashCharge"></span>
+          </div>
+          <div class="flex justify-between text-[#F6921E]" x-show="paymentMethod === 'Nagad'" x-transition>
+            <span>Nagad Charge (৳13/1k)</span>
+            <span x-text="'+৳' + nagadCharge"></span>
           </div>
           <div class="border-t dark:border-white/10 border-black/10 pt-2 flex justify-between font-bold">
             <span class="dark:text-white text-slate-900">Total Payable</span>
@@ -47,14 +74,77 @@
           </div>
         </div>
 
-        <div x-show="paymentMethod === 'bKash'" x-transition class="glass rounded-xl p-4 border border-pink-500/20 bg-pink-500/5">
-          <p class="text-xs text-pink-300 font-semibold mb-2">Send to: <span class="dark:text-white text-slate-900 font-mono">{{ BKASH_NUMBER }}</span></p>
-          <p class="text-xs dark:text-gray-400 text-slate-600">Amount: <strong class="dark:text-white text-slate-900" x-text="'৳' + totalAmount"></strong> · Reference: <strong class="dark:text-white text-slate-900">YCL Membership</strong></p>
+        <!-- bKash Details -->
+        <div x-show="paymentMethod === 'bKash'" x-transition class="space-y-4">
+          <div class="rounded-xl p-4 border border-[#E2136E]/20 bg-[#E2136E]/5" x-data="{ copied: false }">
+            <p class="text-sm text-[#E2136E] font-semibold mb-2.5 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-[#E2136E] text-white flex items-center justify-center text-xs font-black">b</span>
+              How to pay via bKash
+            </p>
+            <ol class="text-xs dark:text-gray-400 text-slate-600 space-y-1.5 list-decimal list-inside">
+              <li>Open bKash → Send Money</li>
+              <li>
+                <span class="inline-flex items-center gap-2">
+                  Send to: <strong class="dark:text-white text-slate-900 font-mono text-sm">{{ BKASH_NUMBER }}</strong>
+                  <button type="button" @click="navigator.clipboard.writeText('{{ BKASH_NUMBER }}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#E2136E]/10 text-[#E2136E] hover:bg-[#E2136E]/20 transition-colors border border-[#E2136E]/20 active:scale-95"
+                          title="Copy Number">
+                    <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    <svg x-show="copied" style="display: none;" class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <span x-text="copied ? 'Copied!' : 'Copy'"></span>
+                  </button>
+                </span>
+              </li>
+              <li>Amount: <strong class="dark:text-white text-slate-900" x-text="'৳' + totalAmount"></strong> · Ref: <strong class="dark:text-white text-slate-900">YCL Membership</strong></li>
+              <li>Enter Transaction ID below</li>
+            </ol>
+          </div>
+          <div>
+            <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">bKash Transaction ID <span class="text-[#E2136E]">*</span></label>
+            <input type="text" name="transaction_id" id="txn-bkash"
+                   :disabled="paymentMethod !== 'bKash'"
+                   placeholder="e.g. 8N7A6P3K1M"
+                   class="form-input" />
+          </div>
         </div>
 
-        <div x-show="paymentMethod === 'bKash'" x-transition>
-          <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">Transaction ID <span class="text-pink-400">*</span></label>
-          <input type="text" name="transaction_id" placeholder="bKash Transaction ID" class="form-input" />
+        <!-- Nagad Details -->
+        <div x-show="paymentMethod === 'Nagad'" x-transition class="space-y-4">
+          <div class="rounded-xl p-4 border border-[#F6921E]/20 bg-[#F6921E]/5" x-data="{ copied: false }">
+            <p class="text-sm text-[#F6921E] font-semibold mb-2.5 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-[#F6921E] text-white flex items-center justify-center text-xs font-black">N</span>
+              How to pay via Nagad
+            </p>
+            <ol class="text-xs dark:text-gray-400 text-slate-600 space-y-1.5 list-decimal list-inside">
+              <li>Open Nagad → Send Money</li>
+              <li>
+                <span class="inline-flex items-center gap-2">
+                  Send to: <strong class="dark:text-white text-slate-900 font-mono text-sm">{{ NAGAD_NUMBER }}</strong>
+                  <button type="button" @click="navigator.clipboard.writeText('{{ NAGAD_NUMBER }}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#F6921E]/10 text-[#F6921E] hover:bg-[#F6921E]/20 transition-colors border border-[#F6921E]/20 active:scale-95"
+                          title="Copy Number">
+                    <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    <svg x-show="copied" style="display: none;" class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <span x-text="copied ? 'Copied!' : 'Copy'"></span>
+                  </button>
+                </span>
+              </li>
+              <li>Amount: <strong class="dark:text-white text-slate-900" x-text="'৳' + totalAmount"></strong> · Ref: <strong class="dark:text-white text-slate-900">YCL Membership</strong></li>
+              <li>Enter Transaction ID below</li>
+            </ol>
+          </div>
+          <div>
+            <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">Nagad Transaction ID <span class="text-[#F6921E]">*</span></label>
+            <input type="text" name="transaction_id" id="txn-nagad"
+                   :disabled="paymentMethod !== 'Nagad'"
+                   placeholder="e.g. TXN123456789"
+                   class="form-input" />
+          </div>
+        </div>
+
+        <!-- Offline Note -->
+        <div x-show="paymentMethod === 'Offline'" x-transition class="glass rounded-xl p-4 border dark:border-white/10 border-black/10 text-sm dark:text-gray-400 text-slate-600">
+          Visit our library in person to complete your membership payment and pick up your membership card.
         </div>
 
         <button type="submit" class="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]">
@@ -70,13 +160,22 @@
 function membershipForm() {
   const planPrice = {{ plan.price }};
   const BKASH_RATE = 13.95 / 1000;
+  const NAGAD_RATE = 13.00 / 1000;
   return {
     paymentMethod: 'Offline',
     get bkashCharge() {
       return Math.round(planPrice * BKASH_RATE);
     },
+    get nagadCharge() {
+      return Math.round(planPrice * NAGAD_RATE);
+    },
+    get currentCharge() {
+      if (this.paymentMethod === 'bKash') return this.bkashCharge;
+      if (this.paymentMethod === 'Nagad') return this.nagadCharge;
+      return 0;
+    },
     get totalAmount() {
-      return this.paymentMethod === 'bKash' ? planPrice + this.bkashCharge : planPrice;
+      return planPrice + this.currentCharge;
     }
   };
 }
