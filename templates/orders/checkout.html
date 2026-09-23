@@ -7,10 +7,7 @@
 
     <!-- Header -->
     <div class="text-center mb-10">
-      <div class="text-xs font-semibold text-primary-500 uppercase tracking-widest mb-2">
-        {% if order_type == 'borrow' %}Borrow{% else %}Purchase{% endif %}
-      </div>
-      <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">Checkout</h1>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">{{ t.checkout_title }}</h1>
       <p class="dark:text-gray-400 text-slate-600 mt-2">{{ order_type_display }} · <span class="dark:text-white text-slate-900">{{ book.title|truncatechars:50 }}</span></p>
     </div>
 
@@ -23,10 +20,10 @@
 
           <!-- Delivery Option -->
           {% if order_type != 'borrow' %}
-          <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10 relative z-30" x-data="{ open: false, selectedValue: '', selectedLabel: '— Select delivery —' }">
+          <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10 relative z-30" x-data="{ open: false, selectedValue: '', selectedLabel: '{{ t.checkout_select_delivery }}' }">
             <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5 flex items-center gap-2">
               <span class="w-7 h-7 rounded-lg bg-primary-500/20 flex items-center justify-center text-sm font-bold">1</span>
-              Delivery Option
+              {{ t.checkout_step_delivery }}
             </h3>
             
             <div class="relative">
@@ -70,23 +67,23 @@
           <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10">
             <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5 flex items-center gap-2">
               <span class="w-7 h-7 rounded-lg bg-primary-500/20 flex items-center justify-center text-sm">{% if order_type == 'borrow' %}1{% else %}2{% endif %}</span>
-              Delivery Address
+              {{ t.checkout_step_address }}
             </h3>
             <div class="space-y-4">
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">Full Name</label>
+                  <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">{{ t.checkout_full_name }}</label>
                   <input type="text" value="{{ user.get_full_name }}" class="form-input text-sm" readonly />
                 </div>
                 <div>
-                  <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">Phone</label>
+                  <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">{{ t.checkout_phone }}</label>
                   <input type="tel" value="{{ user.phone|default:'' }}" class="form-input text-sm" readonly />
                 </div>
               </div>
               <div>
-                <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">Address <span class="text-red-400">*</span></label>
+                <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">{{ t.checkout_address }} <span class="text-red-400">*</span></label>
                 <textarea name="delivery_address" rows="3" class="form-input text-sm"
-                          placeholder="Street, area, thana, district..."
+                          placeholder="{{ t.checkout_address_placeholder }}"
                           required>{{ user.address }}</textarea>
               </div>
             </div>
@@ -96,12 +93,12 @@
           <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10">
             <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5 flex items-center gap-2">
               <span class="w-7 h-7 rounded-lg bg-primary-500/20 flex items-center justify-center text-sm">{% if order_type == 'borrow' %}2{% else %}3{% endif %}</span>
-              Payment Method
+              {{ t.checkout_step_payment }}
             </h3>
 
             {% if order_type == 'borrow' %}
             <div class="glass rounded-xl p-4 border border-emerald-500/20 text-sm text-emerald-400 mb-4">
-              <strong>Borrowing is free</strong> for active members. No payment required — just select delivery.
+              {{ t.checkout_borrow_note }}
             </div>
             <input type="hidden" name="payment_method" value="Offline" />
             <input type="hidden" name="transaction_id" value="" />
@@ -218,7 +215,7 @@
 
             <!-- Offline note -->
             <div x-show="paymentMethod === 'Offline'" x-transition class="glass rounded-xl p-4 border dark:border-white/10 border-black/10 text-sm dark:text-gray-400 text-slate-600">
-              Cash on delivery. Our agent will collect payment when your book is delivered.
+              {{ t.checkout_cash_note }}
             </div>
 
             {% endif %}
@@ -226,7 +223,7 @@
 
           <button type="submit" id="place-order-btn"
                   class="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold text-lg transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]">
-            {% if order_type == 'borrow' %}Confirm Borrow{% else %}Place Order{% endif %}
+            {% if order_type == 'borrow' %}{{ t.btn_confirm_borrow }}{% else %}{{ t.btn_place_order }}{% endif %}
           </button>
         </form>
       </div>
@@ -235,7 +232,7 @@
       <div class="lg:col-span-2">
         <div class="sticky top-24 space-y-4">
           <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10">
-            <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5">Order Summary</h3>
+            <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5">{{ t.checkout_order_summary }}</h3>
 
             <!-- Book info -->
             <div class="flex gap-4 mb-5 pb-5 border-b dark:border-white/10 border-black/10">
@@ -257,28 +254,28 @@
             <div class="space-y-3 text-sm">
               {% if order_type != 'borrow' %}
               <div class="flex justify-between">
-                <span class="dark:text-gray-400 text-slate-600">Book price</span>
+                <span class="dark:text-gray-400 text-slate-600">{{ t.checkout_book_price }}</span>
                 <span class="dark:text-white text-slate-900">৳<span id="summary-book-price">{{ book_price|floatformat:0 }}</span></span>
               </div>
               <div class="flex justify-between">
-                <span class="dark:text-gray-400 text-slate-600">Delivery</span>
-                <span class="dark:text-white text-slate-900" id="summary-delivery">Select option</span>
+                <span class="dark:text-gray-400 text-slate-600">{{ t.checkout_delivery_cost }}</span>
+                <span class="dark:text-white text-slate-900" id="summary-delivery">{{ t.checkout_select_delivery }}</span>
               </div>
               <div class="flex justify-between" id="payment-charge-row" style="display:none;">
                 <span id="payment-charge-label" class="text-sm">Charge</span>
                 <span id="payment-charge-amount" class="font-semibold">৳0</span>
               </div>
               <div class="border-t dark:border-white/10 border-black/10 pt-3 flex justify-between font-bold">
-                <span class="dark:text-white text-slate-900">Total</span>
+                <span class="dark:text-white text-slate-900">{{ t.checkout_total_payable }}</span>
                 <span class="text-xl gradient-text" id="summary-total">৳{{ book_price|floatformat:0 }}</span>
               </div>
               {% else %}
               <div class="flex justify-between">
-                <span class="dark:text-gray-400 text-slate-600">Borrow (members)</span>
-                <span class="text-emerald-400 font-bold">Free</span>
+                <span class="dark:text-gray-400 text-slate-600">{{ t.btn_borrow_members }}</span>
+                <span class="text-emerald-400 font-bold">{{ t.badge_free }}</span>
               </div>
               <div class="border-t dark:border-white/10 border-black/10 pt-3 flex justify-between font-bold">
-                <span class="dark:text-white text-slate-900">Total</span>
+                <span class="dark:text-white text-slate-900">{{ t.checkout_total_payable }}</span>
                 <span class="text-xl text-emerald-400">৳0</span>
               </div>
               {% endif %}
@@ -288,7 +285,7 @@
             {% if order_type == 'borrow' %}
             <div class="mt-4 glass rounded-xl p-3 border border-emerald-500/20 text-xs text-emerald-400 flex items-start gap-2">
               <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              <span>Borrowed books are due <strong>14 days</strong> after receipt. Late returns may affect your membership.</span>
+              <span>{{ t.checkout_due_notice }}</span>
             </div>
             {% endif %}
           </div>

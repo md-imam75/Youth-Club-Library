@@ -47,15 +47,15 @@
           <div class="space-y-3 hidden lg:block">
             {% if book.is_upcoming %}
             <div class="w-full py-4 glass rounded-2xl text-center text-accent-400 font-bold border border-accent-500/30">
-               Coming Soon
+               {{ t.status_upcoming }}
             </div>
             {% elif not book.is_in_stock %}
             <div class="space-y-3">
               <div class="w-full py-4 glass rounded-2xl text-center text-red-400 font-bold border border-red-500/30">
-                 Out of Stock
+                 {{ t.status_out_of_stock }}
               </div>
               <a href="{% url 'join_waitlist' book.pk %}" class="flex flex-col items-center justify-center gap-1 w-full py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-orange-500 rounded-2xl font-bold text-white transition-all shadow-xl hover:shadow-yellow-500/30 text-center">
-                <span>Join Waitlist</span>
+                <span>{{ t.join_waitlist }}</span>
                 <span class="text-[10px] dark:text-white text-slate-900/80 font-normal">Get emailed when stock updates</span>
               </a>
             </div>
@@ -63,13 +63,13 @@
             <a href="{% url 'add_to_cart' book.pk %}"
                class="flex items-center justify-center gap-3 w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold text-lg transition-all hover:shadow-xl hover:scale-[1.02]">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-              Buy — ৳{{ book.effective_price|floatformat:0 }}
+              {{ t.btn_buy }} — ৳{{ book.effective_price|floatformat:0 }}
             </a>
             {% if book.can_borrow %}
             <a href="{% url 'borrow_book' book.pk %}"
                class="flex items-center justify-center gap-2 w-full py-4 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-2xl font-bold text-lg transition-all hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/20">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-              Borrow (Members Only)
+              {{ t.btn_borrow_members }}
             </a>
             {% endif %}
             {% endif %}
@@ -137,16 +137,16 @@
               <div class="flex items-center gap-2">
                 {% if book.is_in_stock %}
                   <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span class="text-emerald-400 font-medium">In Stock ({{ book.stock_quantity }} left)</span>
+                  <span class="text-emerald-400 font-medium">{{ t.status_in_stock }} ({{ book.stock_quantity }} {{ t.left_in_stock }})</span>
                 {% else %}
                   <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                  <span class="text-red-400">Out of Stock</span>
+                  <span class="text-red-400">{{ t.status_out_of_stock }}</span>
                 {% endif %}
               </div>
               {% if book.can_borrow %}
               <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-primary-400"></span>
-                <span class="text-primary-400">Available to borrow for members</span>
+                <span class="text-primary-400">{{ t.avail_borrow_members }}</span>
               </div>
               {% endif %}
             </div>
@@ -155,33 +155,33 @@
 
         <!-- Book Details -->
         <div class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10">
-          <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-4">Book Details</h3>
+          <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-4">{{ t.book_details }}</h3>
           <div class="grid grid-cols-2 gap-3 text-sm">
-            {% if book.pages %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">Pages</span><span class="dark:text-white text-slate-900">{{ book.pages }}</span></div>{% endif %}
-            {% if book.language %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">Language</span><span class="dark:text-white text-slate-900">{{ book.language }}</span></div>{% endif %}
-            {% if book.edition %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">Edition</span><span class="dark:text-white text-slate-900">{{ book.edition }}</span></div>{% endif %}
-            {% if book.isbn %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">ISBN</span><span class="dark:text-white text-slate-900 font-mono text-xs">{{ book.isbn }}</span></div>{% endif %}
-            {% if book.publication %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">Publisher</span><span class="dark:text-white text-slate-900">{{ book.publication.name }}</span></div>{% endif %}
-            <div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">Added</span><span class="dark:text-white text-slate-900">{{ book.created_at|date:"M Y" }}</span></div>
+            {% if book.pages %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">{{ t.pages }}</span><span class="dark:text-white text-slate-900">{{ book.pages }}</span></div>{% endif %}
+            {% if book.language %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">{{ t.language }}</span><span class="dark:text-white text-slate-900">{{ book.language }}</span></div>{% endif %}
+            {% if book.edition %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">{{ t.edition }}</span><span class="dark:text-white text-slate-900">{{ book.edition }}</span></div>{% endif %}
+            {% if book.isbn %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">{{ t.isbn }}</span><span class="dark:text-white text-slate-900 font-mono text-xs">{{ book.isbn }}</span></div>{% endif %}
+            {% if book.publication %}<div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">{{ t.publisher }}</span><span class="dark:text-white text-slate-900">{{ book.publication.name }}</span></div>{% endif %}
+            <div class="flex justify-between"><span class="dark:text-gray-400 text-slate-600">{{ t.added_date }}</span><span class="dark:text-white text-slate-900">{{ book.created_at|date:"M Y" }}</span></div>
           </div>
         </div>
 
         <!-- Description -->
         {% if book.description %}
         <div class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10">
-          <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-3">About this Book</h3>
+          <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-3">{{ t.about_this_book }}</h3>
           <p class="dark:text-gray-400 text-slate-600 leading-relaxed text-sm">{{ book.description }}</p>
         </div>
         {% endif %}
 
         <!-- Reviews Section -->
         <div class="space-y-5">
-          <h3 class="text-xl font-bold dark:text-white text-slate-900">Reviews ({{ book.review_count }})</h3>
+          <h3 class="text-xl font-bold dark:text-white text-slate-900">{{ t.reviews }} ({{ book.review_count }})</h3>
 
           <!-- Submit Review Form -->
           {% if user.is_authenticated and not user_review %}
           <div class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10">
-            <h4 class="text-sm font-semibold dark:text-white text-slate-900 mb-4">Write a Review</h4>
+            <h4 class="text-sm font-semibold dark:text-white text-slate-900 mb-4">{{ t.write_review }}</h4>
             <form method="post">
               {% csrf_token %}
               <input type="hidden" name="submit_review" value="1" />
@@ -198,14 +198,14 @@
               <textarea name="review_text" rows="3" placeholder="Share your thoughts about this book..."
                         class="form-input text-sm mb-3" required></textarea>
               <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-emerald-500 rounded-xl text-sm font-semibold transition-all">
-                Submit Review
+                {{ t.submit_review }}
               </button>
             </form>
           </div>
           {% elif not user.is_authenticated %}
           <div class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10 text-center">
-            <p class="dark:text-gray-400 text-slate-600 text-sm mb-3">Sign in to write a review</p>
-            <a href="{% url 'account_login' %}" class="inline-block px-5 py-2 bg-primary-600 hover:bg-primary-500 rounded-xl text-sm font-medium transition-all">Login to Review</a>
+            <p class="dark:text-gray-400 text-slate-600 text-sm mb-3">{{ t.sign_in_to_review }}</p>
+            <a href="{% url 'account_login' %}" class="inline-block px-5 py-2 bg-primary-600 hover:bg-primary-500 rounded-xl text-sm font-medium transition-all">{{ t.nav_login }}</a>
           </div>
           {% endif %}
 
@@ -230,7 +230,7 @@
           </div>
           {% empty %}
           <div class="text-center py-8 glass rounded-xl border dark:border-white/10 border-black/10">
-            <p class="dark:text-gray-500 text-slate-500">No reviews yet. Be the first to review!</p>
+            <p class="dark:text-gray-500 text-slate-500">{{ t.no_reviews_yet }}</p>
           </div>
           {% endfor %}
         </div>
@@ -363,16 +363,16 @@
 <div class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-[#080f1d]/90 backdrop-blur-md border-t border-slate-200 dark:border-white/10 p-4 z-50 lg:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
   <div class="flex items-center gap-3 max-w-sm mx-auto">
     {% if book.is_upcoming %}
-      <div class="w-full py-3 glass rounded-xl text-center text-accent-400 font-bold border border-accent-500/30">Coming Soon</div>
+      <div class="w-full py-3 glass rounded-xl text-center text-accent-400 font-bold border border-accent-500/30">{{ t.status_upcoming }}</div>
     {% elif not book.is_in_stock %}
-      <a href="{% url 'join_waitlist' book.pk %}" class="flex-1 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 rounded-xl font-bold text-white text-center shadow-lg">Join Waitlist</a>
+      <a href="{% url 'join_waitlist' book.pk %}" class="flex-1 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 rounded-xl font-bold text-white text-center shadow-lg">{{ t.join_waitlist }}</a>
     {% else %}
       <a href="{% url 'add_to_cart' book.pk %}" class="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-center shadow-lg text-sm sm:text-base transition-transform active:scale-95">
         <svg class="w-4 h-4 inline-block mr-1 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-        Buy — ৳{{ book.effective_price|floatformat:0 }}
+        {{ t.btn_buy }} — ৳{{ book.effective_price|floatformat:0 }}
       </a>
       {% if book.can_borrow %}
-        <a href="{% url 'borrow_book' book.pk %}" class="px-5 py-3 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-center border border-emerald-200 dark:border-emerald-500/20 text-sm sm:text-base whitespace-nowrap transition-transform active:scale-95">Borrow</a>
+        <a href="{% url 'borrow_book' book.pk %}" class="px-5 py-3 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-center border border-emerald-200 dark:border-emerald-500/20 text-sm sm:text-base whitespace-nowrap transition-transform active:scale-95">{{ t.btn_borrow }}</a>
       {% endif %}
     {% endif %}
   </div>

@@ -6,7 +6,7 @@
   <div class="w-full max-w-md">
     <div class="glass rounded-3xl p-8 border dark:border-white/10 border-black/10 shadow-2xl">
       <div class="text-center mb-8">
-        <h1 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-1">Apply for <span class="gradient-text">{{ plan.name }}</span></h1>
+        <h1 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-1">{{ t.membership_apply_title }}: <span class="gradient-text">{{ plan.name }}</span></h1>
         <p class="dark:text-gray-400 text-slate-600 text-sm">৳{{ plan.price }} · {{ plan.duration_label }}</p>
       </div>
 
@@ -24,8 +24,8 @@
                   <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                 </div>
               </div>
-              <div class="text-xs font-bold dark:text-white text-slate-900">Offline</div>
-              <div class="text-[9px] dark:text-gray-400 text-slate-500 mt-0.5">In-Person</div>
+              <div class="text-xs font-bold dark:text-white text-slate-900">{{ t.checkout_cash }}</div>
+              <div class="text-[9px] dark:text-gray-400 text-slate-500 mt-0.5">{{ t.membership_in_person }}</div>
             </div>
           </label>
           <label class="cursor-pointer">
@@ -57,7 +57,7 @@
         <!-- Amount Summary -->
         <div class="glass rounded-xl p-4 border dark:border-white/10 border-black/10 space-y-2 text-sm">
           <div class="flex justify-between">
-            <span class="dark:text-gray-400 text-slate-600">Plan Price</span>
+            <span class="dark:text-gray-400 text-slate-600">{{ t.membership_plan_price }}</span>
             <span class="dark:text-white text-slate-900 font-semibold">৳{{ plan.price|floatformat:0 }}</span>
           </div>
           <div class="flex justify-between text-[#E2136E]" x-show="paymentMethod === 'bKash'" x-transition>
@@ -69,7 +69,7 @@
             <span x-text="'+৳' + nagadCharge"></span>
           </div>
           <div class="border-t dark:border-white/10 border-black/10 pt-2 flex justify-between font-bold">
-            <span class="dark:text-white text-slate-900">Total Payable</span>
+            <span class="dark:text-white text-slate-900">{{ t.checkout_total_payable }}</span>
             <span class="gradient-text text-lg" x-text="'৳' + totalAmount"></span>
           </div>
         </div>
@@ -144,13 +144,13 @@
 
         <!-- Offline Note -->
         <div x-show="paymentMethod === 'Offline'" x-transition class="glass rounded-xl p-4 border dark:border-white/10 border-black/10 text-sm dark:text-gray-400 text-slate-600">
-          Visit our library in person to complete your membership payment and pick up your membership card.
+          {{ t.membership_offline_note }}
         </div>
 
         <button type="submit" class="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]">
-          Submit Application →
+          {{ t.btn_apply_membership }}
         </button>
-        <a href="{% url 'membership' %}" class="block text-center text-sm dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors mt-2">← Back to plans</a>
+        <a href="{% url 'membership' %}" class="block text-center text-sm dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors mt-2">{{ t.btn_back_to_plans }}</a>
       </form>
     </div>
   </div>

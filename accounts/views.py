@@ -163,3 +163,15 @@ def delete_account_view(request):
         'page_title': 'Delete Account Confirmation'
     })
 
+
+def set_language_view(request, lang_code):
+    """Switch site language ('bn' or 'en') and redirect back."""
+    if lang_code in ('bn', 'en'):
+        request.session['user_language'] = lang_code
+    referer = request.META.get('HTTP_REFERER', '/')
+    response = redirect(referer)
+    if lang_code in ('bn', 'en'):
+        response.set_cookie('django_language', lang_code, max_age=365*24*60*60)
+    return response
+
+
