@@ -88,21 +88,21 @@
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           {% if query %}
-          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">{{ t.search_results }}</p>
+          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Search Results</p>
           <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">
-            {{ t.search_results_for }} "<span style="background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">{{ query }}</span>"
+            Results for "<span style="background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">{{ query }}</span>"
           </h1>
           {% else %}
-          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">{{ t.our_collection }}</p>
+          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Our Collection</p>
           <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">
-            {{ t.all_books }}
+            All <span style="background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Books</span>
           </h1>
           {% endif %}
         </div>
         <div class="flex items-center gap-3 text-sm">
           <span class="px-3 py-1.5 rounded-full text-xs font-semibold"
                 style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.25);color:#38bdf8;">
-            {{ total_count }} {{ t.books_found }}
+            {{ total_count }} title{{ total_count|pluralize }} found
           </span>
         </div>
       </div>
@@ -120,7 +120,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
           <input type="text" name="q" value="{{ query }}"
-                 placeholder="{{ t.nav_search_placeholder }}"
+                 placeholder="Search by title, author, or publication..."
                  class="w-full pl-12 pr-4 py-4 rounded-2xl text-sm font-medium dark:text-white text-slate-900 placeholder-slate-500 dark:placeholder-gray-500 outline-none bg-transparent border-transparent focus:border-transparent focus:ring-0 transition-all" />
         </div>
 
@@ -131,15 +131,15 @@
           <div class="relative flex-1 md:flex-none">
             <select name="sort" onchange="this.form.submit()"
                     class="w-full md:w-auto appearance-none bg-white dark:bg-[#0a1223] border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-sm font-semibold dark:text-white text-slate-900 outline-none cursor-pointer hover:border-primary-500/50 transition-colors shadow-sm focus:ring-2 focus:ring-primary-500">
-              <option value="featured" {% if sort_by == 'featured' %}selected{% endif %}>{{ t.sort_featured }}</option>
-              <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>{{ t.sort_relevant }}</option>
-              <option value="best_selling" {% if sort_by == 'best_selling' %}selected{% endif %}>{{ t.sort_best_selling }}</option>
-              <option value="alpha_asc" {% if sort_by == 'alpha_asc' %}selected{% endif %}>{{ t.sort_alpha_asc }}</option>
-              <option value="alpha_desc" {% if sort_by == 'alpha_desc' %}selected{% endif %}>{{ t.sort_alpha_desc }}</option>
-              <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>{{ t.sort_price_low }}</option>
-              <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>{{ t.sort_price_high }}</option>
-              <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>{{ t.sort_date_asc }}</option>
-              <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>{{ t.sort_newest }}</option>
+              <option value="featured" {% if sort_by == 'featured' %}selected{% endif %}>Featured</option>
+              <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>Most relevant</option>
+              <option value="best_selling" {% if sort_by == 'best_selling' %}selected{% endif %}>Best selling</option>
+              <option value="alpha_asc" {% if sort_by == 'alpha_asc' %}selected{% endif %}>Alphabetically, A-Z</option>
+              <option value="alpha_desc" {% if sort_by == 'alpha_desc' %}selected{% endif %}>Alphabetically, Z-A</option>
+              <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price, low to high</option>
+              <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price, high to low</option>
+              <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>Date, old to new</option>
+              <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Date, new to old</option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-gray-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -150,7 +150,7 @@
           <button type="submit"
                   class="px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 hover:scale-105 shadow-md flex-shrink-0"
                   style="background:linear-gradient(135deg,#0284c7,#0ea5e9);">
-            {{ t.btn_search }}
+            Search
           </button>
           
           {% if query %}
@@ -164,10 +164,10 @@
 
       <!-- Browse filter pills -->
       <div class="flex flex-wrap gap-2">
-        <a href="{% url 'books' %}" class="filter-pill {% if not query %}active{% endif %}">{{ t.all_books }}</a>
-        <a href="{% url 'authors' %}" class="filter-pill">{{ t.by_author }}</a>
-        <a href="{% url 'publications' %}" class="filter-pill">{{ t.by_publisher }}</a>
-        <a href="{% url 'categories' %}" class="filter-pill">{{ t.by_category }}</a>
+        <a href="{% url 'books' %}" class="filter-pill {% if not query %}active{% endif %}">All Books</a>
+        <a href="{% url 'authors' %}" class="filter-pill">By Author</a>
+        <a href="{% url 'publications' %}" class="filter-pill">By Publisher</a>
+        <a href="{% url 'categories' %}" class="filter-pill">By Category</a>
       </div>
     </div>
 
@@ -192,8 +192,8 @@
           <!-- Badges -->
           <div class="absolute top-2 left-2 flex flex-col gap-1 z-10">
             {% if book.offer_price %}<span class="bk-badge bk-badge-sale">-{{ book.discount_percent }}%</span>{% endif %}
-            {% if book.is_featured %}<span class="bk-badge bk-badge-feat">{{ t.badge_pick }}</span>{% endif %}
-            {% if book.is_new %}<span class="bk-badge bk-badge-new">{{ t.badge_new }}</span>{% endif %}
+            {% if book.is_featured %}<span class="bk-badge bk-badge-feat">Pick</span>{% endif %}
+            {% if book.is_new %}<span class="bk-badge bk-badge-new">New</span>{% endif %}
           </div>
 
           <!-- Hover action -->
@@ -202,7 +202,7 @@
                onclick="event.stopPropagation()"
                class="w-full text-center py-2 rounded-xl text-xs font-bold dark:text-white text-slate-900 transition-all"
                style="background:linear-gradient(135deg,#0284c7,#0ea5e9);">
-              {{ t.btn_view_details }} →
+              View Details →
             </a>
           </div>
         </div>
@@ -229,7 +229,7 @@
             <!-- Stock dot -->
             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
                          {% if book.is_in_stock %}bg-emerald-400{% else %}bg-red-500{% endif %}"
-                  title="{% if book.is_in_stock %}{{ t.status_in_stock }}{% else %}{{ t.status_out_of_stock }}{% endif %}">
+                  title="{% if book.is_in_stock %}In Stock{% else %}Out of Stock{% endif %}">
             </span>
           </div>
 
@@ -260,7 +260,7 @@
           <svg class="w-9 h-9 text-sky-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
         <h3 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-3">
-          {% if query %}{{ t.no_books_found }} ({{ query }}){% else %}{{ t.no_books_found }}{% endif %}
+          {% if query %}No results for "{{ query }}"{% else %}No books yet{% endif %}
         </h3>
         <p class="dark:text-gray-500 text-slate-500 text-sm mb-8 max-w-sm">
           {% if query %}Try a different keyword, or browse all books below.{% else %}Books will appear here once added to the catalog.{% endif %}
@@ -270,13 +270,13 @@
           <a href="{% url 'books' %}"
              class="px-6 py-3 rounded-2xl text-sm font-semibold dark:text-white text-slate-900 transition-all hover:opacity-90"
              style="background:linear-gradient(135deg,#0284c7,#0ea5e9);">
-            ← {{ t.btn_browse_books }}
+            ← Browse All Books
           </a>
           {% endif %}
           <a href="{% url 'home' %}"
              class="px-6 py-3 rounded-2xl text-sm font-semibold dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all"
              style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">
-            {{ t.nav_home }}
+            Go Home
           </a>
         </div>
       </div>

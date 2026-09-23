@@ -7,8 +7,11 @@
 
     <!-- Header -->
     <div class="text-center mb-10">
-      <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">{{ t.checkout_title }}</h1>
-      <p class="dark:text-gray-400 text-slate-600 mt-2">{{ t.checkout_subtitle }}</p>
+      <div class="text-xs font-semibold text-primary-500 uppercase tracking-widest mb-2">
+        Purchase
+      </div>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">Checkout</h1>
+      <p class="dark:text-gray-400 text-slate-600 mt-2">Complete your delivery and payment details below</p>
     </div>
 
     <div class="grid lg:grid-cols-5 gap-8">
@@ -19,10 +22,10 @@
           {% csrf_token %}
 
           <!-- Delivery Option -->
-          <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10 relative z-30" x-data="{ open: false, selectedValue: '', selectedLabel: '{{ t.checkout_select_delivery }}' }">
+          <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10 relative z-30" x-data="{ open: false, selectedValue: '', selectedLabel: '— Select delivery —' }">
             <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5 flex items-center gap-2">
               <span class="w-7 h-7 rounded-lg bg-primary-500/20 flex items-center justify-center text-sm font-bold">1</span>
-              {{ t.checkout_step_delivery }}
+              Delivery Option
             </h3>
             
             <div class="relative">
@@ -66,23 +69,23 @@
           <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10">
             <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5 flex items-center gap-2">
               <span class="w-7 h-7 rounded-lg bg-primary-500/20 flex items-center justify-center text-sm font-bold">2</span>
-              {{ t.checkout_step_address }}
+              Delivery Address
             </h3>
             <div class="space-y-4">
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">{{ t.checkout_full_name }}</label>
+                  <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">Full Name</label>
                   <input type="text" value="{{ user.get_full_name }}" class="form-input text-sm" readonly />
                 </div>
                 <div>
-                  <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">{{ t.checkout_phone }}</label>
+                  <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">Phone</label>
                   <input type="tel" value="{{ user.phone|default:'' }}" class="form-input text-sm" readonly />
                 </div>
               </div>
               <div>
-                <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">{{ t.checkout_address }} <span class="text-red-400">*</span></label>
+                <label class="text-xs dark:text-gray-400 text-slate-600 mb-1 block">Address <span class="text-red-400">*</span></label>
                 <textarea name="delivery_address" rows="3" class="form-input text-sm"
-                          placeholder="{{ t.checkout_address_placeholder }}"
+                          placeholder="Street, area, thana, district..."
                           required>{{ user.address }}</textarea>
               </div>
             </div>
@@ -92,7 +95,7 @@
           <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10">
             <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5 flex items-center gap-2">
               <span class="w-7 h-7 rounded-lg bg-primary-500/20 flex items-center justify-center text-sm font-bold">3</span>
-              {{ t.checkout_step_payment }}
+              Payment Method
             </h3>
 
             <div class="grid grid-cols-3 gap-3 mb-5">
@@ -206,14 +209,14 @@
 
             <!-- Offline note -->
             <div x-show="paymentMethod === 'Offline'" x-transition class="glass rounded-xl p-4 border dark:border-white/10 border-black/10 text-sm dark:text-gray-400 text-slate-600">
-              {{ t.checkout_cash_note }}
+              Cash on delivery. Our agent will collect payment when your book is delivered.
             </div>
 
           </div>
 
           <button type="submit" id="place-order-btn"
                   class="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold text-lg transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]">
-            {{ t.btn_place_order }}
+            Place Order
           </button>
         </form>
       </div>
@@ -222,7 +225,7 @@
       <div class="lg:col-span-2">
         <div class="sticky top-24 space-y-4">
           <div class="glass rounded-2xl p-6 border dark:border-white/10 border-black/10">
-            <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5">{{ t.checkout_order_summary }}</h3>
+            <h3 class="text-lg font-semibold dark:text-white text-slate-900 mb-5">Order Summary</h3>
 
             <!-- Books list -->
             <div class="space-y-4 mb-5 pb-5 border-b dark:border-white/10 border-black/10 max-h-72 overflow-y-auto pr-1">
@@ -249,19 +252,19 @@
             <!-- Price breakdown -->
             <div class="space-y-3 text-sm">
               <div class="flex justify-between">
-                <span class="dark:text-gray-400 text-slate-600">{{ t.cart_subtotal }}</span>
+                <span class="dark:text-gray-400 text-slate-600">Items Subtotal</span>
                 <span class="dark:text-white text-slate-900">৳{{ items_total|floatformat:0 }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="dark:text-gray-400 text-slate-600">{{ t.checkout_delivery_cost }}</span>
-                <span class="dark:text-white text-slate-900" id="summary-delivery">{{ t.checkout_select_delivery }}</span>
+                <span class="dark:text-gray-400 text-slate-600">Delivery Cost</span>
+                <span class="dark:text-white text-slate-900" id="summary-delivery">Select option</span>
               </div>
               <div class="flex justify-between" id="payment-charge-row" style="display:none;">
                 <span id="payment-charge-label" class="text-sm">Charge</span>
                 <span id="payment-charge-amount" class="font-semibold">৳0</span>
               </div>
               <div class="border-t dark:border-white/10 border-black/10 pt-3 flex justify-between font-bold">
-                <span class="dark:text-white text-slate-900">{{ t.checkout_total_payable }}</span>
+                <span class="dark:text-white text-slate-900">Total</span>
                 <span class="text-xl gradient-text" id="summary-total">৳{{ items_total|floatformat:0 }}</span>
               </div>
             </div>

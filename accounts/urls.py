@@ -8,5 +8,4 @@ urlpatterns = [
     path('membership/', views.membership_view, name='membership'),
     path('membership/apply/<int:plan_id>/', views.apply_membership_view, name='apply_membership'),
     path('delete-account/', views.delete_account_view, name='delete_account'),
-    path('set-language/<str:lang_code>/', views.set_language_view, name='set_language'),
 ]
