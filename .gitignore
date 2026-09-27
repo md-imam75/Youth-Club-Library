@@ -16,3 +16,6 @@ media/
 
 # Scraper test output / temporary data files
 scraper_results.json
+full_neon_backup.json
+sqlite_backup.json
+datadump.json
