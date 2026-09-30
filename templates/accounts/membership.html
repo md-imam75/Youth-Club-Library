@@ -81,21 +81,32 @@
           <!-- CTA Button -->
           {% if user.is_authenticated %}
             {% if current_membership and current_membership.status == 'Active' %}
-              <button disabled class="w-full py-3.5 rounded-xl text-sm font-semibold dark:text-gray-500 text-slate-500 dark:bg-white/5 bg-black/5 cursor-not-allowed">
-                Already Active
+              <button disabled class="w-full py-4 px-6 rounded-2xl text-sm font-semibold dark:text-gray-400 text-slate-500 dark:bg-white/5 bg-slate-100 border border-slate-200 dark:border-white/10 cursor-not-allowed flex items-center justify-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                <span>Already Active</span>
               </button>
             {% else %}
-              <button onclick="openMembershipModal('{{ plan.id }}', '{{ plan.name }}', '{{ plan.price }}', '{{ plan.duration_label }}')"
-                      class="w-full py-3.5 rounded-xl text-sm font-bold transition-all
-                        {% if plan.is_popular %}bg-gradient-to-r from-primary-600 to-emerald-600 hover:from-primary-500 hover:to-emerald-500 shadow-lg hover:shadow-primary-500/30 text-white
-                        {% else %}glass hover:bg-white/15 border dark:border-white/20 border-black/20 hover:border-primary-500/40 text-white{% endif %}">
-                {% if current_membership and current_membership.status == 'Expired' %}Renew with {{ plan.name }}{% elif current_membership and current_membership.status == 'Pending' %}Switch Plan{% else %}Get {{ plan.name }}{% endif %}
-              </button>
+              <a href="{% url 'apply_membership' plan.id %}"
+                 class="w-full py-4 px-6 rounded-2xl font-bold text-sm text-center transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2
+                   {% if plan.is_popular %}
+                     bg-gradient-to-r from-sky-500 via-primary-600 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-white shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:-translate-y-0.5
+                   {% else %}
+                     bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 shadow-md hover:shadow-xl hover:-translate-y-0.5
+                   {% endif %}">
+                <span>{% if current_membership and current_membership.status == 'Expired' %}Renew with {{ plan.name }}{% elif current_membership and current_membership.status == 'Pending' %}Switch Plan{% else %}Get {{ plan.name }}{% endif %}</span>
+                <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </a>
             {% endif %}
           {% else %}
-            <a href="{% url 'account_signup' %}"
-               class="block w-full text-center py-3.5 rounded-xl text-sm font-bold glass hover:bg-white/15 border dark:border-white/20 border-black/20 hover:border-primary-500/40 text-slate-900 dark:text-white transition-all">
-              Sign Up to Get Started
+            <a href="{% url 'account_login' %}?next={% url 'apply_membership' plan.id %}"
+               class="w-full py-4 px-6 rounded-2xl font-bold text-sm text-center transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2
+                 {% if plan.is_popular %}
+                   bg-gradient-to-r from-sky-500 via-primary-600 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-white shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:-translate-y-0.5
+                 {% else %}
+                   bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 shadow-md hover:shadow-xl hover:-translate-y-0.5
+                 {% endif %}">
+              <span>Sign In to Get {{ plan.name }}</span>
+              <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </a>
           {% endif %}
         </div>
@@ -259,8 +270,9 @@
         </div>
 
         <button type="submit"
-                class="w-full py-3.5 bg-gradient-to-r from-primary-600 to-emerald-600 hover:from-primary-500 hover:to-emerald-500 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-primary-500/30">
-          Submit Application →
+                class="w-full py-4 bg-gradient-to-r from-sky-500 via-primary-600 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 rounded-2xl font-bold text-white transition-all shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transform active:scale-[0.98] flex items-center justify-center gap-2">
+          <span>Submit Application</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </button>
         <p class="text-center text-xs dark:text-gray-500 text-slate-500">Your membership status will be "Pending" until admin review.</p>
       </form>
