@@ -31,14 +31,14 @@
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           {% if query %}
-          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Search Results</p>
+          <p class="text-sky-600 dark:text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Search Results</p>
           <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">
-            Results for "<span style="background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">{{ query }}</span>"
+            Results for "<span class="text-sky-600 dark:text-sky-400">{{ query }}</span>"
           </h1>
           {% else %}
-          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Publishing Houses</p>
+          <p class="text-sky-600 dark:text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Publishing Houses</p>
           <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">
-            All <span style="background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Publications</span>
+            All <span class="text-sky-600 dark:text-sky-400">Publications</span>
           </h1>
           {% endif %}
         </div>

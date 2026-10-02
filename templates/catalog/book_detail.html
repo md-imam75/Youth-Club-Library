@@ -243,7 +243,7 @@
       <!-- Same Author -->
       {% if related_author_books %}
       <section>
-        <h3 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-6">More by <span class="gradient-text">{{ book.author.name }}</span></h3>
+        <h3 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-6">More by <span class="text-sky-600 dark:text-sky-400">{{ book.author.name }}</span></h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {% for related in related_author_books %}
           <a href="{% url 'book_detail' related.pk %}" class="premium-glass rounded-2xl p-3 border border-transparent dark:hover:border-sky-500/20 hover:border-sky-500/10 hover:-translate-y-2 hover:shadow-2xl hover:dark:shadow-sky-500/10 transition-all duration-500 flex flex-col h-full group">
@@ -281,7 +281,7 @@
       <!-- Same Publication -->
       {% if related_publication_books %}
       <section>
-        <h3 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-6">More from <span class="gradient-text">{{ book.publication.name }}</span></h3>
+        <h3 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-6">More from <span class="text-sky-600 dark:text-sky-400">{{ book.publication.name }}</span></h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {% for related in related_publication_books %}
           <a href="{% url 'book_detail' related.pk %}" class="premium-glass rounded-2xl p-3 border border-transparent dark:hover:border-sky-500/20 hover:border-sky-500/10 hover:-translate-y-2 hover:shadow-2xl hover:dark:shadow-sky-500/10 transition-all duration-500 flex flex-col h-full group">
@@ -319,7 +319,7 @@
       <!-- Same Category -->
       {% if related_category_books %}
       <section>
-        <h3 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-6">More in <span class="gradient-text">{{ book.category.name }}</span></h3>
+        <h3 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-6">More in <span class="text-sky-600 dark:text-sky-400">{{ book.category.name }}</span></h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {% for related in related_category_books %}
           <a href="{% url 'book_detail' related.pk %}" class="premium-glass rounded-2xl p-3 border border-transparent dark:hover:border-sky-500/20 hover:border-sky-500/10 hover:-translate-y-2 hover:shadow-2xl hover:dark:shadow-sky-500/10 transition-all duration-500 flex flex-col h-full group">

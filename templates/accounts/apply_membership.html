@@ -6,7 +6,7 @@
   <div class="w-full max-w-md">
     <div class="glass rounded-3xl p-8 border dark:border-white/10 border-black/10 shadow-2xl">
       <div class="text-center mb-8">
-        <h1 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-1">Apply for <span class="gradient-text">{{ plan.name }}</span></h1>
+        <h1 class="font-display text-2xl font-bold dark:text-white text-slate-900 mb-1">Apply for <span class="text-sky-600 dark:text-sky-400">{{ plan.name }}</span></h1>
         <p class="dark:text-gray-400 text-slate-600 text-sm">৳{{ plan.price }} · {{ plan.duration_label }}</p>
       </div>
 
@@ -70,7 +70,7 @@
           </div>
           <div class="border-t dark:border-white/10 border-black/10 pt-2 flex justify-between font-bold">
             <span class="dark:text-white text-slate-900">Total Payable</span>
-            <span class="gradient-text text-lg" x-text="'৳' + totalAmount"></span>
+            <span class="text-lg font-bold dark:text-white text-slate-900" x-text="'৳' + totalAmount"></span>
           </div>
         </div>
 
