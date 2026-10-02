@@ -1,34 +1,311 @@
 {% extends "base.html" %}
 {% block title %}{{ page_title }} — {{ SITE_NAME }}{% endblock %}
 
+{% block extra_head %}
+<style>
+  .filter-pill {
+    padding: 0.4rem 1rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+    border: 1px solid rgba(0,0,0,0.1); color: #64748b;
+    background: rgba(0,0,0,0.04); cursor: pointer;
+    transition: all 0.2s; white-space: nowrap; text-decoration: none; display: inline-block;
+  }
+  .dark .filter-pill {
+    border: 1px solid rgba(255,255,255,0.1); color: #9ca3af;
+    background: rgba(255,255,255,0.04);
+  }
+  .filter-pill:hover, .filter-pill.active {
+    background: rgba(14,165,233,0.15) !important; border-color: rgba(14,165,233,0.4) !important; color: #0284c7 !important;
+  }
+  .dark .filter-pill:hover, .dark .filter-pill.active {
+    color: #38bdf8 !important;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="pt-24 pb-16 min-h-screen page-flat-bg">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="mb-8">
-      <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900 mb-2"><span class="gradient-text">Publications</span></h1>
-      <p class="dark:text-gray-400 text-slate-600">{{ publications.paginator.count }} publisher{{ publications.paginator.count|pluralize }}</p>
-    </div>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-      {% for pub in publications %}
-      <a href="{% url 'books_by_publication' pub.pk %}"
-         class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10 hover:border-primary-500/30 transition-all text-center group">
-        {% if pub.logo %}
-          <img src="{{ pub.logo.url }}" alt="{{ pub.name }}" class="w-20 h-20 rounded-xl object-contain mx-auto mb-3 group-hover:scale-105 transition-transform" />
-        {% else %}
-          <div class="w-20 h-20 rounded-xl mx-auto mb-3 flex items-center justify-center bg-gradient-to-br from-primary-500/20 to-emerald-500/20 border dark:border-white/10 border-black/10 group-hover:scale-105 transition-transform">
-            <svg class="w-8 h-8 text-primary-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-          </div>
-        {% endif %}
-        <h3 class="dark:text-white text-slate-900 font-semibold text-sm truncate">{{ pub.name }}</h3>
-        <p class="dark:text-gray-500 text-slate-500 text-xs mt-1">{{ pub.num_books }} book{{ pub.num_books|pluralize }}</p>
-      </a>
-      {% empty %}
-      <div class="col-span-5 text-center py-16 dark:text-gray-500 text-slate-500">No publications yet.</div>
-      {% endfor %}
+    
+    <!-- ── PAGE HEADER ─────────────────────────────────────────────────────── -->
+    <div id="publications-header" class="mb-8">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          {% if query %}
+          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Search Results</p>
+          <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">
+            Results for "<span style="background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">{{ query }}</span>"
+          </h1>
+          {% else %}
+          <p class="text-sky-400 text-xs font-bold uppercase tracking-widest mb-2">Publishing Houses</p>
+          <h1 class="font-display text-3xl sm:text-4xl font-bold dark:text-white text-slate-900">
+            All <span style="background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Publications</span>
+          </h1>
+          {% endif %}
+        </div>
+        <div class="flex items-center gap-3 text-sm">
+          <span class="px-3 py-1.5 rounded-full text-xs font-semibold"
+                style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.25);color:#38bdf8;">
+            {{ total_count }} publisher{{ total_count|pluralize }} found
+          </span>
+        </div>
+      </div>
     </div>
 
-    <!-- Pagination -->
-    {% include "includes/pagination.html" with page_obj=publications %}
+    <!-- ── SEARCH + FILTERS ────────────────────────────────────────────────── -->
+    <div class="mb-8 space-y-4">
+      <form id="publications-search-form" method="get" class="flex flex-col md:flex-row gap-4 items-center p-2 rounded-3xl glass border dark:border-white/10 border-black/10 shadow-sm bg-white/50 dark:bg-black/20 backdrop-blur-xl">
+        
+        <!-- Search Input (Left) -->
+        <div class="relative w-full md:flex-1">
+          <!-- Search Icon & Spinner -->
+          <div class="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center">
+            <svg id="search-icon" class="w-5 h-5 text-primary-500 transition-opacity duration-200"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <svg id="search-spinner" class="w-5 h-5 text-sky-500 animate-spin hidden"
+                 fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <input type="text" id="search-input" name="q" value="{{ query }}"
+                 autocomplete="off"
+                 placeholder="Search publications by name..."
+                 class="w-full pl-12 pr-12 py-4 rounded-2xl text-sm font-medium dark:text-white text-slate-900 placeholder-slate-500 dark:placeholder-gray-500 outline-none bg-transparent border-transparent focus:border-transparent focus:ring-0 transition-all" />
+          <button type="button" id="search-clear-btn"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors {% if not query %}hidden{% endif %}"
+                  title="Clear search">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Filters (Right) -->
+        <div class="flex items-center gap-3 w-full md:w-auto pr-2 pb-2 md:pb-0 pl-2 md:pl-0">
+          <div class="relative flex-1 md:flex-none">
+            <select id="sort-select" name="sort"
+                    class="w-full md:w-auto appearance-none bg-white dark:bg-[#0a1223] border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-sm font-semibold dark:text-white text-slate-900 outline-none cursor-pointer hover:border-primary-500/50 transition-colors shadow-sm focus:ring-2 focus:ring-primary-500">
+              <option value="alpha_asc" {% if sort_by == 'alpha_asc' %}selected{% endif %}>Alphabetically, A-Z</option>
+              <option value="alpha_desc" {% if sort_by == 'alpha_desc' %}selected{% endif %}>Alphabetically, Z-A</option>
+              <option value="books_desc" {% if sort_by == 'books_desc' %}selected{% endif %}>Most Books</option>
+              <option value="books_asc" {% if sort_by == 'books_asc' %}selected{% endif %}>Fewest Books</option>
+              <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest Added</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-gray-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Browse filter pills -->
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'books' %}" class="filter-pill">All Books</a>
+        <a href="{% url 'authors' %}" class="filter-pill">By Author</a>
+        <a href="{% url 'publications' %}" class="filter-pill active">By Publisher</a>
+        <a href="{% url 'categories' %}" class="filter-pill">By Category</a>
+      </div>
+    </div>
+
+    <!-- ── PUBLICATIONS GRID ───────────────────────────────────────────────── -->
+    <div id="publications-results" class="transition-opacity duration-200">
+      {% if publications %}
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+        {% for pub in publications %}
+        <a href="{% url 'books_by_publication' pub.pk %}"
+           class="glass rounded-2xl p-5 border dark:border-white/10 border-black/10 hover:border-primary-500/30 transition-all text-center group">
+          {% if pub.logo %}
+            <img src="{{ pub.logo.url }}" alt="{{ pub.name }}" class="w-20 h-20 rounded-xl object-contain mx-auto mb-3 group-hover:scale-105 transition-transform" />
+          {% else %}
+            <div class="w-20 h-20 rounded-xl mx-auto mb-3 flex items-center justify-center bg-gradient-to-br from-primary-500/20 to-emerald-500/20 border dark:border-white/10 border-black/10 group-hover:scale-105 transition-transform">
+              <svg class="w-8 h-8 text-primary-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+          {% endif %}
+          <h3 class="dark:text-white text-slate-900 font-semibold text-sm truncate">{{ pub.name }}</h3>
+          <p class="dark:text-gray-500 text-slate-500 text-xs mt-1">{{ pub.num_books }} book{{ pub.num_books|pluralize }}</p>
+        </a>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% include "includes/pagination.html" with page_obj=publications %}
+
+      {% else %}
+      <!-- Empty state -->
+      <div class="text-center py-20">
+        <div class="inline-flex flex-col items-center">
+          <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4" style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.15);">
+            <svg class="w-8 h-8 text-sky-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          </div>
+          <h3 class="font-display text-xl font-bold dark:text-white text-slate-900 mb-2">
+            {% if query %}No publications found for "{{ query }}"{% else %}No publications found{% endif %}
+          </h3>
+          <p class="dark:text-gray-500 text-slate-500 text-sm mb-6 max-w-sm">
+            {% if query %}Try searching with a different spelling or keyword.{% else %}Publications will appear here once added.{% endif %}
+          </p>
+          {% if query %}
+          <a href="{% url 'publications' %}"
+             class="px-5 py-2.5 rounded-xl text-sm font-semibold dark:text-white text-slate-900 transition-all hover:opacity-90"
+             style="background:linear-gradient(135deg,#0284c7,#0ea5e9);">
+            Browse All Publications
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
   </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function() {
+  const searchInput = document.getElementById('search-input');
+  const sortSelect = document.getElementById('sort-select');
+  const searchForm = document.getElementById('publications-search-form');
+  const clearBtn = document.getElementById('search-clear-btn');
+  const searchIcon = document.getElementById('search-icon');
+  const searchSpinner = document.getElementById('search-spinner');
+
+  let debounceTimer = null;
+  let activeAbortController = null;
+
+  function setLoading(loading) {
+    const resultsContainer = document.getElementById('publications-results');
+    if (loading) {
+      if (searchIcon) searchIcon.classList.add('hidden');
+      if (searchSpinner) searchSpinner.classList.remove('hidden');
+      if (resultsContainer) resultsContainer.classList.add('opacity-50');
+    } else {
+      if (searchIcon) searchIcon.classList.remove('hidden');
+      if (searchSpinner) searchSpinner.classList.add('hidden');
+      if (resultsContainer) resultsContainer.classList.remove('opacity-50');
+    }
+  }
+
+  function updateClearBtn() {
+    if (!clearBtn || !searchInput) return;
+    if (searchInput.value.trim().length > 0) {
+      clearBtn.classList.remove('hidden');
+    } else {
+      clearBtn.classList.add('hidden');
+    }
+  }
+
+  async function fetchResults(url, updateHistory = true) {
+    if (activeAbortController) {
+      activeAbortController.abort();
+    }
+    activeAbortController = new AbortController();
+    const signal = activeAbortController.signal;
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(url, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        signal: signal
+      });
+
+      if (!response.ok) throw new Error('Network response was not ok');
+
+      const text = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+
+      const newResults = doc.getElementById('publications-results');
+      const newHeader = doc.getElementById('publications-header');
+      const currentResults = document.getElementById('publications-results');
+      const currentHeader = document.getElementById('publications-header');
+
+      if (newResults && currentResults) {
+        currentResults.innerHTML = newResults.innerHTML;
+      }
+      if (newHeader && currentHeader) {
+        currentHeader.innerHTML = newHeader.innerHTML;
+      }
+
+      if (updateHistory) {
+        window.history.replaceState({ url: url }, '', url);
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Search error:', err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function triggerSearch() {
+    const q = searchInput ? searchInput.value.trim() : '';
+    const sort = sortSelect ? sortSelect.value : 'alpha_asc';
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (sort && sort !== 'alpha_asc') params.set('sort', sort);
+
+    const queryString = params.toString();
+    const url = window.location.pathname + (queryString ? '?' + queryString : '');
+    fetchResults(url);
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      updateClearBtn();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(triggerSearch, 220);
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      clearTimeout(debounceTimer);
+      triggerSearch();
+    });
+  }
+
+  if (searchForm) {
+    searchForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      clearTimeout(debounceTimer);
+      triggerSearch();
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+      }
+      updateClearBtn();
+      clearTimeout(debounceTimer);
+      triggerSearch();
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    const pageLink = e.target.closest('#publications-results a[href*="page="]');
+    if (pageLink) {
+      e.preventDefault();
+      const targetUrl = pageLink.getAttribute('href');
+      fetchResults(targetUrl);
+      if (searchForm) {
+        window.scrollTo({
+          top: searchForm.offsetTop - 80,
+          behavior: 'smooth'
+        });
+      }
+    }
+  });
+
+  window.addEventListener('popstate', function() {
+    fetchResults(window.location.href, false);
+  });
+})();
+</script>
 {% endblock %}

@@ -257,7 +257,28 @@ def books_by_category_view(request, slug):
 
 
 def authors_view(request):
-    authors = Author.objects.annotate(num_books=Count('books')).order_by('name')
+    query = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'alpha_asc')
+
+    authors = Author.objects.annotate(num_books=Count('books'))
+
+    if query:
+        authors = authors.filter(
+            Q(name__icontains=query) | Q(description__icontains=query)
+        )
+
+    if sort_by == 'alpha_desc':
+        authors = authors.order_by('-name')
+    elif sort_by == 'books_desc':
+        authors = authors.order_by('-num_books', 'name')
+    elif sort_by == 'books_asc':
+        authors = authors.order_by('num_books', 'name')
+    elif sort_by == 'newest':
+        authors = authors.order_by('-created_at')
+    else:  # default 'alpha_asc'
+        authors = authors.order_by('name')
+
+    total_count = authors.count()
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -272,12 +293,36 @@ def authors_view(request):
 
     return render(request, 'catalog/authors.html', {
         'authors': page_obj,
+        'query': query,
+        'sort_by': sort_by,
+        'total_count': total_count,
         'page_title': 'Authors',
     })
 
 
 def publications_view(request):
-    publications = Publication.objects.annotate(num_books=Count('books')).order_by('name')
+    query = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'alpha_asc')
+
+    publications = Publication.objects.annotate(num_books=Count('books'))
+
+    if query:
+        publications = publications.filter(
+            Q(name__icontains=query) | Q(description__icontains=query)
+        )
+
+    if sort_by == 'alpha_desc':
+        publications = publications.order_by('-name')
+    elif sort_by == 'books_desc':
+        publications = publications.order_by('-num_books', 'name')
+    elif sort_by == 'books_asc':
+        publications = publications.order_by('num_books', 'name')
+    elif sort_by == 'newest':
+        publications = publications.order_by('-created_at')
+    else:  # default 'alpha_asc'
+        publications = publications.order_by('name')
+
+    total_count = publications.count()
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -292,12 +337,34 @@ def publications_view(request):
 
     return render(request, 'catalog/publications.html', {
         'publications': page_obj,
+        'query': query,
+        'sort_by': sort_by,
+        'total_count': total_count,
         'page_title': 'Publications',
     })
 
 
 def categories_view(request):
-    categories = Category.objects.annotate(num_books=Count('books')).order_by('name')
+    query = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'alpha_asc')
+
+    categories = Category.objects.annotate(num_books=Count('books'))
+
+    if query:
+        categories = categories.filter(
+            Q(name__icontains=query) | Q(description__icontains=query)
+        )
+
+    if sort_by == 'alpha_desc':
+        categories = categories.order_by('-name')
+    elif sort_by == 'books_desc':
+        categories = categories.order_by('-num_books', 'name')
+    elif sort_by == 'books_asc':
+        categories = categories.order_by('num_books', 'name')
+    else:  # default 'alpha_asc'
+        categories = categories.order_by('name')
+
+    total_count = categories.count()
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -312,6 +379,9 @@ def categories_view(request):
 
     return render(request, 'catalog/categories.html', {
         'categories': page_obj,
+        'query': query,
+        'sort_by': sort_by,
+        'total_count': total_count,
         'page_title': 'Categories',
     })
 
