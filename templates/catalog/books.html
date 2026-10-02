@@ -76,6 +76,53 @@
   /* Shimmer on empty state */
   @keyframes shimmer { 0%,100%{opacity:.4} 50%{opacity:.8} }
   .shimmer { animation: shimmer 2s ease-in-out infinite; }
+
+  /* Dual range slider thumbs */
+  .price-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #0ea5e9;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+    cursor: pointer;
+    pointer-events: auto;
+    position: relative;
+    z-index: 10;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .price-range-input::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 2px 10px rgba(14,165,233,0.35);
+  }
+  .price-range-input::-webkit-slider-thumb:active {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(14,165,233,0.2);
+  }
+  .price-range-input::-moz-range-thumb {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #0ea5e9;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .dark .price-range-input::-webkit-slider-thumb {
+    background: #1e293b;
+    border-color: #38bdf8;
+  }
+  .dark .price-range-input::-moz-range-thumb {
+    background: #1e293b;
+    border-color: #38bdf8;
+  }
+  .price-range-input::-webkit-slider-runnable-track {
+    height: 6px; background: transparent; border-radius: 999px;
+  }
+  .price-range-input::-moz-range-track {
+    height: 6px; background: transparent; border-radius: 999px; border: none;
+  }
 </style>
 {% endblock %}
 
@@ -172,6 +219,50 @@
         <a href="{% url 'authors' %}" class="filter-pill">By Author</a>
         <a href="{% url 'publications' %}" class="filter-pill">By Publisher</a>
         <a href="{% url 'categories' %}" class="filter-pill">By Category</a>
+      </div>
+
+      <!-- ── PRICE RANGE SLIDER ──────────────────────────────────────────────── -->
+      <div id="price-slider-wrapper" class="glass rounded-2xl p-4 sm:p-5 border dark:border-white/10 border-black/10 bg-white/50 dark:bg-black/20 backdrop-blur-xl">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-gray-500 mb-1">Price Range</p>
+            <p class="text-lg sm:text-xl font-bold dark:text-white text-slate-900 leading-none">
+              ৳<span id="price-display-min">0</span>
+              <span class="text-slate-400 dark:text-gray-500 font-normal mx-1">–</span>
+              ৳<span id="price-display-max">{{ slider_max }}</span>
+            </p>
+          </div>
+          <button type="button" id="price-clear-btn"
+                  class="hidden items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 bg-black/5 dark:bg-white/5 hover:bg-red-500/10 dark:hover:bg-red-500/15 border border-black/10 dark:border-white/10 hover:border-red-500/30 transition-all">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            Clear
+          </button>
+        </div>
+
+        <!-- Dual Range Slider -->
+        <div class="relative h-8 flex items-center">
+          <!-- Track background -->
+          <div class="absolute inset-x-0 h-1.5 rounded-full bg-slate-200 dark:bg-white/10"></div>
+          <!-- Active range highlight -->
+          <div id="price-track-fill" class="absolute h-1.5 rounded-full bg-sky-500 dark:bg-sky-400 transition-all duration-75"></div>
+
+          <!-- Min slider -->
+          <input type="range" id="price-range-min" min="0" max="{{ slider_max }}" value="{{ price_min|default:'0' }}" step="10"
+                 class="price-range-input absolute inset-x-0 w-full appearance-none bg-transparent pointer-events-none z-20" />
+          <!-- Max slider -->
+          <input type="range" id="price-range-max" min="0" max="{{ slider_max }}" value="{{ price_max|default:slider_max }}" step="10"
+                 class="price-range-input absolute inset-x-0 w-full appearance-none bg-transparent pointer-events-none z-30" />
+        </div>
+
+        <!-- Tick labels -->
+        <div class="flex justify-between mt-1 px-0.5">
+          <span class="text-[10px] text-slate-400 dark:text-gray-600">৳0</span>
+          <span class="text-[10px] text-slate-400 dark:text-gray-600">৳{{ slider_max }}</span>
+        </div>
+
+        <!-- Hidden form inputs wired into the search -->
+        <input type="hidden" id="price-min-input" name="price_min" value="{{ price_min }}" />
+        <input type="hidden" id="price-max-input" name="price_max" value="{{ price_max }}" />
       </div>
     </div>
 
@@ -303,6 +394,18 @@
   const searchIcon = document.getElementById('search-icon');
   const searchSpinner = document.getElementById('search-spinner');
 
+  // Price slider elements
+  const rangeMin = document.getElementById('price-range-min');
+  const rangeMax = document.getElementById('price-range-max');
+  const displayMin = document.getElementById('price-display-min');
+  const displayMax = document.getElementById('price-display-max');
+  const trackFill = document.getElementById('price-track-fill');
+  const priceClearBtn = document.getElementById('price-clear-btn');
+  const priceMinInput = document.getElementById('price-min-input');
+  const priceMaxInput = document.getElementById('price-max-input');
+
+  const SLIDER_MAX = rangeMin ? parseInt(rangeMin.max) : 5000;
+
   let debounceTimer = null;
   let activeAbortController = null;
 
@@ -328,6 +431,87 @@
     }
   }
 
+  // ── Price Slider UI ──────────────────────────────────────────────
+  function updatePriceSliderUI() {
+    if (!rangeMin || !rangeMax) return;
+    let minVal = parseInt(rangeMin.value);
+    let maxVal = parseInt(rangeMax.value);
+
+    // Prevent crossing
+    if (minVal > maxVal) {
+      rangeMin.value = maxVal;
+      minVal = maxVal;
+    }
+
+    // Update display numbers
+    if (displayMin) displayMin.textContent = minVal.toLocaleString();
+    if (displayMax) displayMax.textContent = maxVal.toLocaleString();
+
+    // Update track fill bar position
+    if (trackFill) {
+      const pctMin = (minVal / SLIDER_MAX) * 100;
+      const pctMax = (maxVal / SLIDER_MAX) * 100;
+      trackFill.style.left = pctMin + '%';
+      trackFill.style.width = (pctMax - pctMin) + '%';
+    }
+
+    // Update hidden inputs
+    if (priceMinInput) priceMinInput.value = minVal > 0 ? minVal : '';
+    if (priceMaxInput) priceMaxInput.value = maxVal < SLIDER_MAX ? maxVal : '';
+
+    // Show/hide clear button
+    const isDefault = (minVal === 0 && maxVal === SLIDER_MAX);
+    if (priceClearBtn) {
+      if (isDefault) {
+        priceClearBtn.classList.add('hidden');
+        priceClearBtn.classList.remove('inline-flex');
+      } else {
+        priceClearBtn.classList.remove('hidden');
+        priceClearBtn.classList.add('inline-flex');
+      }
+    }
+  }
+
+  // Init slider UI on page load
+  updatePriceSliderUI();
+
+  if (rangeMin) {
+    rangeMin.addEventListener('input', function() {
+      if (parseInt(rangeMin.value) > parseInt(rangeMax.value)) {
+        rangeMin.value = rangeMax.value;
+      }
+      updatePriceSliderUI();
+    });
+    rangeMin.addEventListener('change', function() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(triggerSearch, 300);
+    });
+  }
+
+  if (rangeMax) {
+    rangeMax.addEventListener('input', function() {
+      if (parseInt(rangeMax.value) < parseInt(rangeMin.value)) {
+        rangeMax.value = rangeMin.value;
+      }
+      updatePriceSliderUI();
+    });
+    rangeMax.addEventListener('change', function() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(triggerSearch, 300);
+    });
+  }
+
+  if (priceClearBtn) {
+    priceClearBtn.addEventListener('click', function() {
+      if (rangeMin) rangeMin.value = 0;
+      if (rangeMax) rangeMax.value = SLIDER_MAX;
+      updatePriceSliderUI();
+      clearTimeout(debounceTimer);
+      triggerSearch();
+    });
+  }
+
+  // ── AJAX Search ──────────────────────────────────────────────────
   async function fetchResults(url, updateHistory = true) {
     if (activeAbortController) {
       activeAbortController.abort();
@@ -379,6 +563,12 @@
     const params = new URLSearchParams();
     if (q) params.set('q', q);
     if (sort && sort !== 'featured') params.set('sort', sort);
+
+    // Price range params
+    const pMin = priceMinInput ? priceMinInput.value : '';
+    const pMax = priceMaxInput ? priceMaxInput.value : '';
+    if (pMin) params.set('price_min', pMin);
+    if (pMax) params.set('price_max', pMax);
 
     const queryString = params.toString();
     const url = window.location.pathname + (queryString ? '?' + queryString : '');

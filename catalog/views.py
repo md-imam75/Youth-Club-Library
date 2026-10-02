@@ -55,7 +55,7 @@ def books_view(request):
     """All books grid with search."""
     query = request.GET.get('q', '').strip()
     sort_by = request.GET.get('sort', 'newest')
-    
+
     books = Book.objects.select_related('author', 'publication', 'category').filter(is_upcoming=False)
 
     if query:
@@ -65,6 +65,37 @@ def books_view(request):
             Q(publication__name__icontains=query) |
             Q(category__name__icontains=query)
         )
+
+    # Price range filtering
+    from django.db.models.functions import Coalesce
+    from django.db.models import Max
+
+    # Compute max price across ALL books (before price filter) for the slider ceiling
+    max_price_val = Book.objects.filter(is_upcoming=False).annotate(
+        effective_price=Coalesce('offer_price', 'regular_price')
+    ).aggregate(max_p=Max('effective_price'))['max_p'] or 0
+    # Round up to nearest 100 for a clean slider max
+    import math
+    slider_max = int(math.ceil(max_price_val / 100) * 100) if max_price_val else 5000
+
+    price_min = request.GET.get('price_min', '')
+    price_max = request.GET.get('price_max', '')
+
+    if price_min:
+        try:
+            books = books.annotate(
+                _eff_price_min=Coalesce('offer_price', 'regular_price')
+            ).filter(_eff_price_min__gte=int(price_min))
+        except (ValueError, TypeError):
+            pass
+
+    if price_max:
+        try:
+            books = books.annotate(
+                _eff_price_max=Coalesce('offer_price', 'regular_price')
+            ).filter(_eff_price_max__lte=int(price_max))
+        except (ValueError, TypeError):
+            pass
 
     # Sorting
     if sort_by == 'featured':
@@ -76,12 +107,10 @@ def books_view(request):
     elif sort_by == 'alpha_desc':
         books = books.order_by('-title')
     elif sort_by == 'price_asc':
-        from django.db.models.functions import Coalesce
         books = books.annotate(
             current_price=Coalesce('offer_price', 'regular_price')
         ).order_by('current_price')
     elif sort_by == 'price_desc':
-        from django.db.models.functions import Coalesce
         books = books.annotate(
             current_price=Coalesce('offer_price', 'regular_price')
         ).order_by('-current_price')
@@ -113,6 +142,9 @@ def books_view(request):
         'sort_by': sort_by,
         'page_title': 'All Books',
         'total_count': total_count,
+        'slider_max': slider_max,
+        'price_min': price_min,
+        'price_max': price_max,
     }
     return render(request, 'catalog/books.html', context)
 
