@@ -175,16 +175,47 @@ def book_detail_view(request, pk):
     return render(request, 'catalog/book_detail.html', context)
 
 
-def books_by_author_view(request, pk):
-    """Filter books by author."""
-    author = get_object_or_404(Author, pk=pk)
-    books = Book.objects.filter(author=author, is_upcoming=False).select_related(
-        'publication', 'category'
-    ).order_by('-created_at')
+def _filter_and_sort_books(books_qs, request):
+    """Helper to apply search query, sorting, and pagination to book querysets."""
+    query = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'newest')
 
-    # Pagination
+    if query:
+        books_qs = books_qs.filter(
+            Q(title__icontains=query) |
+            Q(author__name__icontains=query) |
+            Q(publication__name__icontains=query) |
+            Q(category__name__icontains=query)
+        )
+
+    # Sorting
+    if sort_by == 'featured':
+        books_qs = books_qs.order_by('-is_featured', '-created_at')
+    elif sort_by == 'best_selling':
+        books_qs = books_qs.annotate(sales_count=Count('orders')).order_by('-sales_count', '-created_at')
+    elif sort_by == 'alpha_asc':
+        books_qs = books_qs.order_by('title')
+    elif sort_by == 'alpha_desc':
+        books_qs = books_qs.order_by('-title')
+    elif sort_by == 'price_asc':
+        from django.db.models.functions import Coalesce
+        books_qs = books_qs.annotate(
+            current_price=Coalesce('offer_price', 'regular_price')
+        ).order_by('current_price')
+    elif sort_by == 'price_desc':
+        from django.db.models.functions import Coalesce
+        books_qs = books_qs.annotate(
+            current_price=Coalesce('offer_price', 'regular_price')
+        ).order_by('-current_price')
+    elif sort_by == 'date_asc':
+        books_qs = books_qs.order_by('created_at')
+    else:  # default 'newest'
+        books_qs = books_qs.order_by('-created_at')
+
+    total_count = books_qs.count()
+
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(books, 36)
+    paginator = Paginator(books_qs, 36)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -193,64 +224,64 @@ def books_by_author_view(request, pk):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    return page_obj, query, sort_by, total_count
+
+
+def books_by_author_view(request, pk):
+    """Filter books by author with search and sorting."""
+    author = get_object_or_404(Author, pk=pk)
+    books_qs = Book.objects.filter(author=author, is_upcoming=False).select_related(
+        'author', 'publication', 'category'
+    )
+    page_obj, query, sort_by, total_count = _filter_and_sort_books(books_qs, request)
+
     context = {
         'books': page_obj,
         'filter_type': 'author',
         'filter_obj': author,
+        'query': query,
+        'sort_by': sort_by,
+        'total_count': total_count,
         'page_title': f'Books by {author.name}',
     }
     return render(request, 'catalog/filtered_books.html', context)
 
 
 def books_by_publication_view(request, pk):
-    """Filter books by publication."""
+    """Filter books by publication with search and sorting."""
     publication = get_object_or_404(Publication, pk=pk)
-    books = Book.objects.filter(publication=publication, is_upcoming=False).select_related(
-        'author', 'category'
-    ).order_by('-created_at')
-
-    # Pagination
-    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(books, 36)
-    page_number = request.GET.get('page')
-    try:
-        page_obj = paginator.page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    books_qs = Book.objects.filter(publication=publication, is_upcoming=False).select_related(
+        'author', 'publication', 'category'
+    )
+    page_obj, query, sort_by, total_count = _filter_and_sort_books(books_qs, request)
 
     context = {
         'books': page_obj,
         'filter_type': 'publication',
         'filter_obj': publication,
+        'query': query,
+        'sort_by': sort_by,
+        'total_count': total_count,
         'page_title': f'Books from {publication.name}',
     }
     return render(request, 'catalog/filtered_books.html', context)
 
 
 def books_by_category_view(request, slug):
-    """Filter books by category."""
+    """Filter books by category with search and sorting."""
     category = get_object_or_404(Category, slug=slug)
-    books = Book.objects.filter(category=category, is_upcoming=False).select_related(
-        'author', 'publication'
-    ).order_by('-created_at')
-
-    # Pagination
-    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(books, 36)
-    page_number = request.GET.get('page')
-    try:
-        page_obj = paginator.page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    books_qs = Book.objects.filter(category=category, is_upcoming=False).select_related(
+        'author', 'publication', 'category'
+    )
+    page_obj, query, sort_by, total_count = _filter_and_sort_books(books_qs, request)
 
     context = {
         'books': page_obj,
         'filter_type': 'category',
         'filter_obj': category,
+        'query': query,
+        'sort_by': sort_by,
+        'total_count': total_count,
         'page_title': f'{category.name} Books',
     }
     return render(request, 'catalog/filtered_books.html', context)
