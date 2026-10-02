@@ -223,9 +223,6 @@
 
           <!-- Info -->
           <div class="p-3 flex flex-col flex-1">
-            <p class="text-[11px] text-sky-600 dark:text-sky-400 font-semibold mb-0.5 truncate">
-              {{ book.primary_category.name|default:"General" }}
-            </p>
             <h3 class="font-bangla font-bold text-sm dark:text-white text-slate-900 group-hover:text-primary-500 line-clamp-2 leading-snug mb-1 transition-colors">
               {{ book.title }}
             </h3>
@@ -241,7 +238,7 @@
             <div class="mt-auto pt-2 border-t border-black/5 dark:border-white/5 flex items-baseline gap-1.5">
               <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400">৳{{ book.effective_price }}</span>
               {% if book.discount_percent > 0 %}
-              <span class="text-[11px] text-slate-400 dark:text-gray-500 line-through">৳{{ book.price }}</span>
+              <span class="text-[11px] text-slate-400 dark:text-gray-500 line-through">৳{{ book.regular_price }}</span>
               {% endif %}
             </div>
 
