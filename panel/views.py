@@ -55,9 +55,13 @@ def admin_dashboard(request):
 
     # Orders
     all_orders = Order.objects.select_related('user', 'book')
-    total_buy_orders = all_orders.filter(order_type='Buy').count()
-    total_borrow_orders = all_orders.filter(order_type='Borrow').count()
-    pending_orders = all_orders.filter(payment_status='Pending').count()
+    
+    def count_unique(qs):
+        return len(set(g or i for i, g in qs.values_list('id', 'group_number')))
+        
+    total_buy_orders = count_unique(all_orders.filter(order_type='Buy'))
+    total_borrow_orders = count_unique(all_orders.filter(order_type='Borrow'))
+    pending_orders = count_unique(all_orders.filter(payment_status='Pending'))
 
     # Revenue
     online_revenue = all_orders.filter(
@@ -258,16 +262,19 @@ def admin_orders(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    def count_unique_orders(queryset):
+        return len(set(g or i for i, g in queryset.values_list('id', 'group_number')))
+
     context = {
         'page_title': 'Borrow Requests' if order_type == 'Borrow' else 'All Orders',
         'orders': page_obj,
         'order_type': order_type,
         'pay_status': pay_status,
         'q': q,
-        'buy_count':     Order.objects.filter(order_type='Buy').count(),
-        'borrow_count':  Order.objects.filter(order_type='Borrow').count(),
-        'pending_count': Order.objects.filter(payment_status='Pending').count(),
-        'paid_count':    Order.objects.filter(payment_status='Paid').count(),
+        'buy_count':     count_unique_orders(Order.objects.filter(order_type='Buy')),
+        'borrow_count':  count_unique_orders(Order.objects.filter(order_type='Borrow')),
+        'pending_count': count_unique_orders(Order.objects.filter(payment_status='Pending')),
+        'paid_count':    count_unique_orders(Order.objects.filter(payment_status='Paid')),
         'total_revenue': Order.objects.filter(order_type='Buy', payment_status='Paid').aggregate(
             t=Sum('total_cost'))['t'] or 0,
     }
