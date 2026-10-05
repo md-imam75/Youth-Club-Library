@@ -143,6 +143,48 @@ def admin_dashboard(request):
 
 
 @staff_required
+def admin_cash_drawer(request):
+    """View the history of cash going in and out of the drawer."""
+    from orders.models import OfflineBill, CashDrawerAdjustment
+    from django.db.models import Sum
+    
+    offline_cash = OfflineBill.objects.filter(payment_method='cash').aggregate(total=Sum('total_amount'))['total'] or 0
+    cash_in = CashDrawerAdjustment.objects.filter(adjustment_type='IN').aggregate(total=Sum('amount'))['total'] or 0
+    cash_out = CashDrawerAdjustment.objects.filter(adjustment_type='OUT').aggregate(total=Sum('amount'))['total'] or 0
+    total_cash_drawer = float(offline_cash) + float(cash_in) - float(cash_out)
+    
+    history = []
+    
+    for bill in OfflineBill.objects.filter(payment_method='cash'):
+        history.append({
+            'date': bill.created_at,
+            'type': 'SALE',
+            'amount': bill.total_amount,
+            'description': f"Walk-in Sale: {bill.customer_name or 'Guest'}",
+            'admin': ''
+        })
+        
+    for adj in CashDrawerAdjustment.objects.select_related('admin').all():
+        history.append({
+            'date': adj.created_at,
+            'type': adj.adjustment_type,
+            'amount': adj.amount,
+            'description': adj.reason,
+            'admin': adj.admin.get_full_name() if adj.admin else 'System'
+        })
+        
+    # Sort history by date descending
+    history.sort(key=lambda x: x['date'], reverse=True)
+    
+    context = {
+        'page_title': 'Cash Drawer',
+        'history': history,
+        'total_cash': total_cash_drawer
+    }
+    return render(request, 'admin_panel/cash_drawer.html', context)
+
+
+@staff_required
 @require_POST
 def admin_adjust_cash(request):
     """Adjust the cash drawer balance directly from the dashboard."""
@@ -165,6 +207,9 @@ def admin_adjust_cash(request):
     except Exception as e:
         messages.error(request, f"Error adjusting cash: {str(e)}")
         
+    next_url = request.GET.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect('admin_dashboard')
 
 
@@ -319,12 +364,21 @@ def admin_order_action(request, pk):
             if o.order_status == Order.STATUS_CANCELLED:
                 continue
             o.order_status = Order.STATUS_CANCELLED
+            o.payment_status = Order.PAYMENT_STATUS_FAILED  # Auto-fail pending payment when cancelled
             # Restore stock if not already restored via return
             if not (o.order_type == Order.ORDER_TYPE_BORROW and o.returned_at):
                 o.book.stock_quantity += o.quantity
                 o.book.save(update_fields=['stock_quantity'])
             o.save()
         messages.warning(request, f'Order {order.order_number} marked as Cancelled. Stock restored.')
+    elif action == 'delete':
+        for o in group_orders:
+            # Restore stock before deleting, unless already cancelled or returned
+            if o.order_status != Order.STATUS_CANCELLED and not (o.order_type == Order.ORDER_TYPE_BORROW and o.returned_at):
+                o.book.stock_quantity += o.quantity
+                o.book.save(update_fields=['stock_quantity'])
+            o.delete()
+        messages.warning(request, f'Order {order.order_number} permanently deleted.')
     else:
         messages.error(request, 'Unknown action.')
 

@@ -7,6 +7,7 @@ urlpatterns = [
     # Dashboard
     path('',                        views.admin_dashboard,        name='admin_dashboard'),
     path('adjust-cash/',            views.admin_adjust_cash,      name='admin_adjust_cash'),
+    path('cash-drawer/',            views.admin_cash_drawer,      name='admin_cash_drawer'),
     # Membership requests
     path('memberships/',            views.admin_memberships,       name='admin_memberships'),
     path('memberships/<int:pk>/action/', views.admin_membership_action, name='admin_membership_action'),
