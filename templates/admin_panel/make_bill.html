@@ -446,9 +446,24 @@
       const data = await res.json();
       
       if (data.success && data.book) {
-        addBookToBill(data.book);
-        document.getElementById('scanner-status').innerText = `Added: ${data.book.title}`;
-        document.getElementById('scanner-status').className = "text-center text-sm mt-3 text-emerald-500 font-semibold";
+        // Stop the scanner momentarily
+        if (html5QrcodeScanner && isScanning) {
+            html5QrcodeScanner.pause(true);
+        }
+        
+        if (confirm(`Are you sure you want to add "${data.book.title}" to the bill?`)) {
+            addBookToBill(data.book);
+            document.getElementById('scanner-status').innerText = `Added: ${data.book.title}`;
+            document.getElementById('scanner-status').className = "text-center text-sm mt-3 text-emerald-500 font-semibold";
+        } else {
+            document.getElementById('scanner-status').innerText = "Addition cancelled.";
+            document.getElementById('scanner-status').className = "text-center text-sm mt-3 text-slate-500 font-semibold";
+        }
+        
+        // Resume scanner
+        if (html5QrcodeScanner && isScanning) {
+            html5QrcodeScanner.resume();
+        }
       } else {
         document.getElementById('scanner-status').innerText = `Not found: ${decodedText}`;
         document.getElementById('scanner-status').className = "text-center text-sm mt-3 text-red-500 font-semibold";

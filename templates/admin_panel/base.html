@@ -561,9 +561,9 @@
           globalScannedBarcode = decodedText;
           
           document.getElementById('global-book-title').innerText = book.title;
-          document.getElementById('global-book-author').innerText = book.author_name || "Unknown Author";
+          document.getElementById('global-book-author').innerText = book.author_name || book.author || "Unknown Author";
           document.getElementById('global-book-barcode').innerText = decodedText;
-          document.getElementById('global-book-stock').innerText = book.stock_quantity;
+          document.getElementById('global-book-stock').innerText = book.stock;
           
           document.getElementById('global-scanner-view').classList.add('hidden');
           document.getElementById('global-action-view').classList.remove('hidden');
