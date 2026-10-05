@@ -205,6 +205,24 @@ class OfflineBillItem(models.Model):
         return f"{self.book_title} x {self.quantity}"
 
 
+class CashDrawerAdjustment(models.Model):
+    ADJUSTMENT_TYPES = [
+        ('IN', 'Add Cash'),
+        ('OUT', 'Remove Cash')
+    ]
+    adjustment_type = models.CharField(max_length=10, choices=ADJUSTMENT_TYPES)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    reason = models.CharField(max_length=255)
+    created_at = models.DateTimeField(default=timezone.now)
+    admin = models.ForeignKey('accounts.CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.adjustment_type} ৳{self.amount} - {self.reason}"
+
+
 class DeliveryOption(models.Model):
     label = models.CharField(max_length=150, unique=True, help_text="e.g. Free Delivery — Kazir Dewri")
     code = models.SlugField(max_length=100, unique=True, help_text="Unique lowercase identifier (e.g. free_kazir_dewri)")

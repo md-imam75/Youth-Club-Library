@@ -64,12 +64,17 @@ def admin_dashboard(request):
         order_type='Buy', payment_status='Paid'
     ).aggregate(total=Sum('total_cost'))['total'] or 0
     
-    from orders.models import OfflineBill
+    from orders.models import OfflineBill, CashDrawerAdjustment
     from django.db.models.functions import Coalesce
     from django.db.models import F
     
     offline_revenue = OfflineBill.objects.aggregate(total=Sum('total_amount'))['total'] or 0
     offline_cash = OfflineBill.objects.filter(payment_method='cash').aggregate(total=Sum('total_amount'))['total'] or 0
+    
+    # Calculate total cash in drawer (offline cash sales + IN adjustments - OUT adjustments)
+    cash_in = CashDrawerAdjustment.objects.filter(adjustment_type='IN').aggregate(total=Sum('amount'))['total'] or 0
+    cash_out = CashDrawerAdjustment.objects.filter(adjustment_type='OUT').aggregate(total=Sum('amount'))['total'] or 0
+    total_cash_drawer = float(offline_cash) + float(cash_in) - float(cash_out)
     
     total_revenue = float(online_revenue) + float(offline_revenue)
 
@@ -121,7 +126,7 @@ def admin_dashboard(request):
         'pending_orders': pending_orders,
         'total_revenue': total_revenue,
         'month_revenue': month_revenue,
-        'offline_cash': offline_cash,
+        'offline_cash': total_cash_drawer,
         'total_inventory_count': total_inventory_count,
         'total_inventory_value': total_inventory_value,
         'pending_memberships': pending_memberships,
@@ -131,6 +136,32 @@ def admin_dashboard(request):
         'recent_memberships': recent_memberships,
     }
     return render(request, 'admin_panel/dashboard.html', context)
+
+
+@staff_required
+@require_POST
+def admin_adjust_cash(request):
+    """Adjust the cash drawer balance directly from the dashboard."""
+    from orders.models import CashDrawerAdjustment
+    try:
+        amount = float(request.POST.get('amount', 0))
+        reason = request.POST.get('reason', '').strip()
+        adjustment_type = request.POST.get('type', 'IN')
+        
+        if amount > 0 and reason:
+            CashDrawerAdjustment.objects.create(
+                adjustment_type=adjustment_type,
+                amount=amount,
+                reason=reason,
+                admin=request.user
+            )
+            messages.success(request, f"Cash drawer adjusted successfully ({adjustment_type} ৳{amount}).")
+        else:
+            messages.error(request, "Invalid amount or missing reason for cash adjustment.")
+    except Exception as e:
+        messages.error(request, f"Error adjusting cash: {str(e)}")
+        
+    return redirect('admin_dashboard')
 
 
 # ──────────────────────────────────────────────────────────────────────────────
