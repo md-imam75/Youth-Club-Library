@@ -214,15 +214,23 @@
     <tr>
       <td class="summary-label">Subtotal:</td>
       <td class="summary-value" id="subtotal-val">
-        <!-- We can calculate it on the fly or just display the total since there is no delivery cost for offline bills -->
         ৳{{ bill.total_amount }}
       </td>
     </tr>
-    <!-- Since xhtml2pdf runs offline, we will pass total amount directly -->
     <tr class="grand-total">
       <td class="summary-label" style="color: #0284c7;">Net Payable:</td>
       <td class="summary-value" style="color: #0284c7;">৳{{ bill.total_amount }}</td>
     </tr>
+    {% if bill.payment_method == 'cash' and bill.cash_tendered %}
+    <tr>
+      <td class="summary-label" style="font-size: 8pt;">Cash Tendered:</td>
+      <td class="summary-value" style="font-size: 8pt; color: #555;">৳{{ bill.cash_tendered }}</td>
+    </tr>
+    <tr>
+      <td class="summary-label" style="font-size: 8pt;">Change Return:</td>
+      <td class="summary-value" style="font-size: 8pt; color: #555;">৳{{ bill.change_returned|default:"0.00" }}</td>
+    </tr>
+    {% endif %}
   </table>
 
   <!-- Thank You Footer -->

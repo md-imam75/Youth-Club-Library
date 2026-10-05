@@ -10,23 +10,29 @@
     <!-- Total Revenue -->
     <div class="stat-card rounded-2xl p-5">
       <div class="flex items-center justify-between mb-3">
-        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Total Revenue</span>
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Total Sales</span>
         <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm font-bold">৳</div>
       </div>
       <div class="text-2xl font-bold dark:text-white text-slate-900">৳{{ total_revenue|floatformat:0 }}</div>
-      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">৳{{ month_revenue|floatformat:0 }} this month</div>
+      <div class="flex flex-col gap-1 mt-1">
+        <div class="text-[10px] dark:text-gray-500 text-slate-500">৳{{ month_revenue|floatformat:0 }} this month</div>
+        <div class="text-[10px] font-medium dark:text-emerald-400 text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded w-max">Cash Drawer: ৳{{ offline_cash|floatformat:0 }}</div>
+      </div>
     </div>
 
-    <!-- Books -->
+    <!-- Inventory POS -->
     <div class="stat-card rounded-2xl p-5">
       <div class="flex items-center justify-between mb-3">
-        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Books</span>
+        <span class="dark:text-gray-400 text-slate-600 text-xs font-medium uppercase tracking-wider">Inventory Status</span>
         <div class="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
         </div>
       </div>
-      <div class="text-2xl font-bold dark:text-white text-slate-900">{{ total_books }}</div>
-      <div class="text-xs dark:text-gray-500 text-slate-500 mt-1">in catalog</div>
+      <div class="flex items-end gap-1">
+        <div class="text-2xl font-bold dark:text-white text-slate-900">{{ total_inventory_count }}</div>
+        <div class="text-xs mb-1 dark:text-gray-400 text-slate-500">books in stock</div>
+      </div>
+      <div class="text-xs dark:text-sky-400 text-sky-600 font-semibold mt-1">Retail Value: ৳{{ total_inventory_value|floatformat:0 }}</div>
     </div>
 
     <!-- Total Users -->

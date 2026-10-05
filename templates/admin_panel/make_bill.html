@@ -2,12 +2,28 @@
 {% block title %}Create Offline Bill{% endblock %}
 
 {% block content %}
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
 <div class="max-w-7xl mx-auto space-y-6">
 
   <!-- Header -->
   <div class="flex items-center gap-4 mb-4">
     <a href="{% url 'admin_bill_list' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
     <h2 class="text-xl font-bold dark:text-white text-slate-900">Create Walk-in Store Bill</h2>
+  </div>
+
+  <!-- Scanner Modal (Hidden by default) -->
+  <div id="scanner-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden">
+    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl w-full max-w-md mx-4 shadow-2xl border dark:border-white/10 border-black/10">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-lg dark:text-white text-slate-900">Scan Book Barcode</h3>
+        <button type="button" onclick="stopScanner()" class="text-slate-500 hover:text-red-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div id="reader" class="w-full bg-black rounded-lg overflow-hidden"></div>
+      <p id="scanner-status" class="text-center text-sm mt-3 text-emerald-500 font-semibold"></p>
+    </div>
   </div>
 
   <form method="post" id="billing-form" onsubmit="prepareSubmission(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -43,13 +59,22 @@
           <label class="block text-xs dark:text-gray-400 text-slate-600 mb-2">Select Payment Method</label>
           <div class="grid grid-cols-2 gap-3">
             <label class="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl border dark:border-white/10 border-black/10 hover:border-emerald-500/50 dark:bg-white/5 bg-black/5 transition-all text-sm font-semibold select-none">
-              <input type="radio" name="payment_method" value="cash" checked class="accent-emerald-500" />
+              <input type="radio" name="payment_method" value="cash" checked class="accent-emerald-500" onchange="toggleCashInput(this.value)" />
               Cash
             </label>
             <label class="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl border dark:border-white/10 border-black/10 hover:border-pink-500/50 dark:bg-white/5 bg-black/5 transition-all text-sm font-semibold select-none">
-              <input type="radio" name="payment_method" value="bkash" class="accent-pink-500" />
+              <input type="radio" name="payment_method" value="bkash" class="accent-pink-500" onchange="toggleCashInput(this.value)" />
               bKash
             </label>
+          </div>
+        </div>
+
+        <div id="cash-tendered-group" class="pt-2">
+          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Cash Tendered by Customer (৳)</label>
+          <input type="number" name="cash_tendered" id="cash_tendered" min="0" step="1" placeholder="e.g. 1000" class="form-input" oninput="calculateSummary()" />
+          <div class="mt-2 text-sm font-bold flex justify-between hidden" id="change-display">
+            <span class="dark:text-gray-400 text-slate-600">Change Return:</span>
+            <span class="text-pink-500 text-lg" id="change-amount">৳0</span>
           </div>
         </div>
       </div>
@@ -67,14 +92,19 @@
       <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4 relative">
         <h3 class="text-sm font-bold dark:text-gray-400 text-slate-600 uppercase tracking-widest">Add Books</h3>
         
-        <!-- Search input box -->
-        <div class="relative">
-          <input type="text" id="book-search" oninput="handleSearch(event)" placeholder="Search by book title, author, or publication..." class="form-input" autocomplete="off" />
-          
-          <!-- Search results dropdown -->
-          <div id="search-results" class="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border dark:border-white/10 border-black/10 rounded-2xl max-h-60 overflow-y-auto hidden z-10 shadow-2xl">
-            <!-- Results injected here -->
+        <!-- Search and Scan input box -->
+        <div class="flex gap-2 relative">
+          <div class="relative flex-1">
+            <input type="text" id="book-search" oninput="handleSearch(event)" placeholder="Search by title, author, or publication..." class="form-input" autocomplete="off" />
+            <!-- Search results dropdown -->
+            <div id="search-results" class="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border dark:border-white/10 border-black/10 rounded-2xl max-h-60 overflow-y-auto hidden z-20 shadow-2xl">
+              <!-- Results injected here -->
+            </div>
           </div>
+          <button type="button" onclick="startScanner()" class="btn-primary flex items-center gap-2 whitespace-nowrap px-4">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+            Scan
+          </button>
         </div>
 
         <!-- Selected items table -->
@@ -309,6 +339,34 @@
     document.getElementById('original-total').innerText = `৳${originalTotal.toFixed(2)}`;
     document.getElementById('discount-total').innerText = `-৳${discountTotal.toFixed(2)}`;
     document.getElementById('payable-total').innerText = `৳${payableTotal.toFixed(2)}`;
+
+    // Calculate Change
+    const cashInput = document.getElementById('cash_tendered');
+    const changeDisplay = document.getElementById('change-display');
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    
+    if (paymentMethod === 'cash' && cashInput.value) {
+      const tendered = parseFloat(cashInput.value);
+      if (tendered >= payableTotal) {
+        document.getElementById('change-amount').innerText = `৳${(tendered - payableTotal).toFixed(2)}`;
+        changeDisplay.classList.remove('hidden');
+      } else {
+        changeDisplay.classList.add('hidden');
+      }
+    } else {
+      changeDisplay.classList.add('hidden');
+    }
+  }
+
+  function toggleCashInput(method) {
+    const group = document.getElementById('cash-tendered-group');
+    if (method === 'cash') {
+      group.classList.remove('hidden');
+    } else {
+      group.classList.add('hidden');
+      document.getElementById('cash_tendered').value = '';
+    }
+    calculateSummary();
   }
 
   function prepareSubmission(e) {
@@ -319,12 +377,113 @@
     document.getElementById('items-json').value = JSON.stringify(payload);
   }
 
+  // Scanner Logic
+  let html5QrcodeScanner = null;
+  let isScanning = false;
+  let lastScannedCode = null;
+  let scanTimeout = null;
+
+  function startScanner() {
+    const modal = document.getElementById('scanner-modal');
+    modal.classList.remove('hidden');
+    
+    if (!html5QrcodeScanner) {
+      html5QrcodeScanner = new Html5Qrcode("reader");
+    }
+    
+    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+    
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      config,
+      onScanSuccess,
+      onScanFailure
+    ).then(() => {
+      isScanning = true;
+      document.getElementById('scanner-status').innerText = "Camera ready. Scan barcode...";
+    }).catch(err => {
+      document.getElementById('scanner-status').innerText = "Camera access denied or unavailable.";
+      document.getElementById('scanner-status').className = "text-center text-sm mt-3 text-red-500 font-semibold";
+    });
+  }
+
+  function stopScanner() {
+    const modal = document.getElementById('scanner-modal');
+    modal.classList.add('hidden');
+    if (html5QrcodeScanner && isScanning) {
+      html5QrcodeScanner.stop().then(() => {
+        isScanning = false;
+      }).catch(err => console.error(err));
+    }
+  }
+
+  async function onScanSuccess(decodedText, decodedResult) {
+    if (decodedText === lastScannedCode) return; // Prevent rapid duplicate scans
+    
+    lastScannedCode = decodedText;
+    document.getElementById('scanner-status').innerText = `Scanned: ${decodedText}... loading`;
+    
+    await lookupBarcode(decodedText);
+  }
+
+  async function lookupBarcode(decodedText) {
+    // Play a beep sound
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // 800Hz beep
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); // Volume
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.1); // 100ms
+    } catch(e) {}
+
+    try {
+      const res = await fetch(`{% url 'admin_barcode_search_ajax' %}?barcode=${encodeURIComponent(decodedText)}`);
+      const data = await res.json();
+      
+      if (data.success && data.book) {
+        addBookToBill(data.book);
+        document.getElementById('scanner-status').innerText = `Added: ${data.book.title}`;
+        document.getElementById('scanner-status').className = "text-center text-sm mt-3 text-emerald-500 font-semibold";
+      } else {
+        document.getElementById('scanner-status').innerText = `Not found: ${decodedText}`;
+        document.getElementById('scanner-status').className = "text-center text-sm mt-3 text-red-500 font-semibold";
+      }
+    } catch (err) {
+      console.error(err);
+      document.getElementById('scanner-status').innerText = "Network error";
+    }
+
+    // Reset last scanned code after 2 seconds to allow scanning same book again if needed
+    clearTimeout(scanTimeout);
+    scanTimeout = setTimeout(() => {
+      lastScannedCode = null;
+      document.getElementById('scanner-status').innerText = "Ready for next scan...";
+      document.getElementById('scanner-status').className = "text-center text-sm mt-3 text-emerald-500 font-semibold";
+    }, 2000);
+  }
+
+  function onScanFailure(error) {
+    // ignore
+  }
+
   // Close dropdown on click outside
   document.addEventListener('click', function(e) {
     const results = document.getElementById('search-results');
     const search = document.getElementById('book-search');
     if (!results.contains(e.target) && e.target !== search) {
       results.classList.add('hidden');
+    }
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const barcode = params.get('scan');
+    if (barcode) {
+      lookupBarcode(barcode);
     }
   });
 </script>

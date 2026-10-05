@@ -23,9 +23,14 @@
         <span class="text-yellow-400">{{ featured }} featured</span>
       </div>
     </div>
-    <a href="{% url 'admin_book_add' %}" class="btn-primary flex items-center gap-2">
-      <span class="text-lg leading-none">+</span> Add New Book
-    </a>
+    <div class="flex items-center gap-3">
+      <a href="{% url 'admin_print_barcodes' %}" target="_blank" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+        Print Barcodes
+      </a>
+      <a href="{% url 'admin_book_add' %}" class="btn-primary flex items-center gap-2">
+        <span class="text-lg leading-none">+</span> Add New Book
+      </a>
+    </div>
   </div>
 
   <!-- Search -->

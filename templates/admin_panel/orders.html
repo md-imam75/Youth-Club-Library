@@ -2,7 +2,43 @@
 {% block title %}All Orders{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl space-y-6">
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<div class="max-w-7xl space-y-6 relative">
+
+  <!-- Scanner & Packing Modal (Hidden by default) -->
+  <div id="packing-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden">
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl w-full max-w-2xl mx-4 shadow-2xl border dark:border-white/10 border-black/10 flex flex-col max-h-[90vh]">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-lg dark:text-white text-slate-900">Pack & Verify Order <span id="pack-order-id" class="text-sky-500"></span></h3>
+        <button type="button" onclick="closePackModal()" class="text-slate-500 hover:text-red-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      
+      <div class="flex gap-4 flex-col sm:flex-row mb-4 h-64 sm:h-80">
+        <div class="flex-1 rounded-lg overflow-hidden bg-black flex items-center justify-center relative">
+          <div id="pack-reader" class="w-full"></div>
+        </div>
+        <div class="flex-1 flex flex-col border dark:border-white/10 border-black/10 rounded-lg p-3 bg-slate-50 dark:bg-slate-800/50">
+          <div class="font-bold text-sm mb-2 dark:text-gray-300 text-slate-700">Items to Pack (<span id="pack-count">0/0</span> Verified):</div>
+          <ul id="pack-items-list" class="space-y-2 overflow-y-auto flex-1 text-sm pr-1">
+            <!-- Items injected via JS -->
+          </ul>
+        </div>
+      </div>
+      
+      <p id="pack-status" class="text-center text-sm mb-4 font-semibold text-slate-500">Scan barcodes to verify items...</p>
+      
+      <form id="pack-form" method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="mark_delivered" />
+        <button type="submit" id="pack-submit-btn" disabled class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-colors">
+          Complete & Mark Delivered
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- Header + Stats -->
   <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-2">
@@ -162,10 +198,12 @@
                 {% if order.order_type == 'Borrow' %}
                 <a href="{% url 'admin_approve_borrow' order.pk %}" class="btn-success text-[10px] py-1 px-2.5 inline-block">Approve Borrow</a>
                 {% else %}
-                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
-                  {% csrf_token %}<input type="hidden" name="action" value="mark_delivered" />
-                  <button type="submit" class="btn-success text-[10px] py-1 px-2.5">Deliver</button>
-                </form>
+                <button type="button" 
+                  onclick='openPackModal("{{ group.grouper }}", "{% url "admin_order_action" order.pk %}", [ {% for item in group.list %}{"barcode": "{{ item.book.barcode|default_if_none:"" }}", "title": "{{ item.book.title|escapejs }}", "qty": {{ item.quantity }}}{% if not forloop.last %},{% endif %}{% endfor %} ])'
+                  class="btn-success text-[10px] py-1 px-2.5 flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                  Pack
+                </button>
                 {% endif %}
                 <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
                   {% csrf_token %}<input type="hidden" name="action" value="mark_cancelled" />
@@ -188,4 +226,142 @@
   <!-- Pagination -->
   {% include "includes/pagination.html" with page_obj=orders %}
 </div>
+
+<script>
+  let html5QrcodeScanner = null;
+  let isScanning = false;
+  let currentPackItems = [];
+  let itemsToPackTotal = 0;
+  let itemsVerified = 0;
+  let lastScannedCode = null;
+  let scanTimeout = null;
+
+  function playBeep(success=true) {
+    try {
+      // Different tones for success vs error
+      const freq = success ? 800 : 300;
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.1);
+    } catch(e) {}
+  }
+
+  function renderPackList() {
+    const listEl = document.getElementById('pack-items-list');
+    listEl.innerHTML = '';
+    
+    currentPackItems.forEach((item, idx) => {
+      const isDone = item.scanned >= item.qty;
+      const li = document.createElement('li');
+      li.className = `p-2 rounded flex justify-between items-center border ${isDone ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-white dark:bg-slate-900 border-black/10 dark:border-white/10 dark:text-gray-300'}`;
+      
+      li.innerHTML = `
+        <div class="truncate flex-1 pr-2">
+          ${isDone ? '<span class="mr-1">✓</span>' : ''}
+          ${item.title}
+        </div>
+        <div class="font-bold text-xs shrink-0 bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded">
+          ${item.scanned} / ${item.qty}
+        </div>
+      `;
+      listEl.appendChild(li);
+    });
+
+    document.getElementById('pack-count').innerText = `${itemsVerified}/${itemsToPackTotal}`;
+    
+    // Enable submit if all verified
+    const submitBtn = document.getElementById('pack-submit-btn');
+    if (itemsVerified >= itemsToPackTotal) {
+      submitBtn.disabled = false;
+      document.getElementById('pack-status').innerText = "All items verified! Ready to deliver.";
+      document.getElementById('pack-status').className = "text-center text-sm mb-4 font-bold text-emerald-500";
+    } else {
+      submitBtn.disabled = true;
+    }
+  }
+
+  function openPackModal(groupNumber, actionUrl, items) {
+    document.getElementById('packing-modal').classList.remove('hidden');
+    document.getElementById('pack-order-id').innerText = groupNumber;
+    document.getElementById('pack-form').action = actionUrl;
+    
+    // Parse items
+    currentPackItems = items.map(i => ({ ...i, scanned: 0 }));
+    itemsToPackTotal = currentPackItems.reduce((acc, curr) => acc + curr.qty, 0);
+    itemsVerified = 0;
+    
+    document.getElementById('pack-status').innerText = "Scan barcodes to verify items...";
+    document.getElementById('pack-status').className = "text-center text-sm mb-4 font-semibold text-slate-500";
+    
+    renderPackList();
+    
+    if (!html5QrcodeScanner) {
+      html5QrcodeScanner = new Html5Qrcode("pack-reader");
+    }
+    
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 150 } },
+      onPackScanSuccess,
+      (err) => {}
+    ).then(() => {
+      isScanning = true;
+    }).catch(err => {
+      document.getElementById('pack-status').innerText = "Camera access denied.";
+      document.getElementById('pack-status').className = "text-center text-sm mb-4 font-bold text-red-500";
+    });
+  }
+
+  function closePackModal() {
+    document.getElementById('packing-modal').classList.add('hidden');
+    if (html5QrcodeScanner && isScanning) {
+      html5QrcodeScanner.stop().then(() => {
+        isScanning = false;
+      }).catch(err => console.error(err));
+    }
+  }
+
+  function onPackScanSuccess(decodedText, decodedResult) {
+    if (decodedText === lastScannedCode) return;
+    lastScannedCode = decodedText;
+    
+    // Find item
+    const targetItem = currentPackItems.find(i => i.barcode === decodedText);
+    
+    if (targetItem) {
+      if (targetItem.scanned < targetItem.qty) {
+        targetItem.scanned += 1;
+        itemsVerified += 1;
+        playBeep(true);
+        document.getElementById('pack-status').innerText = `Verified: ${targetItem.title}`;
+        document.getElementById('pack-status').className = "text-center text-sm mb-4 font-bold text-emerald-500";
+        renderPackList();
+      } else {
+        playBeep(false);
+        document.getElementById('pack-status').innerText = `Extra item! Already scanned enough of: ${targetItem.title}`;
+        document.getElementById('pack-status').className = "text-center text-sm mb-4 font-bold text-yellow-500";
+      }
+    } else {
+      playBeep(false);
+      document.getElementById('pack-status').innerText = `Wrong item! Barcode ${decodedText} is not in this order.`;
+      document.getElementById('pack-status').className = "text-center text-sm mb-4 font-bold text-red-500";
+    }
+
+    clearTimeout(scanTimeout);
+    scanTimeout = setTimeout(() => {
+      lastScannedCode = null;
+      if (itemsVerified < itemsToPackTotal) {
+        document.getElementById('pack-status').innerText = "Ready for next scan...";
+        document.getElementById('pack-status').className = "text-center text-sm mb-4 font-semibold text-slate-500";
+      }
+    }, 2000);
+  }
+</script>
 {% endblock %}

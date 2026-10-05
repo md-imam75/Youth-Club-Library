@@ -176,6 +176,8 @@ class OfflineBill(models.Model):
     customer_email = models.EmailField(blank=True)
     payment_method = models.CharField(max_length=10, choices=[('cash', 'Cash'), ('bkash', 'bKash')], default='cash')
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    cash_tendered = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    change_returned = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

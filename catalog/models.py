@@ -132,6 +132,10 @@ class Book(models.Model):
         help_text='Direct link to this book on Wafilife (Optional)'
     )
 
+    # Barcode & POS
+    barcode = models.CharField(max_length=50, unique=True, null=True, blank=True, help_text='EAN-13 Barcode')
+    low_stock_threshold = models.IntegerField(default=5, help_text='Alert when stock falls below this number')
+
     stock_quantity = models.IntegerField(default=0)
     can_borrow = models.BooleanField(default=True, help_text='Allow members to borrow this book')
 
@@ -157,6 +161,12 @@ class Book(models.Model):
         super().save(*args, **kwargs)
         self._original_stock = self.stock_quantity
         
+        # Generate barcode if missing
+        if not self.barcode and self.pk:
+            from catalog.utils import generate_barcode_number
+            self.barcode = generate_barcode_number(self.pk)
+            Book.objects.filter(pk=self.pk).update(barcode=self.barcode)
+
         if is_restocked:
             import threading
             from django.core.mail import send_mail

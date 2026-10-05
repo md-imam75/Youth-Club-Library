@@ -59,15 +59,38 @@ def admin_dashboard(request):
     pending_orders = all_orders.filter(payment_status='Pending').count()
 
     # Revenue
-    total_revenue = all_orders.filter(
+    online_revenue = all_orders.filter(
         order_type='Buy', payment_status='Paid'
     ).aggregate(total=Sum('total_cost'))['total'] or 0
+    
+    from orders.models import OfflineBill
+    from django.db.models.functions import Coalesce
+    from django.db.models import F
+    
+    offline_revenue = OfflineBill.objects.aggregate(total=Sum('total_amount'))['total'] or 0
+    offline_cash = OfflineBill.objects.filter(payment_method='cash').aggregate(total=Sum('total_amount'))['total'] or 0
+    
+    total_revenue = float(online_revenue) + float(offline_revenue)
 
-    month_revenue = all_orders.filter(
+    month_revenue_online = all_orders.filter(
         order_type='Buy',
         payment_status='Paid',
         created_at__date__gte=month_start,
     ).aggregate(total=Sum('total_cost'))['total'] or 0
+    
+    month_revenue_offline = OfflineBill.objects.filter(
+        created_at__date__gte=month_start
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+    
+    month_revenue = float(month_revenue_online) + float(month_revenue_offline)
+    
+    # Inventory POS Stats
+    total_inventory_count = Book.objects.aggregate(total=Sum('stock_quantity'))['total'] or 0
+    total_inventory_value = Book.objects.annotate(
+        eff_price=Coalesce('offer_price', 'regular_price')
+    ).aggregate(
+        total=Sum(F('stock_quantity') * F('eff_price'))
+    )['total'] or 0
 
     # Memberships
     pending_memberships = UserMembership.objects.filter(status='Pending').count()
@@ -97,6 +120,9 @@ def admin_dashboard(request):
         'pending_orders': pending_orders,
         'total_revenue': total_revenue,
         'month_revenue': month_revenue,
+        'offline_cash': offline_cash,
+        'total_inventory_count': total_inventory_count,
+        'total_inventory_value': total_inventory_value,
         'pending_memberships': pending_memberships,
         'active_memberships': active_memberships,
         'overdue_borrows': overdue_borrows,
@@ -1108,6 +1134,30 @@ def admin_bill_list(request):
 
 
 @staff_required
+@require_POST
+def admin_restock_ajax(request):
+    import json
+    try:
+        data = json.loads(request.body)
+        barcode = data.get('barcode', '').strip()
+        increment = int(data.get('increment', 1))
+        
+        book = Book.objects.get(barcode=barcode)
+        book.stock_quantity += increment
+        book.save(update_fields=['stock_quantity'])
+        
+        return JsonResponse({
+            'success': True,
+            'new_stock': book.stock_quantity,
+            'title': book.title
+        })
+    except Book.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Book not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@staff_required
 def admin_make_bill(request):
     """Create a new offline walk-in customer bill."""
     if request.method == 'POST':
@@ -1116,6 +1166,15 @@ def admin_make_bill(request):
         customer_email = request.POST.get('customer_email', '')
         payment_method = request.POST.get('payment_method', 'cash')
         items_json = request.POST.get('items_json', '[]')
+        
+        cash_tendered = request.POST.get('cash_tendered')
+        if cash_tendered:
+            try:
+                cash_tendered = Decimal(cash_tendered)
+            except:
+                cash_tendered = None
+        else:
+            cash_tendered = None
 
         if not customer_name:
             messages.error(request, "Customer name is required.")
@@ -1205,7 +1264,13 @@ def admin_make_bill(request):
             )
 
         bill.total_amount = total_amount
-        bill.save(update_fields=['total_amount'])
+        bill.cash_tendered = cash_tendered
+        if payment_method == 'cash' and cash_tendered and cash_tendered >= total_amount:
+            bill.change_returned = cash_tendered - total_amount
+        else:
+            bill.change_returned = Decimal('0.00')
+            
+        bill.save(update_fields=['total_amount', 'cash_tendered', 'change_returned'])
 
         # Generate PDF for emailing
         pdf_data = render_to_pdf('admin_panel/bill_pdf.html', {'bill': bill})
@@ -1718,3 +1783,85 @@ def admin_delivery_option_delete(request, pk):
     return render(request, 'admin_panel/confirm_delete.html', context)
 
 
+
+@staff_required
+def admin_print_barcodes(request):
+    import barcode
+    from barcode.writer import SVGWriter
+    from io import BytesIO
+    from catalog.models import Book
+    import re
+    
+    # Optional: filter by IDs
+    book_ids = request.GET.get('ids', '')
+    if book_ids:
+        ids_list = [int(x) for x in book_ids.split(',') if x.isdigit()]
+        books = Book.objects.filter(id__in=ids_list).exclude(barcode__isnull=True).exclude(barcode='')
+    else:
+        # Default to all books with stock
+        books = Book.objects.filter(stock_quantity__gt=0).exclude(barcode__isnull=True).exclude(barcode='').order_by('-created_at')
+        
+    ean = barcode.get_barcode_class('ean13')
+    
+    stickers = []
+    for book in books:
+        try:
+            rv = BytesIO()
+            ean_obj = ean(book.barcode, writer=SVGWriter())
+            # Sizing options for small sticker
+            options = {
+                'write_text': True, 
+                'module_height': 12, 
+                'quiet_zone': 2, 
+                'font_size': 8, 
+                'text_distance': 3
+            }
+            ean_obj.write(rv, options=options)
+            svg_string = rv.getvalue().decode('utf-8')
+            
+            # Extract just the <svg> element to embed directly in HTML
+            svg_match = re.search(r'<svg.*?</svg>', svg_string, re.DOTALL)
+            if svg_match:
+                svg_string = svg_match.group(0)
+            
+            # Generate enough stickers for the current stock, or at least 1
+            qty = max(1, book.stock_quantity) if not book_ids else 1
+            for _ in range(qty):
+                stickers.append({
+                    'book': book,
+                    'svg': svg_string
+                })
+        except Exception as e:
+            continue
+            
+    return render(request, 'admin_panel/print_barcodes.html', {'stickers': stickers, 'page_title': 'Print Barcodes'})
+
+@staff_required
+def admin_barcode_search_ajax(request):
+    """AJAX: Look up a single book by exact barcode."""
+    barcode = request.GET.get('barcode', '').strip()
+    if not barcode:
+        return JsonResponse({'success': False, 'error': 'No barcode provided'})
+        
+    book = Book.objects.filter(barcode=barcode).first()
+    if not book:
+        return JsonResponse({'success': False, 'error': 'Book not found'})
+        
+    effective_price = float(book.offer_price) if book.offer_price else float(book.regular_price)
+    discount_percent = 0
+    if book.offer_price and book.regular_price > 0:
+        discount_percent = int(((book.regular_price - book.offer_price) / book.regular_price) * 100)
+        
+    data = {
+        'id': book.id,
+        'title': book.title,
+        'author': book.author.name if book.author else 'Unknown',
+        'publication': book.publication.name if book.publication else 'Unknown',
+        'regular_price': float(book.regular_price),
+        'offer_price': float(book.offer_price) if book.offer_price else None,
+        'effective_price': effective_price,
+        'discount_percent': discount_percent,
+        'stock': book.stock_quantity,
+        'barcode': book.barcode
+    }
+    return JsonResponse({'success': True, 'book': data})

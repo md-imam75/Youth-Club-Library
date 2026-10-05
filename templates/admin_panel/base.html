@@ -18,6 +18,7 @@
       darkMode: 'class'
     }
   </script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -382,6 +383,12 @@
         </a>
         {% endif %}
         <div class="flex items-center gap-3">
+          <!-- Universal Scan Hub Button -->
+          <button @click="openGlobalScanner()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-white transition-colors shadow shadow-sky-500/20" title="Quick Scan Book">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+            <span class="text-xs font-bold hidden sm:inline">Scan Book</span>
+          </button>
+
           <!-- Theme Toggle Button -->
           <button @click="toggleTheme()" class="p-2 rounded-lg hover:dark:bg-white/10 bg-black/5 transition-colors dark:text-gray-400 text-slate-600" title="Toggle Theme">
             <!-- Sun Icon (shown in dark mode) -->
@@ -425,5 +432,210 @@
 </div>
 
 {% block extra_scripts %}{% endblock %}
+
+<!-- Global Scanner Modal -->
+<div id="global-scanner-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 hidden">
+  <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl w-full max-w-sm mx-4 shadow-2xl border dark:border-white/10 border-black/10 flex flex-col relative overflow-hidden">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg dark:text-white text-slate-900">Scan Book</h3>
+      <button type="button" onclick="closeGlobalScanner()" class="text-slate-500 hover:text-red-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    
+    <!-- Scanner view -->
+    <div id="global-scanner-view">
+      <div id="global-reader" class="w-full bg-black rounded-lg overflow-hidden h-64 mb-4"></div>
+      <p id="global-scan-status" class="text-center text-sm font-semibold text-slate-500 animate-pulse">Position barcode in frame...</p>
+    </div>
+
+    <!-- Action view (shown after scan) -->
+    <div id="global-action-view" class="hidden flex-col gap-4">
+      <div class="text-center">
+        <h4 id="global-book-title" class="font-bold text-lg dark:text-white text-slate-900"></h4>
+        <p id="global-book-author" class="text-sm dark:text-gray-400 text-slate-600 mb-1"></p>
+        <p class="text-xs font-mono bg-sky-500/10 text-sky-500 px-2 py-0.5 rounded inline-block">Barcode: <span id="global-book-barcode"></span></p>
+      </div>
+      <div class="flex items-center justify-center gap-2 mt-2">
+        <div class="text-center">
+          <div class="text-xs dark:text-gray-500 text-slate-500">Current Stock</div>
+          <div id="global-book-stock" class="font-bold text-xl dark:text-white text-slate-900"></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <button onclick="globalActionSell()" class="py-3 px-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors flex flex-col items-center gap-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          <span class="text-xs">Sell (Bill)</span>
+        </button>
+        <button onclick="globalActionRestock()" class="py-3 px-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold transition-colors flex flex-col items-center gap-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+          <span class="text-xs">+1 Restock</span>
+        </button>
+      </div>
+      <button onclick="resetGlobalScanner()" class="mt-2 text-xs text-center dark:text-gray-400 text-slate-500 hover:text-sky-500 underline">Scan Another Book</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let globalHtml5QrcodeScanner = null;
+  let isGlobalScanning = false;
+  let globalScannedBookId = null;
+  let globalScannedBarcode = null;
+
+  function playGlobalBeep(success=true) {
+    try {
+      const freq = success ? 800 : 300;
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.1);
+    } catch(e) {}
+  }
+
+  function openGlobalScanner() {
+    document.getElementById('global-scanner-modal').classList.remove('hidden');
+    resetGlobalScanner();
+  }
+
+  function closeGlobalScanner() {
+    document.getElementById('global-scanner-modal').classList.add('hidden');
+    if (globalHtml5QrcodeScanner && isGlobalScanning) {
+      globalHtml5QrcodeScanner.stop().then(() => {
+        isGlobalScanning = false;
+      }).catch(err => console.error(err));
+    }
+  }
+
+  function resetGlobalScanner() {
+    document.getElementById('global-action-view').classList.add('hidden');
+    document.getElementById('global-scanner-view').classList.remove('hidden');
+    document.getElementById('global-scan-status').innerText = "Position barcode in frame...";
+    document.getElementById('global-scan-status').className = "text-center text-sm font-semibold text-slate-500 animate-pulse";
+    
+    if (!globalHtml5QrcodeScanner) {
+      globalHtml5QrcodeScanner = new Html5Qrcode("global-reader");
+    }
+    
+    if (!isGlobalScanning) {
+      globalHtml5QrcodeScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        onGlobalScanSuccess,
+        (err) => {}
+      ).then(() => {
+        isGlobalScanning = true;
+      }).catch(err => {
+        document.getElementById('global-scan-status').innerText = "Camera access denied.";
+        document.getElementById('global-scan-status').className = "text-center text-sm font-bold text-red-500";
+      });
+    }
+  }
+
+  function onGlobalScanSuccess(decodedText, decodedResult) {
+    if (!isGlobalScanning) return;
+    
+    // Stop scanning while we fetch info
+    if (globalHtml5QrcodeScanner) {
+      globalHtml5QrcodeScanner.stop().then(() => {
+        isGlobalScanning = false;
+      }).catch(e => console.error(e));
+    }
+    
+    document.getElementById('global-scan-status').innerText = "Looking up book...";
+    
+    // Lookup Book via AJAX (using existing admin billing search endpoint)
+    fetch(`/admin-panel/billing/search-barcode/?barcode=${encodeURIComponent(decodedText)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          playGlobalBeep(true);
+          const book = data.book;
+          globalScannedBookId = book.id;
+          globalScannedBarcode = decodedText;
+          
+          document.getElementById('global-book-title').innerText = book.title;
+          document.getElementById('global-book-author').innerText = book.author_name || "Unknown Author";
+          document.getElementById('global-book-barcode').innerText = decodedText;
+          document.getElementById('global-book-stock').innerText = book.stock_quantity;
+          
+          document.getElementById('global-scanner-view').classList.add('hidden');
+          document.getElementById('global-action-view').classList.remove('hidden');
+          document.getElementById('global-action-view').classList.add('flex');
+        } else {
+          playGlobalBeep(false);
+          alert("Book not found for barcode: " + decodedText);
+          resetGlobalScanner();
+        }
+      })
+      .catch(error => {
+        playGlobalBeep(false);
+        console.error('Error:', error);
+        alert("Error looking up barcode.");
+        resetGlobalScanner();
+      });
+  }
+
+  function globalActionSell() {
+    // Redirect to make bill page with pre-filled barcode
+    window.location.href = `/admin-panel/billing/make/?scan=${encodeURIComponent(globalScannedBarcode)}`;
+  }
+
+  function globalActionRestock() {
+    // Make ajax call to increment stock by 1
+    fetch(`/admin-panel/inventory/restock-ajax/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ barcode: globalScannedBarcode, increment: 1 })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('global-book-stock').innerText = data.new_stock;
+        playGlobalBeep(true);
+        // Show brief success msg
+        const btn = event.currentTarget;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = 'Restocked!';
+        btn.classList.add('bg-emerald-500');
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('bg-emerald-500');
+        }, 1000);
+      } else {
+        alert(data.error || "Failed to restock");
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert("Error processing restock.");
+    });
+  }
+  
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
+
 </body>
 </html>

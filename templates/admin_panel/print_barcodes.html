@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Print Barcodes</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f1f5f9;
+    }
+    .print-controls {
+      text-align: center;
+      padding: 20px;
+      background: white;
+      border-bottom: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+    .print-btn {
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .page {
+      background: white;
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 10mm;
+      box-sizing: border-box;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10mm 5mm; /* 10mm vertical, 5mm horizontal gap */
+    }
+    .sticker {
+      border: 1px dashed #ccc;
+      padding: 5mm;
+      text-align: center;
+      box-sizing: border-box;
+      height: 38.1mm; /* Standard Avery label height */
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .book-title {
+      font-size: 10px;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+    .book-price {
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .barcode-svg {
+      width: 100%;
+      height: 20mm;
+    }
+    .barcode-svg svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    @media print {
+      body { background: white; }
+      .print-controls { display: none; }
+      .page {
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        width: 100%;
+      }
+      .sticker {
+        border: none; /* No border when printing on precut sticker paper */
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="print-controls">
+    <button class="print-btn" onclick="window.print()">Print Barcodes</button>
+    <p style="color: #64748b; font-size: 14px; margin-top: 10px;">Load A4 sticker sheets into your printer. Ensure "Actual Size" is selected in print settings.</p>
+  </div>
+
+  <div class="page">
+    <div class="sticker-grid">
+      {% for item in stickers %}
+      <div class="sticker">
+        <div class="book-title">{{ item.book.title }}</div>
+        <div class="barcode-svg">
+          {{ item.svg|safe }}
+        </div>
+        <div class="book-price">৳{{ item.book.effective_price|floatformat:"0" }}</div>
+      </div>
+      {% endfor %}
+      
+      {% if not stickers %}
+      <div style="grid-column: span 3; text-align: center; padding: 50px; color: #64748b;">
+        No books in stock have barcodes.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</body>
+</html>

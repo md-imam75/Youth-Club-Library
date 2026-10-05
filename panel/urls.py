@@ -20,6 +20,7 @@ urlpatterns = [
     path('publication-discount/<int:pk>/', views.publication_discount_ajax, name='publication_discount_ajax'),
     # Books CRUD
     path('books/',                  views.admin_books,             name='admin_books'),
+    path('books/barcodes/print/',   views.admin_print_barcodes,    name='admin_print_barcodes'),
     path('books/add/',              views.admin_book_add,          name='admin_book_add'),
     path('books/<int:pk>/edit/',    views.admin_book_edit,         name='admin_book_edit'),
     path('books/<int:pk>/delete/',  views.admin_book_delete,       name='admin_book_delete'),
@@ -59,6 +60,8 @@ urlpatterns = [
     path('billing/<int:pk>/edit/',       views.admin_bill_edit,              name='admin_bill_edit'),
     path('billing/<int:pk>/pdf/',        views.admin_bill_download_pdf,      name='admin_bill_download_pdf'),
     path('billing/search-books/',        views.admin_book_search_ajax,       name='admin_book_search_ajax'),
+    path('billing/search-barcode/',      views.admin_barcode_search_ajax,    name='admin_barcode_search_ajax'),
+    path('inventory/restock-ajax/',      views.admin_restock_ajax,           name='admin_restock_ajax'),
 
     # Book Requests Management
     path('requests/',                    views.admin_book_requests,          name='admin_book_requests'),

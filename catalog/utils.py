@@ -130,3 +130,18 @@ def get_competitor_prices(book_title: str, cache_ttl: int = 86400) -> list[dict]
     # Save to cache
     cache.set(cache_key, results, cache_ttl)
     return results
+
+
+def generate_barcode_number(book_id: int) -> str:
+    """
+    Generate an EAN-13 barcode number from a book ID.
+    Uses '200' as a prefix (common for in-store items) + 9 zero-padded digits of the book ID.
+    """
+    import barcode
+    
+    # 12 digits base: '200' + 9-digit book ID
+    base = f"200{str(book_id).zfill(9)}"
+    
+    # Let the library calculate the 13th checksum digit
+    ean = barcode.get_barcode_class('ean13')
+    return ean(base).get_fullcode()
