@@ -1,4 +1,4 @@
-"""
+﻿"""
 orders/views.py
 """
 
@@ -41,7 +41,7 @@ def checkout_view(request, book_id, order_type='Buy'):
         if not request.user.has_active_membership:
             messages.warning(
                 request,
-                '📚 You need an active membership to borrow books. '
+                'ðŸ“š You need an active membership to borrow books. '
                 'Please subscribe to a plan and wait for activation.'
             )
             return redirect('membership')
@@ -95,7 +95,7 @@ def checkout_view(request, book_id, order_type='Buy'):
 
             messages.success(
                 request,
-                f'✅ Your {order_type} order ({order.order_number}) has been placed! '
+                f'âœ… Your {order_type} order ({order.order_number}) has been placed! '
                 'Our team will verify and process it shortly.'
             )
             return redirect('order_success', order_id=order.id)
@@ -116,7 +116,7 @@ def checkout_view(request, book_id, order_type='Buy'):
         'book_price': float(book.effective_price),
         'delivery_costs_json': delivery_costs_json,
         'delivery_options': DeliveryOption.objects.filter(is_active=True),
-        'page_title': f'Checkout — {book.title}',
+        'page_title': f'Checkout â€” {book.title}',
     }
     return render(request, 'orders/checkout.html', context)
 
@@ -310,7 +310,7 @@ def cart_checkout_view(request):
             # Clear cart
             request.session['cart'] = {}
 
-            messages.success(request, '✅ Your order has been placed successfully!')
+            messages.success(request, 'âœ… Your order has been placed successfully!')
             return redirect('order_success', order_id=created_orders[0].id)
     else:
         form = CheckoutForm(initial={
@@ -342,7 +342,7 @@ def borrow_book_view(request, book_id):
     if not request.user.has_active_membership:
         messages.warning(
             request,
-            '📚 You need an active membership to borrow books. '
+            'ðŸ“š You need an active membership to borrow books. '
             'Please subscribe to a plan and wait for activation.'
         )
         return redirect('membership')
