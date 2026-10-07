@@ -88,6 +88,10 @@ def checkout_view(request, book_id, order_type='Buy'):
             # Decrease stock
             book.stock_quantity = max(0, book.stock_quantity - 1)
             book.save(update_fields=['stock_quantity'])
+            
+            # Notify admin
+            from youth_club_library.notifications import notify_admin_new_order
+            notify_admin_new_order(order)
 
             messages.success(
                 request,

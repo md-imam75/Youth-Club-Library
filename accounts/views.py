@@ -130,6 +130,10 @@ def apply_membership_view(request, plan_id):
                 status=UserMembership.STATUS_PENDING,
             )
 
+        # Notify admin
+        from youth_club_library.notifications import notify_admin_new_membership
+        notify_admin_new_membership(membership)
+
         messages.success(
             request,
             f'Your membership application (ID: {membership.unique_membership_id}) has been submitted! '

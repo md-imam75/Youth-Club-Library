@@ -510,6 +510,10 @@ def request_book_view(request):
                 quantity=qty_val
             )
 
+        # Notify admin
+        from youth_club_library.notifications import notify_admin_new_book_request
+        notify_admin_new_book_request(book_req)
+
         context = {
             'page_title': 'Request Submitted',
             'success': True,
