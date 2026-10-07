@@ -4,13 +4,16 @@ from django.conf import settings
 
 def _send_admin_email_task(subject, message):
     try:
+        from_email = settings.EMAIL_HOST_USER if hasattr(settings, 'EMAIL_HOST_USER') and settings.EMAIL_HOST_USER else settings.DEFAULT_FROM_EMAIL
+        print(f"Sending email from {from_email} to imamsabbir20173@gmail.com")
         send_mail(
             subject=subject,
             message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=['imamsabbir20173@gmail.com'],
-            fail_silently=True,
+            from_email=from_email,
+            recipient_list=['u2104075@student.cuet.ac.bd'],
+            fail_silently=False,
         )
+        print("Email sent successfully.")
     except Exception as e:
         print(f"Failed to send admin notification email: {e}")
 
