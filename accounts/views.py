@@ -153,7 +153,12 @@ def delete_account_view(request):
     """
     Allows a user to permanently delete their account and personal data.
     Orders and transaction histories are unlinked/anonymized to preserve accounting integrity.
+    Admin accounts cannot be deleted to prevent accidental loss.
     """
+    if request.user.is_staff or request.user.is_superuser:
+        messages.error(request, 'Admin accounts cannot be deleted to prevent accidental data loss.')
+        return redirect('dashboard')
+
     if request.method == 'POST':
         user = request.user
         from django.contrib.auth import logout
