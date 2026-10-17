@@ -1258,7 +1258,7 @@ def send_order_invoice_email_thread(order_pk):
 @staff_required
 def admin_bill_list(request):
     """List and filter walk-in offline bills."""
-    q = request.GET.get('q', '')
+    q = request.GET.get('q', '').strip()
     qs = OfflineBill.objects.all().order_by('-created_at')
     if q:
         qs = qs.filter(
@@ -1267,6 +1267,13 @@ def admin_bill_list(request):
             Q(customer_mobile__icontains=q) |
             Q(customer_email__icontains=q)
         )
+
+    # Summary metrics for modern dashboard
+    total_bills_count = OfflineBill.objects.count()
+    total_revenue = OfflineBill.objects.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    today = timezone.now().date()
+    today_bills_count = OfflineBill.objects.filter(created_at__date=today).count()
+    today_revenue = OfflineBill.objects.filter(created_at__date=today).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
 
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(qs, 15)
@@ -1282,6 +1289,10 @@ def admin_bill_list(request):
         'page_title': 'Walk-in Bills',
         'bills': page_obj,
         'q': q,
+        'total_bills_count': total_bills_count,
+        'total_revenue': total_revenue,
+        'today_bills_count': today_bills_count,
+        'today_revenue': today_revenue,
     }
     return render(request, 'admin_panel/bills.html', context)
 
@@ -1504,6 +1515,33 @@ def admin_bill_download_pdf(request, pk):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
     return HttpResponse("Error generating PDF invoice", status=500)
+
+
+@staff_required
+@require_POST
+def admin_bill_delete(request, pk):
+    """Delete an offline walk-in bill, restore book stock quantities, and remove linked order records."""
+    bill = get_object_or_404(OfflineBill, pk=pk)
+    bill_number = bill.bill_number
+    try:
+        # 1. Restore inventory stock for all items
+        for item in bill.items.select_related('book').all():
+            if item.book:
+                item.book.stock_quantity += item.quantity
+                item.book.save(update_fields=['stock_quantity'])
+
+        # 2. Delete corresponding Order records created for this walk-in bill
+        Order.objects.filter(bill_number=bill_number).delete()
+
+        # 3. Delete the bill (OfflineBillItem records cascade-delete)
+        bill.delete()
+
+        messages.success(request, f"Bill #{bill_number} has been deleted and inventory stock was restored.")
+    except Exception as e:
+        logger.error(f"Error deleting bill {bill_number}: {e}", exc_info=True)
+        messages.error(request, f"Failed to delete bill #{bill_number}: {str(e)}")
+
+    return redirect('admin_bill_list')
 
 
 @staff_required

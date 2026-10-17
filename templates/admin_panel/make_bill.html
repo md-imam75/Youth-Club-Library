@@ -8,7 +8,9 @@
 
   <!-- Header -->
   <div class="flex items-center gap-4 mb-4">
-    <a href="{% url 'admin_bill_list' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
+    <a href="{% url 'admin_bill_list' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors" title="Back to Bills">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    </a>
     <h2 class="text-xl font-bold dark:text-white text-slate-900">Create Walk-in Store Bill</h2>
   </div>
 
