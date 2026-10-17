@@ -462,16 +462,34 @@
           <div id="global-book-stock" class="font-bold text-xl dark:text-white text-slate-900"></div>
         </div>
       </div>
+      <!-- Confirmation / Notification message container -->
+      <div id="global-restock-notification" class="hidden p-3 rounded-xl text-xs font-semibold text-center border"></div>
+
       <div class="grid grid-cols-2 gap-3 mt-4">
         <button onclick="globalActionSell()" class="py-3 px-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors flex flex-col items-center gap-1">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
           <span class="text-xs">Sell (Bill)</span>
         </button>
-        <button onclick="globalActionRestock()" class="py-3 px-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold transition-colors flex flex-col items-center gap-1">
+        <button onclick="toggleRestockSection()" class="py-3 px-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold transition-colors flex flex-col items-center gap-1">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-          <span class="text-xs">+1 Restock</span>
+          <span class="text-xs">Restock</span>
         </button>
       </div>
+
+      <!-- Restock form (amount field + confirmation) -->
+      <div id="global-restock-container" class="hidden flex-col gap-2 p-3 rounded-xl border dark:border-white/10 border-black/10 bg-slate-50 dark:bg-slate-800/40 mt-1">
+        <label class="text-xs font-semibold dark:text-gray-300 text-slate-700">Enter Restock Amount:</label>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="adjustRestockQty(-1)" class="w-9 h-9 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 font-bold text-slate-700 dark:text-white flex items-center justify-center">-</button>
+          <input type="number" id="global-restock-qty" min="1" value="1" class="form-input flex-1 text-center font-bold text-sm py-2" />
+          <button type="button" onclick="adjustRestockQty(1)" class="w-9 h-9 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 font-bold text-slate-700 dark:text-white flex items-center justify-center">+</button>
+        </div>
+        <button type="button" onclick="globalActionRestock()" id="global-restock-submit-btn" class="w-full mt-1 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+          Confirm Add to Stock
+        </button>
+      </div>
+
       <button onclick="resetGlobalScanner()" class="mt-2 text-xs text-center dark:text-gray-400 text-slate-500 hover:text-sky-500 underline">Scan Another Book</button>
     </div>
   </div>
@@ -518,6 +536,10 @@
     document.getElementById('global-scanner-view').classList.remove('hidden');
     document.getElementById('global-scan-status').innerText = "Position barcode in frame...";
     document.getElementById('global-scan-status').className = "text-center text-sm font-semibold text-slate-500 animate-pulse";
+    const notif = document.getElementById('global-restock-notification');
+    if (notif) notif.classList.add('hidden');
+    const container = document.getElementById('global-restock-container');
+    if (container) { container.classList.add('hidden'); container.classList.remove('flex'); }
     
     if (!globalHtml5QrcodeScanner) {
       globalHtml5QrcodeScanner = new Html5Qrcode("global-reader");
@@ -587,37 +609,84 @@
     window.location.href = `/admin-panel/billing/make/?scan=${encodeURIComponent(globalScannedBarcode)}`;
   }
 
+  function toggleRestockSection() {
+    const el = document.getElementById('global-restock-container');
+    el.classList.toggle('hidden');
+    el.classList.toggle('flex');
+    if (!el.classList.contains('hidden')) {
+      const inp = document.getElementById('global-restock-qty');
+      if (inp) inp.focus();
+    }
+  }
+
+  function adjustRestockQty(delta) {
+    const input = document.getElementById('global-restock-qty');
+    let val = parseInt(input.value) || 1;
+    val = Math.max(1, val + delta);
+    input.value = val;
+  }
+
   function globalActionRestock() {
-    // Make ajax call to increment stock by 1
+    const input = document.getElementById('global-restock-qty');
+    const amount = parseInt(input ? input.value : 1) || 1;
+    if (amount <= 0) {
+      alert("Please enter a valid amount (1 or more).");
+      return;
+    }
+
+    const notif = document.getElementById('global-restock-notification');
+    const submitBtn = document.getElementById('global-restock-submit-btn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Updating stock...';
+    }
+
     fetch(`/admin-panel/inventory/restock-ajax/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRFToken': getCookie('csrftoken')
       },
-      body: JSON.stringify({ barcode: globalScannedBarcode, increment: 1 })
+      body: JSON.stringify({ barcode: globalScannedBarcode, increment: amount })
     })
     .then(response => response.json())
     .then(data => {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg> Confirm Add to Stock';
+      }
       if (data.success) {
         document.getElementById('global-book-stock').innerText = data.new_stock;
         playGlobalBeep(true);
-        // Show brief success msg
-        const btn = event.currentTarget;
-        const originalHtml = btn.innerHTML;
-        btn.innerHTML = 'Restocked!';
-        btn.classList.add('bg-emerald-500');
-        setTimeout(() => {
-          btn.innerHTML = originalHtml;
-          btn.classList.remove('bg-emerald-500');
-        }, 1000);
+        if (notif) {
+          notif.className = "p-3 rounded-xl text-xs font-bold text-center border bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400";
+          notif.innerText = `✅ Successfully added ${amount} ${amount > 1 ? 'copies' : 'copy'}! Total stock is now ${data.new_stock}.`;
+          notif.classList.remove('hidden');
+        }
+        if (input) input.value = 1;
       } else {
-        alert(data.error || "Failed to restock");
+        if (notif) {
+          notif.className = "p-3 rounded-xl text-xs font-bold text-center border bg-red-500/15 border-red-500/30 text-red-600 dark:text-red-400";
+          notif.innerText = `❌ ${data.error || "Failed to restock"}`;
+          notif.classList.remove('hidden');
+        } else {
+          alert(data.error || "Failed to restock");
+        }
       }
     })
     .catch(error => {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg> Confirm Add to Stock';
+      }
       console.error('Error:', error);
-      alert("Error processing restock.");
+      if (notif) {
+        notif.className = "p-3 rounded-xl text-xs font-bold text-center border bg-red-500/15 border-red-500/30 text-red-600 dark:text-red-400";
+        notif.innerText = "❌ Error processing restock request.";
+        notif.classList.remove('hidden');
+      } else {
+        alert("Error processing restock.");
+      }
     });
   }
   

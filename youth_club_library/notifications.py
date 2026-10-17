@@ -5,13 +5,14 @@ from django.conf import settings
 def _send_admin_email_task(subject, message):
     try:
         from_email = settings.EMAIL_HOST_USER if hasattr(settings, 'EMAIL_HOST_USER') and settings.EMAIL_HOST_USER else settings.DEFAULT_FROM_EMAIL
-        print(f"Sending email from {from_email} to imamsabbir20173@gmail.com")
+        admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', 'imamsabbir20173@gmail.com')
+        print(f"Sending email from {from_email} to {admin_email}")
         send_mail(
             subject=subject,
             message=message,
             from_email=from_email,
-            recipient_list=['u2104075@student.cuet.ac.bd'],
-            fail_silently=False,
+            recipient_list=[admin_email],
+            fail_silently=True,
         )
         print("Email sent successfully.")
     except Exception as e:
@@ -67,3 +68,31 @@ def notify_admin_new_book_request(book_req):
     )
     
     threading.Thread(target=_send_admin_email_task, args=(subject, message)).start()
+
+def _send_user_status_task(email, subject, message):
+    try:
+        from_email = settings.EMAIL_HOST_USER if hasattr(settings, 'EMAIL_HOST_USER') and settings.EMAIL_HOST_USER else settings.DEFAULT_FROM_EMAIL
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=from_email,
+            recipient_list=[email],
+            fail_silently=True,
+        )
+        print(f"Sent status update email to {email}")
+    except Exception as e:
+        print(f"Failed to send status email to {email}: {e}")
+
+def notify_user_order_status(order, new_status):
+    """Send an email to the order's user informing them of a status change."""
+    if not order.user or not order.user.email:
+        return
+    subject = f"Your order {order.order_number} is now {new_status}"
+    message = (
+        f"Hello {order.user.get_full_name() or order.user.username},\n\n"
+        f"Your order for '{order.book.title}' has been updated to status: {new_status}.\n"
+        f"You can view the order details by logging into your account.\n\n"
+        f"Thank you for using Youth Club Library."
+    )
+    threading.Thread(target=_send_user_status_task, args=(order.user.email, subject, message)).start()
+

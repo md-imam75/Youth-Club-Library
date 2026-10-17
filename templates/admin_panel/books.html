@@ -99,8 +99,11 @@
             </div>
           </td>
           <td class="px-4 py-3">
-            <div class="flex gap-2">
+            <div class="flex gap-1.5 items-center">
               <a href="{% url 'admin_book_edit' book.pk %}" class="btn-warn">Edit</a>
+              <button type="button" onclick="printBookBarcode({{ book.id }}, '{{ book.title|escapejs }}', {{ book.stock_quantity }})" class="px-2 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded text-xs font-semibold transition-colors" title="Print Barcode Stickers">
+                Barcode
+              </button>
               <a href="{% url 'admin_book_delete' book.pk %}" class="btn-danger">Delete</a>
             </div>
           </td>
@@ -119,4 +122,19 @@
   <!-- Pagination -->
   {% include "includes/pagination.html" with page_obj=books %}
 </div>
+
+<script>
+  function printBookBarcode(bookId, bookTitle, currentStock) {
+    const defaultQty = currentStock > 0 ? currentStock : 1;
+    const qty = prompt(`How many barcode stickers do you want to print for:\n"${bookTitle}"?`, defaultQty);
+    if (qty !== null && qty.trim() !== '') {
+      const num = parseInt(qty.trim());
+      if (!isNaN(num) && num > 0) {
+        window.open(`{% url 'admin_print_barcodes' %}?book_id=${bookId}&qty=${num}`, '_blank');
+      } else {
+        alert('Please enter a valid positive number.');
+      }
+    }
+  }
+</script>
 {% endblock %}

@@ -38,10 +38,12 @@ class Order(models.Model):
     ]
 
     STATUS_PENDING = 'Pending'
+    STATUS_APPROVED = 'Approved'
     STATUS_DELIVERED = 'Delivered'
     STATUS_CANCELLED = 'Cancelled'
     ORDER_STATUS_CHOICES = [
         (STATUS_PENDING, 'Pending'),
+        (STATUS_APPROVED, 'Approved'),
         (STATUS_DELIVERED, 'Delivered'),
         (STATUS_CANCELLED, 'Cancelled'),
     ]

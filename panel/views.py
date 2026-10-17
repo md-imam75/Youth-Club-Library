@@ -354,11 +354,28 @@ def admin_order_action(request, pk):
             messages.success(request, f'Order #{order.id} marked as returned. Stock restored.')
         else:
             messages.error(request, 'Cannot mark as returned.')
+    elif action == 'mark_approved':
+        for o in group_orders:
+            o.order_status = Order.STATUS_APPROVED
+            o.save()
+        messages.success(request, f'Order {order.order_number} marked as Approved.')
+        try:
+            from youth_club_library.notifications import notify_user_order_status
+            for o in group_orders:
+                notify_user_order_status(o, 'Approved')
+        except Exception as e:
+            logger.error('Error notifying user on approval: %s', e)
     elif action == 'mark_delivered':
         for o in group_orders:
             o.order_status = Order.STATUS_DELIVERED
             o.save()
         messages.success(request, f'Order {order.order_number} marked as Delivered.')
+        try:
+            from youth_club_library.notifications import notify_user_order_status
+            for o in group_orders:
+                notify_user_order_status(o, 'Delivered')
+        except Exception as e:
+            logger.error('Error notifying user on delivery: %s', e)
     elif action == 'mark_cancelled':
         for o in group_orders:
             if o.order_status == Order.STATUS_CANCELLED:
@@ -1078,64 +1095,106 @@ def admin_social_link_delete(request, pk):
 # ──────────────────────────────────────────────────────────────────────────────
 
 def render_to_pdf(template_src, context_dict={}):
-    """Helper: Render an HTML template into a PDF byte stream."""
+    """Helper: Render an HTML template into a PDF byte stream safely."""
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from django.conf import settings
     import os
+    import base64
     
-    # Apply monkey patch to prevent Windows permission issues during PDF generation
-    from xhtml2pdf.files import pisaFileObject
-    pisaFileObject.getNamedFile = lambda self: self.uri
+    # Safe link callback for resolving local files without network DNS queries
+    def link_callback(uri, rel):
+        if uri.startswith('data:'):
+            return uri
+        clean_uri = uri.replace('\\', '/')
+        if os.path.isabs(clean_uri) and os.path.exists(clean_uri):
+            return clean_uri
+        static_path = os.path.join(settings.BASE_DIR, 'static', clean_uri.lstrip('/'))
+        if os.path.exists(static_path):
+            return static_path
+        if hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+            root_path = os.path.join(settings.STATIC_ROOT, clean_uri.lstrip('/'))
+            if os.path.exists(root_path):
+                return root_path
+        try:
+            from django.contrib.staticfiles import finders
+            found = finders.find(clean_uri)
+            if found:
+                return found if isinstance(found, str) else found[0]
+        except Exception:
+            pass
+        return ''
 
     try:
         font_regular = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'NotoSansBengali-Regular.ttf')
         font_bold = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'NotoSansBengali-Bold.ttf')
         logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
 
-        context_dict['font_regular'] = font_regular
-        context_dict['font_bold'] = font_bold
-        context_dict['logo_path'] = logo_path
+        # Convert backslashes for CSS url() syntax
+        context_dict['font_regular'] = font_regular.replace('\\', '/')
+        context_dict['font_bold'] = font_bold.replace('\\', '/')
 
-        if 'NotoSansBengali' not in pdfmetrics.getRegisteredFontNames():
+        if os.path.exists(logo_path):
+            try:
+                with open(logo_path, 'rb') as lf:
+                    context_dict['logo_path'] = f"data:image/png;base64,{base64.b64encode(lf.read()).decode('utf-8')}"
+            except Exception:
+                context_dict['logo_path'] = logo_path.replace('\\', '/')
+        else:
+            context_dict['logo_path'] = ''
+
+        if os.path.exists(font_regular) and 'NotoSansBengali' not in pdfmetrics.getRegisteredFontNames():
             pdfmetrics.registerFont(TTFont('NotoSansBengali', font_regular))
-        if 'NotoSansBengali-Bold' not in pdfmetrics.getRegisteredFontNames():
+        if os.path.exists(font_bold) and 'NotoSansBengali-Bold' not in pdfmetrics.getRegisteredFontNames():
             pdfmetrics.registerFont(TTFont('NotoSansBengali-Bold', font_bold))
             
         # Register family so bold tags work automatically
-        pdfmetrics.registerFontFamily('NotoSansBengali', normal='NotoSansBengali', bold='NotoSansBengali-Bold')
+        if 'NotoSansBengali' in pdfmetrics.getRegisteredFontNames() and 'NotoSansBengali-Bold' in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFontFamily('NotoSansBengali', normal='NotoSansBengali', bold='NotoSansBengali-Bold')
     except Exception as e:
-        logger.error('Font registration error: %s', e)
+        logger.error('Font/asset registration error: %s', e)
 
-    template = get_template(template_src)
-    html = template.render(context_dict)
-    result = BytesIO()
-    pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), result)
-    if not pdf.err:
-        return result.getvalue()
+    try:
+        template = get_template(template_src)
+        html = template.render(context_dict)
+        result = BytesIO()
+        pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), result, link_callback=link_callback)
+        if not pdf.err:
+            return result.getvalue()
+    except Exception as e:
+        logger.error('Error generating PDF with pisa: %s', e)
     return None
 
 
 def send_bill_email(bill, pdf_data):
-    """Helper: Send PDF invoice to client email."""
+    """Helper: Send PDF invoice to client email asynchronously."""
     if not bill.customer_email:
         return
-    from django.conf import settings
-    from django.core.mail import EmailMultiAlternatives
+    import threading
 
-    subject = f"Invoice {bill.bill_number} — Youth Club Library"
-    html_message = render_to_string('admin_panel/bill_email.html', {'bill': bill})
-    plain_message = render_to_string('admin_panel/bill_email.txt', {'bill': bill})
+    def _task():
+        from django.conf import settings
+        from django.core.mail import EmailMultiAlternatives
 
-    email = EmailMultiAlternatives(
-        subject,
-        plain_message,
-        settings.DEFAULT_FROM_EMAIL,
-        [bill.customer_email]
-    )
-    email.attach_alternative(html_message, "text/html")
-    email.attach(f"Invoice_{bill.bill_number}.pdf", pdf_data, "application/pdf")
-    email.send(fail_silently=False)
+        try:
+            subject = f"Invoice {bill.bill_number} - Youth Club Library"
+            html_message = render_to_string('admin_panel/bill_email.html', {'bill': bill})
+            plain_message = render_to_string('admin_panel/bill_email.txt', {'bill': bill})
+
+            email = EmailMultiAlternatives(
+                subject,
+                plain_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [bill.customer_email]
+            )
+            email.attach_alternative(html_message, "text/html")
+            email.attach(f"Invoice_{bill.bill_number}.pdf", pdf_data, "application/pdf")
+            email.send(fail_silently=True)
+            print(f"Successfully emailed bill #{bill.bill_number} to {bill.customer_email}")
+        except Exception as e:
+            logger.error('Failed to send bill email to %s: %s', bill.customer_email, e)
+
+    threading.Thread(target=_task).start()
 
 
 def send_order_invoice_email_thread(order_pk):
@@ -1885,10 +1944,26 @@ def admin_print_barcodes(request):
     from catalog.models import Book
     import re
     
-    # Optional: filter by IDs
-    book_ids = request.GET.get('ids', '')
-    if book_ids:
+    # Optional: filter by single book_id or multiple IDs
+    book_id = request.GET.get('book_id', '').strip()
+    book_ids = request.GET.get('ids', '').strip()
+    custom_qty = request.GET.get('qty', '').strip()
+    
+    try:
+        custom_amount = int(custom_qty) if custom_qty else 0
+    except (ValueError, TypeError):
+        custom_amount = 0
+
+    all_books_with_barcode = Book.objects.exclude(barcode__isnull=True).exclude(barcode='').order_by('title')
+
+    selected_book_id = None
+    if book_id and book_id.isdigit():
+        selected_book_id = int(book_id)
+        books = Book.objects.filter(id=selected_book_id).exclude(barcode__isnull=True).exclude(barcode='')
+    elif book_ids:
         ids_list = [int(x) for x in book_ids.split(',') if x.isdigit()]
+        if len(ids_list) == 1:
+            selected_book_id = ids_list[0]
         books = Book.objects.filter(id__in=ids_list).exclude(barcode__isnull=True).exclude(barcode='')
     else:
         # Default to all books with stock
@@ -1917,8 +1992,14 @@ def admin_print_barcodes(request):
             if svg_match:
                 svg_string = svg_match.group(0)
             
-            # Generate enough stickers for the current stock, or at least 1
-            qty = max(1, book.stock_quantity) if not book_ids else 1
+            # Determine sticker quantity
+            if custom_amount > 0:
+                qty = custom_amount
+            elif selected_book_id:
+                qty = max(1, book.stock_quantity)
+            else:
+                qty = max(1, book.stock_quantity) if not book_ids else 1
+
             for _ in range(qty):
                 stickers.append({
                     'book': book,
@@ -1927,7 +2008,14 @@ def admin_print_barcodes(request):
         except Exception as e:
             continue
             
-    return render(request, 'admin_panel/print_barcodes.html', {'stickers': stickers, 'page_title': 'Print Barcodes'})
+    context = {
+        'stickers': stickers,
+        'page_title': 'Print Barcodes',
+        'all_books': all_books_with_barcode,
+        'selected_book_id': selected_book_id,
+        'custom_qty': custom_amount if custom_amount > 0 else '',
+    }
+    return render(request, 'admin_panel/print_barcodes.html', context)
 
 @staff_required
 def admin_barcode_search_ajax(request):

@@ -1,4 +1,4 @@
-﻿"""
+"""
 orders/views.py
 """
 
@@ -95,7 +95,7 @@ def checkout_view(request, book_id, order_type='Buy'):
 
             messages.success(
                 request,
-                f'âœ… Your {order_type} order ({order.order_number}) has been placed! '
+                f'Your {order_type} order ({order.order_number}) has been placed successfully! '
                 'Our team will verify and process it shortly.'
             )
             return redirect('order_success', order_id=order.id)
@@ -116,7 +116,7 @@ def checkout_view(request, book_id, order_type='Buy'):
         'book_price': float(book.effective_price),
         'delivery_costs_json': delivery_costs_json,
         'delivery_options': DeliveryOption.objects.filter(is_active=True),
-        'page_title': f'Checkout â€” {book.title}',
+        'page_title': f'Checkout - {book.title}',
     }
     return render(request, 'orders/checkout.html', context)
 
@@ -310,7 +310,11 @@ def cart_checkout_view(request):
             # Clear cart
             request.session['cart'] = {}
 
-            messages.success(request, 'âœ… Your order has been placed successfully!')
+            if created_orders:
+                from youth_club_library.notifications import notify_admin_new_order
+                notify_admin_new_order(created_orders[0])
+
+            messages.success(request, 'Your order has been placed successfully!')
             return redirect('order_success', order_id=created_orders[0].id)
     else:
         form = CheckoutForm(initial={

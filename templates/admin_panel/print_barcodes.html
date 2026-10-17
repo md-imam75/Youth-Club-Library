@@ -15,20 +15,72 @@
       background: #f1f5f9;
     }
     .print-controls {
-      text-align: center;
-      padding: 20px;
+      padding: 16px 24px;
       background: white;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid #e2e8f0;
       margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .controls-form {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-select, .form-input {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #f8fafc;
+      color: #1e293b;
+    }
+    .form-select {
+      max-width: 320px;
+    }
+    .form-input {
+      width: 100px;
+    }
+    .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-submit {
+      background: #0284c7;
+      color: white;
+    }
+    .btn-submit:hover {
+      background: #0369a1;
     }
     .print-btn {
-      background: #0ea5e9;
+      background: #10b981;
       color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 5px;
+    }
+    .print-btn:hover {
+      background: #059669;
+    }
+    .back-btn {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    .back-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
     }
     .page {
       background: white;
@@ -95,8 +147,31 @@
 <body>
 
   <div class="print-controls">
-    <button class="print-btn" onclick="window.print()">Print Barcodes</button>
-    <p style="color: #64748b; font-size: 14px; margin-top: 10px;">Load A4 sticker sheets into your printer. Ensure "Actual Size" is selected in print settings.</p>
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <a href="{% url 'admin_books' %}" class="btn back-btn">← Back to Books</a>
+      
+      <form method="get" class="controls-form">
+        <label style="font-size: 13px; font-weight: 600; color: #475569;">Book:</label>
+        <select name="book_id" class="form-select">
+          <option value="">-- All Books in Stock --</option>
+          {% for b in all_books %}
+          <option value="{{ b.id }}" {% if selected_book_id == b.id %}selected{% endif %}>
+            {{ b.title }} (Barcode: {{ b.barcode }}, Stock: {{ b.stock_quantity }})
+          </option>
+          {% endfor %}
+        </select>
+
+        <label style="font-size: 13px; font-weight: 600; color: #475569;">Stickers Amount:</label>
+        <input type="number" name="qty" min="1" max="1000" value="{{ custom_qty }}" placeholder="Amount" class="form-input" />
+
+        <button type="submit" class="btn btn-submit">Generate</button>
+      </form>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 12px; color: #64748b; font-weight: 500;">Total Stickers: <strong>{{ stickers|length }}</strong></span>
+      <button class="btn print-btn" onclick="window.print()">🖨️ Print Barcodes</button>
+    </div>
   </div>
 
   <div class="page">
