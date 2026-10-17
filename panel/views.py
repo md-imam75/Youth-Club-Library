@@ -12,6 +12,7 @@ from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from datetime import timedelta
+from decimal import Decimal
 import logging
 
 logger = logging.getLogger(__name__)
@@ -1313,126 +1314,135 @@ def admin_restock_ajax(request):
 def admin_make_bill(request):
     """Create a new offline walk-in customer bill."""
     if request.method == 'POST':
-        customer_name = request.POST.get('customer_name')
-        customer_mobile = request.POST.get('customer_mobile', '')
-        customer_email = request.POST.get('customer_email', '')
-        payment_method = request.POST.get('payment_method', 'cash')
-        items_json = request.POST.get('items_json', '[]')
-        
-        cash_tendered = request.POST.get('cash_tendered')
-        if cash_tendered:
-            try:
-                cash_tendered = Decimal(cash_tendered)
-            except:
-                cash_tendered = None
-        else:
-            cash_tendered = None
-
-        if not customer_name:
-            messages.error(request, "Customer name is required.")
-            return redirect('admin_make_bill')
-
-        import json
         try:
-            items = json.loads(items_json)
-        except Exception:
-            messages.error(request, "Invalid items structure.")
-            return redirect('admin_make_bill')
+            customer_name = request.POST.get('customer_name', '').strip()
+            customer_mobile = request.POST.get('customer_mobile', '').strip()
+            customer_email = request.POST.get('customer_email', '').strip()
+            payment_method = request.POST.get('payment_method', 'cash')
+            items_json = request.POST.get('items_json', '[]')
+            
+            cash_tendered_raw = request.POST.get('cash_tendered')
+            cash_tendered = None
+            if cash_tendered_raw:
+                try:
+                    cash_tendered = Decimal(str(cash_tendered_raw).strip())
+                except Exception:
+                    cash_tendered = None
 
-        if not items:
-            messages.error(request, "Please add at least one book to the bill.")
-            return redirect('admin_make_bill')
+            if not customer_name:
+                messages.error(request, "Customer name is required.")
+                return redirect('admin_make_bill')
 
-        # Generate unique bill number
-        import random
-        from django.utils import timezone
-        date_str = timezone.now().strftime("%Y%m%d")
-        count = OfflineBill.objects.filter(created_at__date=timezone.now().date()).count() + 1
-        bill_number = f"BILL-{date_str}-{count:04d}"
+            import json
+            try:
+                items = json.loads(items_json)
+            except Exception:
+                messages.error(request, "Invalid items structure.")
+                return redirect('admin_make_bill')
 
-        # Create OfflineBill record
-        bill = OfflineBill.objects.create(
-            bill_number=bill_number,
-            customer_name=customer_name,
-            customer_mobile=customer_mobile,
-            customer_email=customer_email,
-            payment_method=payment_method,
-            total_amount=0
-        )
+            if not items:
+                messages.error(request, "Please add at least one book to the bill.")
+                return redirect('admin_make_bill')
 
-        total_amount = 0
-        for item in items:
-            book_id = item.get('id')
-            qty = int(item.get('qty', 1))
-            book = get_object_or_404(Book, pk=book_id)
+            # Generate unique bill number safely
+            date_str = timezone.now().strftime("%Y%m%d")
+            count = OfflineBill.objects.filter(created_at__date=timezone.now().date()).count() + 1
+            bill_number = f"BILL-{date_str}-{count:04d}"
+            while OfflineBill.objects.filter(bill_number=bill_number).exists():
+                count += 1
+                bill_number = f"BILL-{date_str}-{count:04d}"
 
-            # Reduce inventory
-            book.stock_quantity = max(0, book.stock_quantity - qty)
-            book.save(update_fields=['stock_quantity'])
-
-            # Pricing snapshot
-            regular_price = book.regular_price
-            offer_price = book.offer_price
-
-            effective_price = offer_price if offer_price else regular_price
-            discount_percent = 0
-            if offer_price and regular_price > 0:
-                discount_percent = int(((regular_price - offer_price) / regular_price) * 100)
-
-            item_total = effective_price * qty
-            total_amount += item_total
-
-            OfflineBillItem.objects.create(
-                bill=bill,
-                book=book,
-                book_title=book.title,
-                author_name=book.author.name if book.author else '',
-                publication_name=book.publication.name if book.publication else '',
-                quantity=qty,
-                regular_price=regular_price,
-                offer_price=offer_price,
-                discount_percent=discount_percent,
-                total_price=item_total
-            )
-
-            # Create standard Order record to integrate with "All Orders"
-            Order.objects.create(
-                user=None,
-                book=book,
-                order_type=Order.ORDER_TYPE_BUY,
-                quantity=qty,
-                order_status=Order.STATUS_DELIVERED,
-                delivery_option='offline_store',
-                delivery_cost=0,
-                book_price=effective_price,
-                total_cost=item_total,
-                payment_method=Order.PAYMENT_OFFLINE if payment_method == 'cash' else Order.PAYMENT_BKASH,
-                payment_status=Order.PAYMENT_STATUS_PAID,
+            # Create OfflineBill record
+            bill = OfflineBill.objects.create(
+                bill_number=bill_number,
                 customer_name=customer_name,
                 customer_mobile=customer_mobile,
                 customer_email=customer_email,
-                bill_number=bill_number,
-                group_number=bill_number,
+                payment_method=payment_method,
+                total_amount=Decimal('0.00')
             )
 
-        bill.total_amount = total_amount
-        bill.cash_tendered = cash_tendered
-        if payment_method == 'cash' and cash_tendered and cash_tendered >= total_amount:
-            bill.change_returned = cash_tendered - total_amount
-        else:
-            bill.change_returned = Decimal('0.00')
-            
-        bill.save(update_fields=['total_amount', 'cash_tendered', 'change_returned'])
+            total_amount = Decimal('0.00')
+            for item in items:
+                book_id = item.get('id')
+                qty = int(item.get('qty', 1))
+                book = get_object_or_404(Book, pk=book_id)
 
-        # Generate PDF for emailing
-        pdf_data = render_to_pdf('admin_panel/bill_pdf.html', {'bill': bill})
-        if pdf_data and customer_email:
-            send_bill_email(bill, pdf_data)
-            messages.success(request, f"Bill #{bill.bill_number} created and emailed to {customer_email}.")
-        else:
-            messages.success(request, f"Bill #{bill.bill_number} created successfully.")
+                # Reduce inventory
+                book.stock_quantity = max(0, book.stock_quantity - qty)
+                book.save(update_fields=['stock_quantity'])
 
-        return redirect('admin_bill_list')
+                # Pricing snapshot
+                regular_price = Decimal(str(book.regular_price))
+                offer_price = Decimal(str(book.offer_price)) if book.offer_price else None
+
+                effective_price = offer_price if offer_price else regular_price
+                discount_percent = 0
+                if offer_price and regular_price > 0:
+                    discount_percent = int(((regular_price - offer_price) / regular_price) * 100)
+
+                item_total = effective_price * qty
+                total_amount += item_total
+
+                OfflineBillItem.objects.create(
+                    bill=bill,
+                    book=book,
+                    book_title=book.title,
+                    author_name=book.author.name if book.author else '',
+                    publication_name=book.publication.name if book.publication else '',
+                    quantity=qty,
+                    regular_price=regular_price,
+                    offer_price=offer_price,
+                    discount_percent=discount_percent,
+                    total_price=item_total
+                )
+
+                # Create standard Order record to integrate with "All Orders"
+                Order.objects.create(
+                    user=None,
+                    book=book,
+                    order_type=Order.ORDER_TYPE_BUY,
+                    quantity=qty,
+                    order_status=Order.STATUS_DELIVERED,
+                    delivery_option='offline_store',
+                    delivery_cost=Decimal('0.00'),
+                    book_price=effective_price,
+                    total_cost=item_total,
+                    payment_method=Order.PAYMENT_OFFLINE if payment_method == 'cash' else Order.PAYMENT_BKASH,
+                    payment_status=Order.PAYMENT_STATUS_PAID,
+                    customer_name=customer_name,
+                    customer_mobile=customer_mobile,
+                    customer_email=customer_email,
+                    bill_number=bill_number,
+                    group_number=bill_number,
+                )
+
+            bill.total_amount = total_amount
+            bill.cash_tendered = cash_tendered
+            if payment_method == 'cash' and cash_tendered and cash_tendered >= total_amount:
+                bill.change_returned = cash_tendered - total_amount
+            else:
+                bill.change_returned = Decimal('0.00')
+                
+            bill.save(update_fields=['total_amount', 'cash_tendered', 'change_returned'])
+
+            # Generate PDF for emailing safely
+            try:
+                pdf_data = render_to_pdf('admin_panel/bill_pdf.html', {'bill': bill})
+                if pdf_data and customer_email:
+                    send_bill_email(bill, pdf_data)
+                    messages.success(request, f"Bill #{bill.bill_number} created and emailed to {customer_email}.")
+                else:
+                    messages.success(request, f"Bill #{bill.bill_number} created successfully.")
+            except Exception as pe:
+                logger.error("Error generating/sending PDF invoice for bill %s: %s", bill.bill_number, pe)
+                messages.success(request, f"Bill #{bill.bill_number} created successfully.")
+
+            return redirect('admin_bill_list')
+        except Exception as e:
+            logger.error("Error creating offline bill: %s", e, exc_info=True)
+            messages.error(request, f"Failed to generate bill: {str(e)}")
+            return redirect('admin_make_bill')
 
     context = {
         'page_title': 'Make a Bill',
