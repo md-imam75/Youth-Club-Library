@@ -1,3 +1,9 @@
+from django.core.cache import cache
+
+
+SOCIAL_LINKS_CACHE_KEY = 'active_social_links_v1'
+
+
 def global_nav(request):
     """Makes the navigation menu and active social media links available to all templates."""
     from catalog.models import SocialMediaLink
@@ -17,8 +23,13 @@ def global_nav(request):
                 cart_count += int(val)
             except (ValueError, TypeError):
                 pass
-                
-    active_social_links = SocialMediaLink.objects.filter(is_active=True).order_by('name')
+
+    active_social_links = cache.get(SOCIAL_LINKS_CACHE_KEY)
+    if active_social_links is None:
+        active_social_links = list(
+            SocialMediaLink.objects.filter(is_active=True).order_by('name')
+        )
+        cache.set(SOCIAL_LINKS_CACHE_KEY, active_social_links, timeout=300)
 
     return {
         'nav_menu': nav_menu,

@@ -25,6 +25,8 @@ class Author(models.Model):
 
     @property
     def book_count(self):
+        if hasattr(self, 'num_books'):
+            return self.num_books
         return self.books.count()
 
 
@@ -51,6 +53,8 @@ class Publication(models.Model):
 
     @property
     def book_count(self):
+        if hasattr(self, 'num_books'):
+            return self.num_books
         return self.books.count()
 
 
@@ -75,7 +79,7 @@ class Category(models.Model):
 
 
 class Book(models.Model):
-    title = models.CharField(max_length=300)
+    title = models.CharField(max_length=300, db_index=True)
     author = models.ForeignKey(
         Author,
         on_delete=models.SET_NULL,
@@ -140,11 +144,11 @@ class Book(models.Model):
     can_borrow = models.BooleanField(default=True, help_text='Allow members to borrow this book')
 
     # Homepage display flags
-    is_featured = models.BooleanField(default=False)
-    is_new = models.BooleanField(default=False)
-    is_upcoming = models.BooleanField(default=False, help_text='Coming soon — not yet available')
+    is_featured = models.BooleanField(default=False, db_index=True)
+    is_new = models.BooleanField(default=False, db_index=True)
+    is_upcoming = models.BooleanField(default=False, db_index=True, help_text='Coming soon — not yet available')
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -160,6 +164,8 @@ class Book(models.Model):
         is_restocked = self.pk and getattr(self, '_original_stock', 0) == 0 and self.stock_quantity > 0
         super().save(*args, **kwargs)
         self._original_stock = self.stock_quantity
+        from django.core.cache import cache
+        cache.delete('catalog_slider_max_v1')
         
         # Generate barcode if missing
         if not self.barcode and self.pk:
@@ -217,11 +223,15 @@ class Book(models.Model):
 
     @property
     def average_rating(self):
+        if hasattr(self, '_avg_rating'):
+            return round(self._avg_rating or 0, 1)
         result = self.reviews.aggregate(avg=Avg('rating'))
         return round(result['avg'] or 0, 1)
 
     @property
     def review_count(self):
+        if hasattr(self, '_review_count'):
+            return self._review_count
         return self.reviews.count()
 
 
@@ -272,6 +282,16 @@ class SocialMediaLink(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        from django.core.cache import cache
+        cache.delete('active_social_links_v1')
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        from django.core.cache import cache
+        cache.delete('active_social_links_v1')
 
 
 class BookRequest(models.Model):

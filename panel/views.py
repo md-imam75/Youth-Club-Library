@@ -47,75 +47,91 @@ def staff_required(view_func):
 @staff_required
 def admin_dashboard(request):
     """Overview: stats cards + recent activity."""
-    today = timezone.now().date()
-    month_start = today.replace(day=1)
-
-    # --- Stats ---
-    total_books = Book.objects.count()
-    total_users = CustomUser.objects.filter(is_staff=False).count()
-
-    # Orders
-    all_orders = Order.objects.select_related('user', 'book')
-    
-    def count_unique(qs):
-        return len(set(g or i for i, g in qs.values_list('id', 'group_number')))
-        
-    total_buy_orders = count_unique(all_orders.filter(order_type='Buy'))
-    total_borrow_orders = count_unique(all_orders.filter(order_type='Borrow'))
-    pending_orders = count_unique(all_orders.filter(payment_status='Pending'))
-
-    # Revenue
-    online_revenue = all_orders.filter(
-        order_type='Buy', payment_status='Paid'
-    ).aggregate(total=Sum('total_cost'))['total'] or 0
-    
     from orders.models import OfflineBill, CashDrawerAdjustment
     from django.db.models.functions import Coalesce
     from django.db.models import F
-    
-    offline_revenue = OfflineBill.objects.aggregate(total=Sum('total_amount'))['total'] or 0
-    offline_cash = OfflineBill.objects.filter(payment_method='cash').aggregate(total=Sum('total_amount'))['total'] or 0
-    
-    # Calculate total cash in drawer (offline cash sales + IN adjustments - OUT adjustments)
-    cash_in = CashDrawerAdjustment.objects.filter(adjustment_type='IN').aggregate(total=Sum('amount'))['total'] or 0
-    cash_out = CashDrawerAdjustment.objects.filter(adjustment_type='OUT').aggregate(total=Sum('amount'))['total'] or 0
-    total_cash_drawer = float(offline_cash) + float(cash_in) - float(cash_out)
-    
-    total_revenue = float(online_revenue) + float(offline_revenue)
 
-    month_revenue_online = all_orders.filter(
-        order_type='Buy',
-        payment_status='Paid',
-        created_at__date__gte=month_start,
-    ).aggregate(total=Sum('total_cost'))['total'] or 0
-    
-    month_revenue_offline = OfflineBill.objects.filter(
-        created_at__date__gte=month_start
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
-    
-    month_revenue = float(month_revenue_online) + float(month_revenue_offline)
-    
-    # Inventory POS Stats
-    total_inventory_count = Book.objects.aggregate(total=Sum('stock_quantity'))['total'] or 0
-    total_inventory_value = Book.objects.annotate(
+    today = timezone.now().date()
+    month_start = today.replace(day=1)
+
+    # --- Book & Inventory Stats (1 query instead of 3) ---
+    book_stats = Book.objects.annotate(
         eff_price=Coalesce('offer_price', 'regular_price')
     ).aggregate(
-        total=Sum(F('stock_quantity') * F('eff_price'))
-    )['total'] or 0
+        total_books=Count('id'),
+        total_inventory_count=Sum('stock_quantity'),
+        total_inventory_value=Sum(F('stock_quantity') * F('eff_price')),
+    )
+    total_books = book_stats['total_books'] or 0
+    total_inventory_count = book_stats['total_inventory_count'] or 0
+    total_inventory_value = book_stats['total_inventory_value'] or 0
 
-    # Memberships
-    pending_memberships = UserMembership.objects.filter(status='Pending').count()
-    active_memberships = UserMembership.objects.filter(status='Active').count()
+    total_users = CustomUser.objects.filter(is_staff=False).count()
 
-    # Overdue borrows
-    overdue_borrows = Order.objects.filter(
-        order_type='Borrow',
-        due_date__lt=today,
-        returned_at__isnull=True,
-    ).count()
+    # --- Order Stats (single lightweight pass instead of 6 separate queries) ---
+    buy_groups = set()
+    borrow_groups = set()
+    pending_groups = set()
+    for oid, gnum, otype, pstatus in Order.objects.values_list('id', 'group_number', 'order_type', 'payment_status'):
+        key = gnum or oid
+        if otype == 'Buy':
+            buy_groups.add(key)
+        elif otype == 'Borrow':
+            borrow_groups.add(key)
+        if pstatus == 'Pending':
+            pending_groups.add(key)
+
+    total_buy_orders = len(buy_groups)
+    total_borrow_orders = len(borrow_groups)
+    pending_orders = len(pending_groups)
+
+    order_agg = Order.objects.aggregate(
+        online_rev=Sum('total_cost', filter=Q(order_type='Buy', payment_status='Paid')),
+        month_online_rev=Sum(
+            'total_cost',
+            filter=Q(order_type='Buy', payment_status='Paid', created_at__date__gte=month_start),
+        ),
+        overdue_borrows=Count(
+            'id',
+            filter=Q(order_type='Borrow', due_date__lt=today, returned_at__isnull=True),
+        ),
+    )
+    online_revenue = order_agg['online_rev'] or 0
+    month_revenue_online = order_agg['month_online_rev'] or 0
+    overdue_borrows = order_agg['overdue_borrows'] or 0
+
+    # --- Offline Bill Stats (1 query instead of 3) ---
+    bill_agg = OfflineBill.objects.aggregate(
+        offline_rev=Sum('total_amount'),
+        offline_cash=Sum('total_amount', filter=Q(payment_method='cash')),
+        month_offline_rev=Sum('total_amount', filter=Q(created_at__date__gte=month_start)),
+    )
+    offline_revenue = bill_agg['offline_rev'] or 0
+    offline_cash = bill_agg['offline_cash'] or 0
+    month_revenue_offline = bill_agg['month_offline_rev'] or 0
+
+    # --- Cash Drawer Adjustments (1 query instead of 2) ---
+    drawer_agg = CashDrawerAdjustment.objects.aggregate(
+        cash_in=Sum('amount', filter=Q(adjustment_type='IN')),
+        cash_out=Sum('amount', filter=Q(adjustment_type='OUT')),
+    )
+    cash_in = drawer_agg['cash_in'] or 0
+    cash_out = drawer_agg['cash_out'] or 0
+    total_cash_drawer = float(offline_cash) + float(cash_in) - float(cash_out)
+
+    total_revenue = float(online_revenue) + float(offline_revenue)
+    month_revenue = float(month_revenue_online) + float(month_revenue_offline)
+
+    # --- Memberships (1 query instead of 2) ---
+    mem_agg = UserMembership.objects.aggregate(
+        pending=Count('id', filter=Q(status='Pending')),
+        active=Count('id', filter=Q(status='Active')),
+    )
+    pending_memberships = mem_agg['pending'] or 0
+    active_memberships = mem_agg['active'] or 0
 
     # Recent orders (last 10)
-    recent_orders = all_orders.order_by('-created_at')[:10]
+    recent_orders = Order.objects.select_related('user', 'book', 'book__author').order_by('-created_at')[:10]
 
     # Recent membership requests (last 5 pending)
     recent_memberships = UserMembership.objects.filter(
@@ -147,15 +163,18 @@ def admin_dashboard(request):
 def admin_cash_drawer(request):
     """View the history of cash going in and out of the drawer."""
     from orders.models import OfflineBill, CashDrawerAdjustment
-    from django.db.models import Sum
-    
+
     offline_cash = OfflineBill.objects.filter(payment_method='cash').aggregate(total=Sum('total_amount'))['total'] or 0
-    cash_in = CashDrawerAdjustment.objects.filter(adjustment_type='IN').aggregate(total=Sum('amount'))['total'] or 0
-    cash_out = CashDrawerAdjustment.objects.filter(adjustment_type='OUT').aggregate(total=Sum('amount'))['total'] or 0
+    drawer_agg = CashDrawerAdjustment.objects.aggregate(
+        cash_in=Sum('amount', filter=Q(adjustment_type='IN')),
+        cash_out=Sum('amount', filter=Q(adjustment_type='OUT')),
+    )
+    cash_in = drawer_agg['cash_in'] or 0
+    cash_out = drawer_agg['cash_out'] or 0
     total_cash_drawer = float(offline_cash) + float(cash_in) - float(cash_out)
-    
+
     history = []
-    
+
     for bill in OfflineBill.objects.filter(payment_method='cash'):
         history.append({
             'date': bill.created_at,
@@ -164,7 +183,7 @@ def admin_cash_drawer(request):
             'description': f"Walk-in Sale: {bill.customer_name or 'Guest'}",
             'admin': ''
         })
-        
+
     for adj in CashDrawerAdjustment.objects.select_related('admin').all():
         history.append({
             'date': adj.created_at,
@@ -173,10 +192,10 @@ def admin_cash_drawer(request):
             'description': adj.reason,
             'admin': adj.admin.get_full_name() if adj.admin else 'System'
         })
-        
+
     # Sort history by date descending
     history.sort(key=lambda x: x['date'], reverse=True)
-    
+
     context = {
         'page_title': 'Cash Drawer',
         'history': history,
@@ -190,11 +209,14 @@ def admin_cash_drawer(request):
 def admin_adjust_cash(request):
     """Adjust the cash drawer balance directly from the dashboard."""
     from orders.models import CashDrawerAdjustment
+    from django.utils.http import url_has_allowed_host_and_scheme
     try:
         amount = float(request.POST.get('amount', 0))
-        reason = request.POST.get('reason', '').strip()
+        reason = request.POST.get('reason', '').strip()[:255]
         adjustment_type = request.POST.get('type', 'IN')
-        
+        if adjustment_type not in ('IN', 'OUT'):
+            adjustment_type = 'IN'
+
         if amount > 0 and reason:
             CashDrawerAdjustment.objects.create(
                 adjustment_type=adjustment_type,
@@ -206,10 +228,15 @@ def admin_adjust_cash(request):
         else:
             messages.error(request, "Invalid amount or missing reason for cash adjustment.")
     except Exception as e:
-        messages.error(request, f"Error adjusting cash: {str(e)}")
-        
+        logger.error("Error adjusting cash drawer: %s", e, exc_info=True)
+        messages.error(request, "Could not adjust cash drawer. Please check your input.")
+
     next_url = request.GET.get('next')
-    if next_url:
+    if next_url and url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
         return redirect(next_url)
     return redirect('admin_dashboard')
 
@@ -236,18 +263,25 @@ def admin_memberships(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    counts = UserMembership.objects.aggregate(
+        pending=Count('id', filter=Q(status='Pending')),
+        active=Count('id', filter=Q(status='Active')),
+        expired=Count('id', filter=Q(status='Expired')),
+    )
+
     context = {
         'page_title': 'Membership Requests',
         'memberships': page_obj,
         'status_filter': status_filter,
-        'pending_count':  UserMembership.objects.filter(status='Pending').count(),
-        'active_count':   UserMembership.objects.filter(status='Active').count(),
-        'expired_count':  UserMembership.objects.filter(status='Expired').count(),
+        'pending_count': counts['pending'] or 0,
+        'active_count': counts['active'] or 0,
+        'expired_count': counts['expired'] or 0,
     }
     return render(request, 'admin_panel/memberships.html', context)
 
 
 @staff_required
+@require_POST
 def admin_membership_action(request, pk):
     """Approve or decline a membership request."""
     membership = get_object_or_404(UserMembership, pk=pk)
@@ -285,7 +319,7 @@ def admin_orders(request):
     pay_status = request.GET.get('status', '')
     q = request.GET.get('q', '')
 
-    qs = Order.objects.select_related('user', 'book').order_by('-created_at')
+    qs = Order.objects.select_related('user', 'book', 'book__author').order_by('-created_at')
     if order_type:
         qs = qs.filter(order_type=order_type)
     if pay_status:
@@ -295,7 +329,9 @@ def admin_orders(request):
             Q(book__title__icontains=q) |
             Q(user__email__icontains=q) |
             Q(user__first_name__icontains=q) |
-            Q(user__last_name__icontains=q)
+            Q(user__last_name__icontains=q) |
+            Q(customer_name__icontains=q) |
+            Q(bill_number__icontains=q)
         )
 
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -308,8 +344,32 @@ def admin_orders(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    def count_unique_orders(queryset):
-        return len(set(g or i for i, g in queryset.values_list('id', 'group_number')))
+    # Pre-populate _group_total_cost for all orders on the current page in 1 SQL query (eliminates 15 N+1 queries)
+    page_group_nums = {o.group_number for o in page_obj.object_list if o.group_number}
+    if page_group_nums:
+        group_totals = dict(
+            Order.objects.filter(group_number__in=page_group_nums)
+            .values_list('group_number')
+            .annotate(total=Sum('total_cost'))
+        )
+        for o in page_obj.object_list:
+            o._group_total_cost = group_totals.get(o.group_number, o.total_cost) if o.group_number else o.total_cost
+
+    # Single pass for unique order counts (1 query instead of 4 full-table scans)
+    buy_groups = set()
+    borrow_groups = set()
+    pending_groups = set()
+    paid_groups = set()
+    for oid, gnum, otype, pstatus in Order.objects.values_list('id', 'group_number', 'order_type', 'payment_status'):
+        key = gnum or oid
+        if otype == 'Buy':
+            buy_groups.add(key)
+        elif otype == 'Borrow':
+            borrow_groups.add(key)
+        if pstatus == 'Pending':
+            pending_groups.add(key)
+        elif pstatus == 'Paid':
+            paid_groups.add(key)
 
     context = {
         'page_title': 'Borrow Requests' if order_type == 'Borrow' else 'All Orders',
@@ -317,10 +377,10 @@ def admin_orders(request):
         'order_type': order_type,
         'pay_status': pay_status,
         'q': q,
-        'buy_count':     count_unique_orders(Order.objects.filter(order_type='Buy')),
-        'borrow_count':  count_unique_orders(Order.objects.filter(order_type='Borrow')),
-        'pending_count': count_unique_orders(Order.objects.filter(payment_status='Pending')),
-        'paid_count':    count_unique_orders(Order.objects.filter(payment_status='Paid')),
+        'buy_count': len(buy_groups),
+        'borrow_count': len(borrow_groups),
+        'pending_count': len(pending_groups),
+        'paid_count': len(paid_groups),
         'total_revenue': Order.objects.filter(order_type='Buy', payment_status='Paid').aggregate(
             t=Sum('total_cost'))['t'] or 0,
     }
@@ -328,18 +388,19 @@ def admin_orders(request):
 
 
 @staff_required
+@require_POST
 def admin_order_action(request, pk):
     """Mark order paid / failed / returned / delivered / cancelled."""
     order = get_object_or_404(Order, pk=pk)
-    group_orders = Order.objects.filter(group_number=order.group_number) if order.group_number else [order]
+    group_orders = list(Order.objects.filter(group_number=order.group_number).select_related('book', 'user')) if order.group_number else [order]
     action = request.POST.get('action')
 
     if action == 'mark_paid':
         for o in group_orders:
             o.payment_status = Order.PAYMENT_STATUS_PAID
-            o.save()
+            o.save(update_fields=['payment_status'])
         messages.success(request, f'Order {order.order_number} marked as Paid.')
-        
+
         # If it is a purchase order, trigger invoice email to the customer
         if order.order_type == Order.ORDER_TYPE_BUY:
             import threading
@@ -347,7 +408,7 @@ def admin_order_action(request, pk):
     elif action == 'mark_failed':
         for o in group_orders:
             o.payment_status = Order.PAYMENT_STATUS_FAILED
-            o.save()
+            o.save(update_fields=['payment_status'])
         messages.warning(request, f'Order {order.order_number} marked as Failed.')
     elif action == 'mark_returned':
         if order.order_type == 'Borrow' and not order.returned_at:
@@ -358,7 +419,7 @@ def admin_order_action(request, pk):
     elif action == 'mark_approved':
         for o in group_orders:
             o.order_status = Order.STATUS_APPROVED
-            o.save()
+            o.save(update_fields=['order_status'])
         messages.success(request, f'Order {order.order_number} marked as Approved.')
         try:
             from youth_club_library.notifications import notify_user_order_status
@@ -369,7 +430,7 @@ def admin_order_action(request, pk):
     elif action == 'mark_delivered':
         for o in group_orders:
             o.order_status = Order.STATUS_DELIVERED
-            o.save()
+            o.save(update_fields=['order_status'])
         messages.success(request, f'Order {order.order_number} marked as Delivered.')
         try:
             from youth_club_library.notifications import notify_user_order_status
@@ -382,16 +443,14 @@ def admin_order_action(request, pk):
             if o.order_status == Order.STATUS_CANCELLED:
                 continue
             o.order_status = Order.STATUS_CANCELLED
-            o.payment_status = Order.PAYMENT_STATUS_FAILED  # Auto-fail pending payment when cancelled
-            # Restore stock if not already restored via return
+            o.payment_status = Order.PAYMENT_STATUS_FAILED
             if not (o.order_type == Order.ORDER_TYPE_BORROW and o.returned_at):
                 o.book.stock_quantity += o.quantity
                 o.book.save(update_fields=['stock_quantity'])
-            o.save()
+            o.save(update_fields=['order_status', 'payment_status'])
         messages.warning(request, f'Order {order.order_number} marked as Cancelled. Stock restored.')
     elif action == 'delete':
         for o in group_orders:
-            # Restore stock before deleting, unless already cancelled or returned
             if o.order_status != Order.STATUS_CANCELLED and not (o.order_type == Order.ORDER_TYPE_BORROW and o.returned_at):
                 o.book.stock_quantity += o.quantity
                 o.book.save(update_fields=['stock_quantity'])
@@ -425,14 +484,21 @@ def admin_books(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    stats = Book.objects.aggregate(
+        total_books=Count('id'),
+        in_stock=Count('id', filter=Q(stock_quantity__gt=0)),
+        out_of_stock=Count('id', filter=Q(stock_quantity=0)),
+        featured=Count('id', filter=Q(is_featured=True)),
+    )
+
     context = {
         'page_title': 'Manage Books',
         'books': page_obj,
         'q': q,
-        'total_books': Book.objects.count(),
-        'in_stock': Book.objects.filter(stock_quantity__gt=0).count(),
-        'out_of_stock': Book.objects.filter(stock_quantity=0).count(),
-        'featured': Book.objects.filter(is_featured=True).count(),
+        'total_books': stats['total_books'] or 0,
+        'in_stock': stats['in_stock'] or 0,
+        'out_of_stock': stats['out_of_stock'] or 0,
+        'featured': stats['featured'] or 0,
     }
     return render(request, 'admin_panel/books.html', context)
 
@@ -593,13 +659,13 @@ def admin_users(request):
     """List all registered users for details and borrow stats."""
     from accounts.models import CustomUser
     q = request.GET.get('q', '')
-    users = CustomUser.objects.all().order_by('-date_joined')
+    users = CustomUser.objects.select_related('membership', 'membership__plan').order_by('-date_joined')
     if q:
         users = users.filter(
-            models.Q(username__icontains=q) |
-            models.Q(email__icontains=q) |
-            models.Q(first_name__icontains=q) |
-            models.Q(last_name__icontains=q)
+            Q(username__icontains=q) |
+            Q(email__icontains=q) |
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q)
         )
 
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -624,34 +690,37 @@ def admin_users(request):
 def admin_user_detail(request, pk):
     """Display user details with borrow statistics."""
     from accounts.models import CustomUser
-    user = get_object_or_404(CustomUser, pk=pk)
+    user = get_object_or_404(CustomUser.objects.select_related('membership', 'membership__plan'), pk=pk)
 
-    borrow_orders = Order.objects.filter(user=user, order_type=Order.ORDER_TYPE_BORROW).order_by('-created_at')
-    total_borrows = borrow_orders.count()
+    borrow_orders = list(
+        Order.objects.filter(user=user, order_type=Order.ORDER_TYPE_BORROW)
+        .select_related('book')
+        .order_by('-created_at')
+    )
+    total_borrows = len(borrow_orders)
 
     in_time_returns = 0
     late_returns = 0
     active_borrows = []
+    today = timezone.now().date()
 
     for o in borrow_orders:
         if o.returned_at:
-            # Check if returned on or before due date
-            if o.returned_at.date() <= o.due_date:
-                in_time_returns += 1
-            else:
+            if o.due_date and o.returned_at.date() > o.due_date:
                 late_returns += 1
+            else:
+                in_time_returns += 1
         else:
-            # Active borrow - check if it is already late
-            is_late = timezone.now().date() > o.due_date
+            is_late = bool(o.due_date and today > o.due_date)
             if is_late:
-                late_returns += 1  # count as late return because it's past limit and not back yet
-            
-            delta = o.due_date - timezone.now().date()
+                late_returns += 1
+
+            delta_days = (o.due_date - today).days if o.due_date else 0
             active_borrows.append({
                 'order': o,
-                'days_remaining': max(0, delta.days),
+                'days_remaining': max(0, delta_days),
                 'is_overdue': is_late,
-                'days_overdue': max(0, -delta.days),
+                'days_overdue': max(0, -delta_days),
             })
 
     context = {
@@ -667,6 +736,7 @@ def admin_user_detail(request, pk):
 
 
 @staff_required
+@require_POST
 def admin_create_ajax(request):
     """AJAX endpoint to dynamically create Author, Publication, or Category."""
     import json
@@ -1259,7 +1329,7 @@ def send_order_invoice_email_thread(order_pk):
 def admin_bill_list(request):
     """List and filter walk-in offline bills."""
     q = request.GET.get('q', '').strip()
-    qs = OfflineBill.objects.all().order_by('-created_at')
+    qs = OfflineBill.objects.prefetch_related('items').order_by('-created_at')
     if q:
         qs = qs.filter(
             Q(bill_number__icontains=q) |
@@ -1268,12 +1338,18 @@ def admin_bill_list(request):
             Q(customer_email__icontains=q)
         )
 
-    # Summary metrics for modern dashboard
-    total_bills_count = OfflineBill.objects.count()
-    total_revenue = OfflineBill.objects.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    # Summary metrics in 1 combined SQL aggregate query instead of 4 separate queries
     today = timezone.now().date()
-    today_bills_count = OfflineBill.objects.filter(created_at__date=today).count()
-    today_revenue = OfflineBill.objects.filter(created_at__date=today).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    summary = OfflineBill.objects.aggregate(
+        total_bills_count=Count('id'),
+        total_revenue=Sum('total_amount'),
+        today_bills_count=Count('id', filter=Q(created_at__date=today)),
+        today_revenue=Sum('total_amount', filter=Q(created_at__date=today)),
+    )
+    total_bills_count = summary['total_bills_count'] or 0
+    total_revenue = summary['total_revenue'] or Decimal('0.00')
+    today_bills_count = summary['today_bills_count'] or 0
+    today_revenue = summary['today_revenue'] or Decimal('0.00')
 
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(qs, 15)
@@ -1305,11 +1381,11 @@ def admin_restock_ajax(request):
         data = json.loads(request.body)
         barcode = data.get('barcode', '').strip()
         increment = int(data.get('increment', 1))
-        
+
         book = Book.objects.get(barcode=barcode)
         book.stock_quantity += increment
         book.save(update_fields=['stock_quantity'])
-        
+
         return JsonResponse({
             'success': True,
             'new_stock': book.stock_quantity,
@@ -1318,7 +1394,8 @@ def admin_restock_ajax(request):
     except Book.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Book not found'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        logger.error("admin_restock_ajax error: %s", e, exc_info=True)
+        return JsonResponse({'success': False, 'error': 'Unable to update stock. Please verify the barcode and quantity.'}, status=400)
 
 
 @staff_required
@@ -1331,7 +1408,7 @@ def admin_make_bill(request):
             customer_email = request.POST.get('customer_email', '').strip()
             payment_method = request.POST.get('payment_method', 'cash')
             items_json = request.POST.get('items_json', '[]')
-            
+
             cash_tendered_raw = request.POST.get('cash_tendered')
             cash_tendered = None
             if cash_tendered_raw:
@@ -1377,7 +1454,7 @@ def admin_make_bill(request):
             for item in items:
                 book_id = item.get('id')
                 qty = int(item.get('qty', 1))
-                book = get_object_or_404(Book, pk=book_id)
+                book = get_object_or_404(Book.objects.select_related('author', 'publication'), pk=book_id)
 
                 # Reduce inventory
                 book.stock_quantity = max(0, book.stock_quantity - qty)
@@ -1434,7 +1511,7 @@ def admin_make_bill(request):
                 bill.change_returned = cash_tendered - total_amount
             else:
                 bill.change_returned = Decimal('0.00')
-                
+
             bill.save(update_fields=['total_amount', 'cash_tendered', 'change_returned'])
 
             # Generate PDF for emailing safely
@@ -1452,7 +1529,7 @@ def admin_make_bill(request):
             return redirect('admin_bill_list')
         except Exception as e:
             logger.error("Error creating offline bill: %s", e, exc_info=True)
-            messages.error(request, f"Failed to generate bill: {str(e)}")
+            messages.error(request, "Failed to generate bill. Please verify the customer details and items.")
             return redirect('admin_make_bill')
 
     context = {
@@ -1465,20 +1542,20 @@ def admin_make_bill(request):
 def admin_bill_edit(request, pk):
     """Edit an existing walk-in bill (change total/discount or date)."""
     bill = get_object_or_404(OfflineBill, pk=pk)
-    
+
     if request.method == 'POST':
         try:
             new_total = float(request.POST.get('total_amount', bill.total_amount))
             new_date_str = request.POST.get('created_at')
-            
+
             from django.utils.dateparse import parse_datetime
             parsed_date = parse_datetime(new_date_str) if new_date_str else None
-            
+
             if parsed_date:
                 bill.created_at = parsed_date
                 # Sync date to all associated Order items
                 Order.objects.filter(bill_number=bill.bill_number).update(created_at=parsed_date)
-                
+
             if float(new_total) != float(bill.total_amount):
                 diff = float(bill.total_amount) - new_total
                 bill.total_amount = new_total
@@ -1488,7 +1565,7 @@ def admin_bill_edit(request, pk):
                     first_order = orders.first()
                     first_order.total_cost = float(first_order.total_cost) - diff
                     first_order.save(update_fields=['total_cost'])
-            
+
             bill.save()
             messages.success(request, f"Bill #{bill.bill_number} updated.")
             return redirect('admin_bill_list')
@@ -1501,7 +1578,6 @@ def admin_bill_edit(request, pk):
         'page_title': f'Edit Bill {bill.bill_number}',
     }
     return render(request, 'admin_panel/bill_edit.html', context)
-
 
 
 @staff_required
@@ -1538,8 +1614,8 @@ def admin_bill_delete(request, pk):
 
         messages.success(request, f"Bill #{bill_number} has been deleted and inventory stock was restored.")
     except Exception as e:
-        logger.error(f"Error deleting bill {bill_number}: {e}", exc_info=True)
-        messages.error(request, f"Failed to delete bill #{bill_number}: {str(e)}")
+        logger.error("Error deleting bill %s: %s", bill_number, e, exc_info=True)
+        messages.error(request, f"Failed to delete bill #{bill_number}. Please try again.")
 
     return redirect('admin_bill_list')
 
@@ -1551,7 +1627,7 @@ def admin_book_search_ajax(request):
     if len(q) < 2:
         return JsonResponse({'books': []})
 
-    books = Book.objects.filter(
+    books = Book.objects.select_related('author', 'publication').filter(
         Q(title__icontains=q) |
         Q(author__name__icontains=q) |
         Q(publication__name__icontains=q)
@@ -1622,6 +1698,7 @@ def admin_book_requests(request):
 
 
 @staff_required
+@require_POST
 def admin_book_request_action(request, pk):
     """Change the status of a specific user book request."""
     book_req = get_object_or_404(BookRequest, pk=pk)
@@ -2071,8 +2148,8 @@ def admin_barcode_search_ajax(request):
     barcode = request.GET.get('barcode', '').strip()
     if not barcode:
         return JsonResponse({'success': False, 'error': 'No barcode provided'})
-        
-    book = Book.objects.filter(barcode=barcode).first()
+
+    book = Book.objects.select_related('author', 'publication').filter(barcode=barcode).first()
     if not book:
         return JsonResponse({'success': False, 'error': 'Book not found'})
         

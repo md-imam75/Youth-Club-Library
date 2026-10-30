@@ -61,18 +61,19 @@ class Order(models.Model):
     customer_name = models.CharField(max_length=150, blank=True)
     customer_mobile = models.CharField(max_length=20, blank=True)
     customer_email = models.EmailField(blank=True)
-    bill_number = models.CharField(max_length=50, blank=True)
+    bill_number = models.CharField(max_length=50, blank=True, db_index=True)
     book = models.ForeignKey(
         'catalog.Book',
         on_delete=models.CASCADE,
         related_name='orders'
     )
-    order_type = models.CharField(max_length=10, choices=ORDER_TYPE_CHOICES, default=ORDER_TYPE_BUY)
+    order_type = models.CharField(max_length=10, choices=ORDER_TYPE_CHOICES, default=ORDER_TYPE_BUY, db_index=True)
     quantity = models.PositiveIntegerField(default=1)
     order_status = models.CharField(
         max_length=20,
         choices=ORDER_STATUS_CHOICES,
-        default=STATUS_PENDING
+        default=STATUS_PENDING,
+        db_index=True
     )
 
     # Delivery
@@ -91,11 +92,12 @@ class Order(models.Model):
     payment_status = models.CharField(
         max_length=20,
         choices=PAYMENT_STATUS_CHOICES,
-        default=PAYMENT_STATUS_PENDING
+        default=PAYMENT_STATUS_PENDING,
+        db_index=True
     )
 
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     due_date = models.DateField(null=True, blank=True, help_text='Return due date for borrows')
     returned_at = models.DateTimeField(null=True, blank=True)
 
@@ -108,7 +110,8 @@ class Order(models.Model):
         verbose_name_plural = 'Orders'
 
     def __str__(self):
-        return f'Order #{self.id} — {self.user.username} [{self.order_type}] {self.book.title}'
+        username = self.user.username if self.user else (self.customer_name or 'Guest')
+        return f'Order #{self.id} — {username} [{self.order_type}] {self.book.title}'
 
     @property
     def order_number(self):
@@ -129,6 +132,8 @@ class Order(models.Model):
 
     @property
     def group_total_cost(self):
+        if hasattr(self, '_group_total_cost') and self._group_total_cost is not None:
+            return self._group_total_cost
         if not self.group_number:
             return self.total_cost
         from django.db.models import Sum
@@ -136,8 +141,12 @@ class Order(models.Model):
 
     @property
     def delivery_option_label(self):
-        opt = DeliveryOption.objects.filter(code=self.delivery_option).first()
-        return opt.label if opt else self.delivery_option
+        from django.core.cache import cache
+        labels = cache.get('delivery_option_labels_v1')
+        if labels is None:
+            labels = dict(DeliveryOption.objects.values_list('code', 'label'))
+            cache.set('delivery_option_labels_v1', labels, 300)
+        return labels.get(self.delivery_option, self.delivery_option)
 
     @property
     def days_remaining(self):
@@ -180,7 +189,7 @@ class OfflineBill(models.Model):
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     cash_tendered = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     change_returned = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -241,4 +250,14 @@ class DeliveryOption(models.Model):
         if self.cost == 0:
             return f"{self.label} (Free)"
         return f"{self.label} (৳{self.cost:.0f})"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        from django.core.cache import cache
+        cache.delete('delivery_option_labels_v1')
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        from django.core.cache import cache
+        cache.delete('delivery_option_labels_v1')
 

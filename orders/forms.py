@@ -25,10 +25,13 @@ class CheckoutForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
+        delivery_options = kwargs.pop('delivery_options', None)
         super().__init__(*args, **kwargs)
         from .models import DeliveryOption
+        if delivery_options is None:
+            delivery_options = DeliveryOption.objects.filter(is_active=True)
         choices = []
-        for opt in DeliveryOption.objects.filter(is_active=True):
+        for opt in delivery_options:
             label = f'{opt.label} — ৳{opt.cost:.0f}' if opt.cost > 0 else opt.label
             choices.append((opt.code, label))
         self.fields['delivery_option'].choices = choices

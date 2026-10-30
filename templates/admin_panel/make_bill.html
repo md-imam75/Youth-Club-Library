@@ -155,6 +155,15 @@
 <script>
   let selectedItems = [];
 
+  function escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   async function handleSearch(e) {
     const q = e.target.value.trim();
     const dropdown = document.getElementById('search-results');
@@ -176,16 +185,16 @@
           
           let priceHTML = '';
           if (book.offer_price) {
-            priceHTML = `<span class="text-emerald-400 font-bold">৳${book.offer_price}</span> <span class="text-xs line-through dark:text-gray-500 text-slate-500 ml-1">৳${book.regular_price}</span>`;
+            priceHTML = `<span class="text-emerald-400 font-bold">৳${Number(book.offer_price)}</span> <span class="text-xs line-through dark:text-gray-500 text-slate-500 ml-1">৳${Number(book.regular_price)}</span>`;
           } else {
-            priceHTML = `<span class="dark:text-white text-slate-900 font-bold">৳${book.regular_price}</span>`;
+            priceHTML = `<span class="dark:text-white text-slate-900 font-bold">৳${Number(book.regular_price)}</span>`;
           }
 
           item.innerHTML = `
             <div class="text-left">
-              <div class="dark:text-white text-slate-900 font-semibold text-sm">${book.title}</div>
-              <div class="text-xs dark:text-gray-400 text-slate-600 mt-0.5">${book.author} | ${book.publication}</div>
-              <div class="text-[10px] dark:text-gray-500 text-slate-500 mt-0.5">Stock Available: ${book.stock}</div>
+              <div class="dark:text-white text-slate-900 font-semibold text-sm">${escapeHtml(book.title)}</div>
+              <div class="text-xs dark:text-gray-400 text-slate-600 mt-0.5">${escapeHtml(book.author)} | ${escapeHtml(book.publication)}</div>
+              <div class="text-[10px] dark:text-gray-500 text-slate-500 mt-0.5">Stock Available: ${Number(book.stock)}</div>
             </div>
             <div class="text-right">
               ${priceHTML}
@@ -298,8 +307,8 @@
 
       row.innerHTML = `
         <td class="py-4 pr-3">
-          <div class="font-bold dark:text-white text-slate-900 text-sm max-w-xs truncate">${item.title}</div>
-          <div class="text-xs dark:text-gray-500 text-slate-500 mt-0.5">${item.author} | ${item.publication}</div>
+          <div class="font-bold dark:text-white text-slate-900 text-sm max-w-xs truncate">${escapeHtml(item.title)}</div>
+          <div class="text-xs dark:text-gray-500 text-slate-500 mt-0.5">${escapeHtml(item.author)} | ${escapeHtml(item.publication)}</div>
         </td>
         <td class="py-4 text-center">
           <div class="inline-flex items-center gap-1 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 rounded-xl p-1">

@@ -147,7 +147,7 @@ class UserMembership(models.Model):
         default=generate_membership_id,
         editable=False
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True)
     transaction_id = models.CharField(max_length=100, blank=True)
     payment_method = models.CharField(
         max_length=20,

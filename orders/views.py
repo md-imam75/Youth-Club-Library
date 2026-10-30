@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import transaction
 from catalog.models import Book
 from .models import Order, DeliveryOption
 from .forms import CheckoutForm
@@ -19,7 +20,6 @@ def generate_order_group_number():
     from django.utils import timezone
     local_now = timezone.localtime(timezone.now())
     date_str = local_now.strftime('%Y%m%d')
-    # Count distinct group numbers created today
     day_groups_count = Order.objects.filter(
         created_at__date=local_now.date()
     ).values('group_number').distinct().count()
@@ -33,7 +33,7 @@ def checkout_view(request, book_id, order_type='Buy'):
     Checkout for buying or borrowing a book.
     order_type is passed via URL: 'buy' or 'borrow'
     """
-    book = get_object_or_404(Book, pk=book_id)
+    book = get_object_or_404(Book.objects.select_related('author', 'publication'), pk=book_id)
     order_type_display = order_type.capitalize()
 
     # Borrow guard: require active membership
@@ -41,7 +41,7 @@ def checkout_view(request, book_id, order_type='Buy'):
         if not request.user.has_active_membership:
             messages.warning(
                 request,
-                'ðŸ“š You need an active membership to borrow books. '
+                'You need an active membership to borrow books. '
                 'Please subscribe to a plan and wait for activation.'
             )
             return redirect('membership')
@@ -54,41 +54,49 @@ def checkout_view(request, book_id, order_type='Buy'):
         messages.error(request, 'Sorry, this book is currently out of stock.')
         return redirect('book_detail', pk=book.pk)
 
+    active_delivery_options = list(DeliveryOption.objects.filter(is_active=True))
+    delivery_map = {opt.code: opt for opt in active_delivery_options}
+
     if request.method == 'POST':
-        form = CheckoutForm(request.POST)
+        form = CheckoutForm(request.POST, delivery_options=active_delivery_options)
         if form.is_valid():
             delivery_key = form.cleaned_data['delivery_option']
-            opt = DeliveryOption.objects.filter(code=delivery_key, is_active=True).first()
+            opt = delivery_map.get(delivery_key)
             delivery_cost = float(opt.cost) if opt else 0.0
-            book_price = float(book.effective_price)
 
-            if order_type == 'borrow':
-                # Borrows are free (membership covers it)
-                total_cost = 0
-            else:
-                total_cost = book_price + delivery_cost
+            with transaction.atomic():
+                locked_book = Book.objects.select_for_update().get(pk=book.pk)
+                if locked_book.stock_quantity < 1:
+                    messages.error(request, 'Sorry, this book just went out of stock.')
+                    return redirect('book_detail', pk=book.pk)
 
-            group_num = generate_order_group_number()
-            order = Order.objects.create(
-                user=request.user,
-                book=book,
-                order_type=order_type_display,
-                delivery_option=delivery_key,
-                delivery_address=form.cleaned_data['delivery_address'],
-                delivery_cost=delivery_cost,
-                book_price=book_price,
-                total_cost=total_cost,
-                payment_method=form.cleaned_data['payment_method'],
-                transaction_id=form.cleaned_data.get('transaction_id', ''),
-                payment_status='Pending',
-                due_date=(timezone.now() + timedelta(days=14)).date() if order_type == 'borrow' else None,
-                group_number=group_num,
-            )
+                book_price = float(locked_book.effective_price)
+                if order_type == 'borrow':
+                    total_cost = 0
+                else:
+                    total_cost = book_price + delivery_cost
 
-            # Decrease stock
-            book.stock_quantity = max(0, book.stock_quantity - 1)
-            book.save(update_fields=['stock_quantity'])
-            
+                group_num = generate_order_group_number()
+                order = Order.objects.create(
+                    user=request.user,
+                    book=locked_book,
+                    order_type=order_type_display,
+                    delivery_option=delivery_key,
+                    delivery_address=form.cleaned_data['delivery_address'],
+                    delivery_cost=delivery_cost,
+                    book_price=book_price,
+                    total_cost=total_cost,
+                    payment_method=form.cleaned_data['payment_method'],
+                    transaction_id=form.cleaned_data.get('transaction_id', ''),
+                    payment_status='Pending',
+                    due_date=(timezone.now() + timedelta(days=14)).date() if order_type == 'borrow' else None,
+                    group_number=group_num,
+                )
+
+                # Decrease stock atomically
+                locked_book.stock_quantity = max(0, locked_book.stock_quantity - 1)
+                locked_book.save(update_fields=['stock_quantity'])
+
             # Notify admin
             from youth_club_library.notifications import notify_admin_new_order
             notify_admin_new_order(order)
@@ -100,13 +108,12 @@ def checkout_view(request, book_id, order_type='Buy'):
             )
             return redirect('order_success', order_id=order.id)
     else:
-        # Pre-fill with user data
-        form = CheckoutForm(initial={
-            'delivery_address': request.user.address,
-        })
+        form = CheckoutForm(
+            initial={'delivery_address': request.user.address},
+            delivery_options=active_delivery_options,
+        )
 
-    # Delivery pricing for JS
-    delivery_costs_json = {opt.code: float(opt.cost) for opt in DeliveryOption.objects.filter(is_active=True)}
+    delivery_costs_json = {opt.code: float(opt.cost) for opt in active_delivery_options}
 
     context = {
         'book': book,
@@ -115,7 +122,7 @@ def checkout_view(request, book_id, order_type='Buy'):
         'order_type_display': order_type_display,
         'book_price': float(book.effective_price),
         'delivery_costs_json': delivery_costs_json,
-        'delivery_options': DeliveryOption.objects.filter(is_active=True),
+        'delivery_options': active_delivery_options,
         'page_title': f'Checkout - {book.title}',
     }
     return render(request, 'orders/checkout.html', context)
@@ -123,7 +130,7 @@ def checkout_view(request, book_id, order_type='Buy'):
 
 @login_required
 def order_success_view(request, order_id):
-    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    order = get_object_or_404(Order.objects.select_related('book'), pk=order_id, user=request.user)
     return render(request, 'orders/order_success.html', {
         'order': order,
         'page_title': f'Order {order.order_number} Confirmed',
@@ -151,34 +158,63 @@ def add_to_cart(request, book_id):
     return redirect('book_detail', pk=book_id)
 
 
+def _load_cart_items(request, warn_out_of_stock=False):
+    """Helper: Batch-fetch all books in the session cart in 1 SQL query instead of N queries."""
+    cart = request.session.get('cart', {})
+    if not cart:
+        return [], 0.0
+
+    valid_ids = []
+    for k in list(cart.keys()):
+        try:
+            valid_ids.append(int(k))
+        except (ValueError, TypeError):
+            del cart[k]
+
+    books_by_id = {
+        b.pk: b
+        for b in Book.objects.filter(pk__in=valid_ids).select_related('author', 'publication')
+    }
+
+    cart_items = []
+    grand_total = 0.0
+    cart_modified = False
+
+    for book_id_str, quantity in list(cart.items()):
+        book = books_by_id.get(int(book_id_str))
+        if not book:
+            del cart[book_id_str]
+            cart_modified = True
+            continue
+        if book.stock_quantity <= 0:
+            if warn_out_of_stock:
+                messages.warning(request, f'"{book.title}" is out of stock and was removed.')
+            del cart[book_id_str]
+            cart_modified = True
+            continue
+        if quantity > book.stock_quantity:
+            quantity = book.stock_quantity
+            cart[book_id_str] = quantity
+            cart_modified = True
+
+        subtotal = float(book.effective_price) * quantity
+        grand_total += subtotal
+        cart_items.append({
+            'book': book,
+            'quantity': quantity,
+            'subtotal': subtotal,
+        })
+
+    if cart_modified:
+        request.session['cart'] = cart
+
+    return cart_items, grand_total
+
+
 @login_required
 def cart_view(request):
     """Display items in the user's cart."""
-    cart = request.session.get('cart', {})
-    cart_items = []
-    grand_total = 0
-
-    for book_id, quantity in list(cart.items()):
-        try:
-            book = Book.objects.get(pk=int(book_id))
-            if book.stock_quantity <= 0:
-                del cart[book_id]
-                continue
-            if quantity > book.stock_quantity:
-                quantity = book.stock_quantity
-                cart[book_id] = quantity
-
-            subtotal = float(book.effective_price) * quantity
-            grand_total += subtotal
-            cart_items.append({
-                'book': book,
-                'quantity': quantity,
-                'subtotal': subtotal,
-            })
-        except Book.DoesNotExist:
-            del cart[book_id]
-
-    request.session['cart'] = cart
+    cart_items, grand_total = _load_cart_items(request, warn_out_of_stock=False)
 
     context = {
         'cart_items': cart_items,
@@ -231,81 +267,70 @@ def cart_checkout_view(request):
         messages.warning(request, 'Your cart is empty.')
         return redirect('books')
 
-    cart_items = []
-    items_total = 0
-    for book_id, quantity in list(cart.items()):
-        try:
-            book = Book.objects.get(pk=int(book_id))
-            if book.stock_quantity <= 0:
-                messages.warning(request, f'"{book.title}" is out of stock and was removed.')
-                del cart[book_id]
-                continue
-            if quantity > book.stock_quantity:
-                quantity = book.stock_quantity
-                cart[book_id] = quantity
-            
-            subtotal = float(book.effective_price) * quantity
-            items_total += subtotal
-            cart_items.append({
-                'book': book,
-                'quantity': quantity,
-                'subtotal': subtotal,
-            })
-        except Book.DoesNotExist:
-            del cart[book_id]
-    
-    request.session['cart'] = cart
+    cart_items, items_total = _load_cart_items(request, warn_out_of_stock=True)
     if not cart_items:
         return redirect('cart')
 
+    active_delivery_options = list(DeliveryOption.objects.filter(is_active=True))
+    delivery_map = {opt.code: opt for opt in active_delivery_options}
+
     if request.method == 'POST':
-        form = CheckoutForm(request.POST)
+        form = CheckoutForm(request.POST, delivery_options=active_delivery_options)
         if form.is_valid():
             delivery_key = form.cleaned_data['delivery_option']
-            opt = DeliveryOption.objects.filter(code=delivery_key, is_active=True).first()
+            opt = delivery_map.get(delivery_key)
             delivery_cost = float(opt.cost) if opt else 0.0
             payment_method = form.cleaned_data['payment_method']
             transaction_id = form.cleaned_data.get('transaction_id', '')
             delivery_address = form.cleaned_data['delivery_address']
 
-            # Double check stock
-            for item in cart_items:
-                b = Book.objects.get(pk=item['book'].pk)
-                if b.stock_quantity < item['quantity']:
-                    messages.error(request, f'Sorry, "{b.title}" just went out of stock or doesn\'t have enough copies.')
-                    return redirect('cart')
-
-            # Create orders - delivery cost is charged once for the whole cart
-            first = True
+            book_ids = [item['book'].pk for item in cart_items]
             created_orders = []
-            group_num = generate_order_group_number()
-            for item in cart_items:
-                b = Book.objects.get(pk=item['book'].pk)
-                book_price = float(b.effective_price)
-                item_delivery = delivery_cost if first else 0
-                item_total = (book_price * item['quantity']) + item_delivery
-                
-                order = Order.objects.create(
-                    user=request.user,
-                    book=b,
-                    quantity=item['quantity'],
-                    order_type=Order.ORDER_TYPE_BUY,
-                    delivery_option=delivery_key,
-                    delivery_address=delivery_address,
-                    delivery_cost=item_delivery,
-                    book_price=book_price,
-                    total_cost=item_total,
-                    payment_method=payment_method,
-                    transaction_id=transaction_id,
-                    payment_status='Pending',
-                    group_number=group_num,
-                )
-                created_orders.append(order)
 
-                # Decrease stock
-                b.stock_quantity = max(0, b.stock_quantity - item['quantity'])
-                b.save(update_fields=['stock_quantity'])
-                first = False
+            with transaction.atomic():
+                locked_books = {
+                    b.pk: b
+                    for b in Book.objects.select_for_update().filter(pk__in=book_ids)
+                }
+
+                # Verify stock under row lock
+                for item in cart_items:
+                    b = locked_books.get(item['book'].pk)
+                    if not b or b.stock_quantity < item['quantity']:
+                        title = b.title if b else item['book'].title
+                        messages.error(request, f'Sorry, "{title}" just went out of stock or doesn\'t have enough copies.')
+                        return redirect('cart')
+
+                # Create orders — delivery cost is charged once for the whole cart
+                first = True
+                group_num = generate_order_group_number()
+                for item in cart_items:
+                    b = locked_books[item['book'].pk]
+                    book_price = float(b.effective_price)
+                    item_delivery = delivery_cost if first else 0
+                    item_total = (book_price * item['quantity']) + item_delivery
+
+                    order = Order.objects.create(
+                        user=request.user,
+                        book=b,
+                        quantity=item['quantity'],
+                        order_type=Order.ORDER_TYPE_BUY,
+                        delivery_option=delivery_key,
+                        delivery_address=delivery_address,
+                        delivery_cost=item_delivery,
+                        book_price=book_price,
+                        total_cost=item_total,
+                        payment_method=payment_method,
+                        transaction_id=transaction_id,
+                        payment_status='Pending',
+                        group_number=group_num,
+                    )
+                    created_orders.append(order)
+
+                    # Decrease stock
+                    b.stock_quantity = max(0, b.stock_quantity - item['quantity'])
+                    b.save(update_fields=['stock_quantity'])
+                    first = False
 
             # Clear cart
             request.session['cart'] = {}
@@ -317,18 +342,19 @@ def cart_checkout_view(request):
             messages.success(request, 'Your order has been placed successfully!')
             return redirect('order_success', order_id=created_orders[0].id)
     else:
-        form = CheckoutForm(initial={
-            'delivery_address': request.user.address,
-        })
+        form = CheckoutForm(
+            initial={'delivery_address': request.user.address},
+            delivery_options=active_delivery_options,
+        )
 
-    delivery_costs_json = {opt.code: float(opt.cost) for opt in DeliveryOption.objects.filter(is_active=True)}
+    delivery_costs_json = {opt.code: float(opt.cost) for opt in active_delivery_options}
 
     context = {
         'cart_items': cart_items,
         'items_total': items_total,
         'form': form,
         'delivery_costs_json': delivery_costs_json,
-        'delivery_options': DeliveryOption.objects.filter(is_active=True),
+        'delivery_options': active_delivery_options,
         'page_title': 'Checkout',
     }
     return render(request, 'orders/cart_checkout.html', context)
@@ -341,47 +367,48 @@ def borrow_book_view(request, book_id):
     Bypasses checkout forms completely.
     """
     book = get_object_or_404(Book, pk=book_id)
-    
+
     # Check membership
     if not request.user.has_active_membership:
         messages.warning(
             request,
-            'ðŸ“š You need an active membership to borrow books. '
+            'You need an active membership to borrow books. '
             'Please subscribe to a plan and wait for activation.'
         )
         return redirect('membership')
-        
+
     # Check borrow flag
     if not book.can_borrow:
         messages.error(request, 'This book is not available for borrowing.')
         return redirect('book_detail', pk=book.pk)
-        
-    # Check stock
-    if not book.is_in_stock:
-        messages.error(request, 'Sorry, this book is currently out of stock.')
-        return redirect('book_detail', pk=book.pk)
 
-    # Create pending borrow order
-    group_num = generate_order_group_number()
-    order = Order.objects.create(
-        user=request.user,
-        book=book,
-        quantity=1,
-        order_type=Order.ORDER_TYPE_BORROW,
-        delivery_option='offline_store',
-        delivery_address='Offline Pickup',
-        delivery_cost=0,
-        book_price=0,
-        total_cost=0,
-        payment_method=Order.PAYMENT_OFFLINE,
-        payment_status=Order.PAYMENT_STATUS_PENDING,
-        order_status=Order.STATUS_PENDING,
-        group_number=group_num,
-    )
-    
-    # Decrease stock
-    book.stock_quantity = max(0, book.stock_quantity - 1)
-    book.save(update_fields=['stock_quantity'])
+    with transaction.atomic():
+        locked_book = Book.objects.select_for_update().get(pk=book.pk)
+        if not locked_book.is_in_stock:
+            messages.error(request, 'Sorry, this book is currently out of stock.')
+            return redirect('book_detail', pk=book.pk)
+
+        # Create pending borrow order
+        group_num = generate_order_group_number()
+        order = Order.objects.create(
+            user=request.user,
+            book=locked_book,
+            quantity=1,
+            order_type=Order.ORDER_TYPE_BORROW,
+            delivery_option='offline_store',
+            delivery_address='Offline Pickup',
+            delivery_cost=0,
+            book_price=0,
+            total_cost=0,
+            payment_method=Order.PAYMENT_OFFLINE,
+            payment_status=Order.PAYMENT_STATUS_PENDING,
+            order_status=Order.STATUS_PENDING,
+            group_number=group_num,
+        )
+
+        # Decrease stock
+        locked_book.stock_quantity = max(0, locked_book.stock_quantity - 1)
+        locked_book.save(update_fields=['stock_quantity'])
 
     messages.success(request, f'Borrow request for "{book.title}" placed successfully.')
     return redirect('borrow_success', order_id=order.id)

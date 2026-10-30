@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Q, Count
+from django.core.cache import cache
+from django.db.models import Q, Count, Avg
 from .models import Author, Publication, Category, Book, BookReview, BookRequest, BookRequestItem, WaitlistEntry, SiteTestimonial
 from accounts.models import CustomUser, UserMembership, MembershipPlan
+from youth_club_library.throttle import is_throttled
 
 
 def home_view(request):
@@ -16,12 +18,17 @@ def home_view(request):
     upcoming_books = Book.objects.filter(is_upcoming=True).select_related(
         'author', 'publication'
     )[:12]
-  
-    # Statistics for animated counters
-    total_members = UserMembership.objects.filter(status='Active').count()
-    total_books = Book.objects.filter(is_upcoming=False).count()
-    total_authors = Author.objects.count()
-    total_categories = Category.objects.count()
+
+    # Cache homepage counters for 60s to avoid 4 COUNT(*) queries on every landing page hit
+    stats = cache.get('home_stats_v1')
+    if stats is None:
+        stats = {
+            'total_members': UserMembership.objects.filter(status='Active').count(),
+            'total_books': Book.objects.filter(is_upcoming=False).count(),
+            'total_authors': Author.objects.count(),
+            'total_categories': Category.objects.count(),
+        }
+        cache.set('home_stats_v1', stats, 60)
 
     # Active testimonials & membership plans
     testimonials = SiteTestimonial.objects.filter(is_active=True)
@@ -31,15 +38,15 @@ def home_view(request):
         'featured_books': featured_books,
         'new_books': new_books,
         'upcoming_books': upcoming_books,
-        'total_members': total_members,
-        'total_books': total_books,
-        'total_authors': total_authors,
-        'total_categories': total_categories,
+        'total_members': stats['total_members'],
+        'total_books': stats['total_books'],
+        'total_authors': stats['total_authors'],
+        'total_categories': stats['total_categories'],
         'testimonials': testimonials,
         'plans': plans,
         'page_title': 'Home',
     }
-    return render(request, 'home.html', context) 
+    return render(request, 'home.html', context)
 
 
 def about_view(request):
@@ -47,8 +54,7 @@ def about_view(request):
     context = {
         'page_title': 'About Us',
     }
-    return render(request, 'catalog/about.html', context) 
-
+    return render(request, 'catalog/about.html', context)
 
 
 def books_view(request):
@@ -56,7 +62,12 @@ def books_view(request):
     query = request.GET.get('q', '').strip()
     sort_by = request.GET.get('sort', 'newest')
 
-    books = Book.objects.select_related('author', 'publication', 'category').filter(is_upcoming=False)
+    books = Book.objects.select_related('author', 'publication', 'category').filter(
+        is_upcoming=False
+    ).annotate(
+        _review_count=Count('reviews', distinct=True),
+        _avg_rating=Avg('reviews__rating'),
+    )
 
     if query:
         books = books.filter(
@@ -69,14 +80,16 @@ def books_view(request):
     # Price range filtering
     from django.db.models.functions import Coalesce
     from django.db.models import Max
-
-    # Compute max price across ALL books (before price filter) for the slider ceiling
-    max_price_val = Book.objects.filter(is_upcoming=False).annotate(
-        effective_price=Coalesce('offer_price', 'regular_price')
-    ).aggregate(max_p=Max('effective_price'))['max_p'] or 0
-    # Round up to nearest 100 for a clean slider max
     import math
-    slider_max = int(math.ceil(max_price_val / 100) * 100) if max_price_val else 5000
+
+    # Cache max price across ALL books for 5 minutes (invalidated on Book.save)
+    slider_max = cache.get('catalog_slider_max_v1')
+    if slider_max is None:
+        max_price_val = Book.objects.filter(is_upcoming=False).annotate(
+            effective_price=Coalesce('offer_price', 'regular_price')
+        ).aggregate(max_p=Max('effective_price'))['max_p'] or 0
+        slider_max = int(math.ceil(max_price_val / 100) * 100) if max_price_val else 5000
+        cache.set('catalog_slider_max_v1', slider_max, 300)
 
     price_min = request.GET.get('price_min', '')
     price_max = request.GET.get('price_max', '')
@@ -101,7 +114,7 @@ def books_view(request):
     if sort_by == 'featured':
         books = books.order_by('-is_featured', '-created_at')
     elif sort_by == 'best_selling':
-        books = books.annotate(sales_count=Count('orders')).order_by('-sales_count', '-created_at')
+        books = books.annotate(sales_count=Count('orders', distinct=True)).order_by('-sales_count', '-created_at')
     elif sort_by == 'alpha_asc':
         books = books.order_by('title')
     elif sort_by == 'alpha_desc':
@@ -117,17 +130,15 @@ def books_view(request):
     elif sort_by == 'date_asc':
         books = books.order_by('created_at')
     elif sort_by == 'relevance':
-        # Leave as default order (if searched) or fallback to newest
         if not query:
             books = books.order_by('-created_at')
     else:
-        # Default to newest (date_desc)
         books = books.order_by('-created_at')
-    total_count = books.count()
 
-    # Pagination
+    # Pagination (paginator.count computes total_count once instead of running a duplicate COUNT query)
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(books, 36)
+    total_count = paginator.count
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -150,50 +161,59 @@ def books_view(request):
 
 
 def book_detail_view(request, pk):
-    """Book detail: competitor prices, Buy/Borrow buttons, reviews."""
+    """Book detail: Buy/Borrow buttons, reviews, and related books."""
     book = get_object_or_404(
-        Book.objects.select_related('author', 'publication', 'category'),
+        Book.objects.select_related('author', 'publication', 'category').annotate(
+            _review_count=Count('reviews', distinct=True),
+            _avg_rating=Avg('reviews__rating'),
+        ),
         pk=pk
     )
-    reviews = book.reviews.select_related('user').all()
-
-    # Competitor prices scraping removed for performance
+    reviews = list(book.reviews.select_related('user').all())
 
     # Handle review submission
     user_review = None
     if request.user.is_authenticated:
-        user_review = reviews.filter(user=request.user).first()
+        for rev in reviews:
+            if rev.user_id == request.user.id:
+                user_review = rev
+                break
 
         if request.method == 'POST' and 'submit_review' in request.POST:
             if user_review:
                 messages.warning(request, 'You have already reviewed this book.')
             else:
                 rating = request.POST.get('rating')
-                review_text = request.POST.get('review_text', '').strip()
-                if rating and review_text:
+                review_text = request.POST.get('review_text', '').strip()[:2000]
+                try:
+                    rating_int = int(rating)
+                except (ValueError, TypeError):
+                    rating_int = 0
+
+                if 1 <= rating_int <= 5 and review_text:
                     BookReview.objects.create(
                         user=request.user,
                         book=book,
-                        rating=int(rating),
+                        rating=rating_int,
                         review_text=review_text,
                     )
                     messages.success(request, 'Your review has been submitted. Thank you!')
                     return redirect('book_detail', pk=book.pk)
                 else:
-                    messages.error(request, 'Please provide a rating and review text.')
+                    messages.error(request, 'Please provide a valid rating (1–5) and review text.')
 
     # Related books by Category, Author, and Publication
     related_category_books = Book.objects.filter(
         category=book.category, is_upcoming=False
-    ).exclude(pk=book.pk).select_related('author')[:6]
+    ).exclude(pk=book.pk).select_related('author')[:6] if book.category_id else []
 
     related_author_books = Book.objects.filter(
         author=book.author, is_upcoming=False
-    ).exclude(pk=book.pk).select_related('author')[:6] if book.author else []
+    ).exclude(pk=book.pk).select_related('author')[:6] if book.author_id else []
 
     related_publication_books = Book.objects.filter(
         publication=book.publication, is_upcoming=False
-    ).exclude(pk=book.pk).select_related('author')[:6] if book.publication else []
+    ).exclude(pk=book.pk).select_related('author')[:6] if book.publication_id else []
 
     context = {
         'book': book,
@@ -212,6 +232,11 @@ def _filter_and_sort_books(books_qs, request):
     query = request.GET.get('q', '').strip()
     sort_by = request.GET.get('sort', 'newest')
 
+    books_qs = books_qs.annotate(
+        _review_count=Count('reviews', distinct=True),
+        _avg_rating=Avg('reviews__rating'),
+    )
+
     if query:
         books_qs = books_qs.filter(
             Q(title__icontains=query) |
@@ -224,7 +249,7 @@ def _filter_and_sort_books(books_qs, request):
     if sort_by == 'featured':
         books_qs = books_qs.order_by('-is_featured', '-created_at')
     elif sort_by == 'best_selling':
-        books_qs = books_qs.annotate(sales_count=Count('orders')).order_by('-sales_count', '-created_at')
+        books_qs = books_qs.annotate(sales_count=Count('orders', distinct=True)).order_by('-sales_count', '-created_at')
     elif sort_by == 'alpha_asc':
         books_qs = books_qs.order_by('title')
     elif sort_by == 'alpha_desc':
@@ -244,10 +269,9 @@ def _filter_and_sort_books(books_qs, request):
     else:  # default 'newest'
         books_qs = books_qs.order_by('-created_at')
 
-    total_count = books_qs.count()
-
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(books_qs, 36)
+    total_count = paginator.count
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -341,11 +365,10 @@ def authors_view(request):
     else:  # default 'alpha_asc'
         authors = authors.order_by('name')
 
-    total_count = authors.count()
-
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(authors, 24)
+    total_count = paginator.count
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -385,11 +408,10 @@ def publications_view(request):
     else:  # default 'alpha_asc'
         publications = publications.order_by('name')
 
-    total_count = publications.count()
-
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(publications, 24)
+    total_count = paginator.count
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -427,11 +449,10 @@ def categories_view(request):
     else:  # default 'alpha_asc'
         categories = categories.order_by('name')
 
-    total_count = categories.count()
-
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(categories, 24)
+    total_count = paginator.count
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -452,26 +473,25 @@ def categories_view(request):
 def request_book_view(request):
     """User facing page to request books that are not in the catalog."""
     if request.method == 'POST':
-        name = request.POST.get('name')
-        address = request.POST.get('address', '')
-        phone = request.POST.get('phone')
-        email = request.POST.get('email', '')
+        if is_throttled(request, 'book_request', per_ip_limit=5, global_limit=50, window=3600):
+            messages.error(request, "Too many book requests submitted recently. Please try again later.")
+            return redirect('request_book')
 
-        titles = request.POST.getlist('book_title[]')
-        authors = request.POST.getlist('author[]')
-        publications = request.POST.getlist('publication[]')
-        quantities = request.POST.getlist('quantity[]')
+        name = request.POST.get('name', '').strip()[:150]
+        address = request.POST.get('address', '').strip()[:500]
+        phone = request.POST.get('phone', '').strip()[:20]
+        email = request.POST.get('email', '').strip()[:254]
+
+        titles = request.POST.getlist('book_title[]')[:10]
+        authors = request.POST.getlist('author[]')[:10]
+        publications = request.POST.getlist('publication[]')[:10]
+        quantities = request.POST.getlist('quantity[]')[:10]
 
         if not name or not phone:
             messages.error(request, "Name and Phone number are required.")
             return redirect('request_book')
 
-        valid_items = False
-        for title in titles:
-            if title.strip():
-                valid_items = True
-                break
-
+        valid_items = any(t.strip() for t in titles)
         if not valid_items:
             messages.error(request, "Please enter at least one book title.")
             return redirect('request_book')
@@ -485,30 +505,35 @@ def request_book_view(request):
             email=email
         )
 
-        # Create request items
+        # Create request items in bulk (1 query instead of N queries)
+        items_to_create = []
         for i in range(len(titles)):
-            title = titles[i].strip()
+            title = titles[i].strip()[:250]
             if not title:
                 continue
 
-            author_val = authors[i].strip() if i < len(authors) else ''
-            pub_val = publications[i].strip() if i < len(publications) else ''
+            author_val = authors[i].strip()[:200] if i < len(authors) else ''
+            pub_val = publications[i].strip()[:200] if i < len(publications) else ''
             qty_val = 1
             if i < len(quantities):
                 try:
                     qty_val = int(quantities[i])
-                    if qty_val <= 0:
+                    if qty_val <= 0 or qty_val > 100:
                         qty_val = 1
                 except ValueError:
                     qty_val = 1
 
-            BookRequestItem.objects.create(
-                request=book_req,
-                book_title=title,
-                author=author_val,
-                publication=pub_val,
-                quantity=qty_val
+            items_to_create.append(
+                BookRequestItem(
+                    request=book_req,
+                    book_title=title,
+                    author=author_val,
+                    publication=pub_val,
+                    quantity=qty_val
+                )
             )
+        if items_to_create:
+            BookRequestItem.objects.bulk_create(items_to_create)
 
         # Notify admin
         from youth_club_library.notifications import notify_admin_new_book_request

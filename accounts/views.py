@@ -24,10 +24,17 @@ def dashboard_view(request):
     except UserMembership.DoesNotExist:
         membership = None
 
-    # Order history
-    orders = Order.objects.filter(user=user).select_related('book').order_by('-created_at')
-    bought_orders = orders.filter(order_type='Buy')
-    borrowed_orders = orders.filter(order_type='Borrow')
+    # Order history (fetch once and precompute group totals in memory to avoid N+1 queries)
+    all_orders = list(Order.objects.filter(user=user).select_related('book', 'book__author').order_by('-created_at'))
+    group_totals = {}
+    for o in all_orders:
+        if o.group_number:
+            group_totals[o.group_number] = group_totals.get(o.group_number, 0) + o.total_cost
+    for o in all_orders:
+        o._group_total_cost = group_totals.get(o.group_number, o.total_cost) if o.group_number else o.total_cost
+
+    bought_orders = [o for o in all_orders if o.order_type == 'Buy']
+    borrowed_orders = [o for o in all_orders if o.order_type == 'Borrow']
 
     # Book Requests
     book_requests = BookRequest.objects.filter(user=user).prefetch_related('items').order_by('-created_at')

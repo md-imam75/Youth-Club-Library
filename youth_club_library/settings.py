@@ -33,6 +33,10 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(','
     'www.youthclublibrary.com',
     '.youthclublibrary.com'
 ]
+# Render injects its public hostname; allow it explicitly instead of a wildcard.
+_render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if _render_host:
+    ALLOWED_HOSTS.append(_render_host)
 
 # ─── SECURITY SETTINGS FOR PRODUCTION (RENDER) ───────────────────────────────
 # Trust the X-Forwarded-Proto header from Render's load balancer
@@ -41,14 +45,24 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Enforce HTTPS (prevents POST data loss on HTTP -> HTTPS redirects)
 SECURE_SSL_REDIRECT = not DEBUG
 
-# Allow CSRF POST requests from the Render domain and Custom Domain
+# HSTS: tell browsers to only ever use HTTPS for this site (1 year).
+# Not enabled in DEBUG so local http://localhost keeps working.
+SECURE_HSTS_SECONDS = 0 if DEBUG else 60 * 60 * 24 * 365
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+
+# Browser-side hardening headers (Django defaults made explicit)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'  # keeps Google OAuth popup flow working
+X_FRAME_OPTIONS = 'DENY'
+
+# Allow CSRF POST requests only from our own origins (HTTPS only, no wildcards:
+# a wildcard like https://*.onrender.com would trust *every* Render-hosted site).
 CSRF_TRUSTED_ORIGINS = [
     'https://youth-club-library.onrender.com',
-    'https://*.onrender.com',
     'https://youthclublibrary.com',
     'https://www.youthclublibrary.com',
-    'http://youthclublibrary.com',
-    'http://www.youthclublibrary.com',
 ]
 
 # Application definition
@@ -76,6 +90,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'youth_club_library.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -243,7 +258,7 @@ SOCIALACCOUNT_PROVIDERS = {
 SOCIALACCOUNT_AUTO_SIGNUP = True       # Skip the confirm-signup page for social logins
 SOCIALACCOUNT_LOGIN_ON_GET = True      # Allow GET to trigger social login (no extra form)
 SOCIALACCOUNT_QUERY_EMAIL = True       # Always fetch email from Google
-SOCIALACCOUNT_STORE_TOKENS = True      # Store OAuth tokens for later use
+SOCIALACCOUNT_STORE_TOKENS = False     # We never call Google APIs after login; don't keep tokens in the DB
 
 # Use https in production to prevent mobile browser redirect issues
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http' if DEBUG else 'https'
