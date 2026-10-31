@@ -59,14 +59,18 @@
         
         <div>
           <label class="block text-xs dark:text-gray-400 text-slate-600 mb-2">Select Payment Method</label>
-          <div class="grid grid-cols-2 gap-3">
-            <label class="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl border dark:border-white/10 border-black/10 hover:border-emerald-500/50 dark:bg-white/5 bg-black/5 transition-all text-sm font-semibold select-none">
+          <div class="grid grid-cols-3 gap-2.5">
+            <label class="cursor-pointer flex items-center justify-center gap-1.5 p-3 rounded-xl border dark:border-white/10 border-black/10 hover:border-emerald-500/50 dark:bg-white/5 bg-black/5 transition-all text-sm font-semibold select-none">
               <input type="radio" name="payment_method" value="cash" checked class="accent-emerald-500" onchange="toggleCashInput(this.value)" />
-              Cash
+              <span>Cash</span>
             </label>
-            <label class="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl border dark:border-white/10 border-black/10 hover:border-pink-500/50 dark:bg-white/5 bg-black/5 transition-all text-sm font-semibold select-none">
+            <label class="cursor-pointer flex items-center justify-center gap-1.5 p-3 rounded-xl border dark:border-white/10 border-black/10 hover:border-pink-500/50 dark:bg-white/5 bg-black/5 transition-all text-sm font-semibold select-none">
               <input type="radio" name="payment_method" value="bkash" class="accent-pink-500" onchange="toggleCashInput(this.value)" />
-              bKash
+              <span class="text-[#E2136E] dark:text-pink-400">bKash</span>
+            </label>
+            <label class="cursor-pointer flex items-center justify-center gap-1.5 p-3 rounded-xl border dark:border-white/10 border-black/10 hover:border-orange-500/50 dark:bg-white/5 bg-black/5 transition-all text-sm font-semibold select-none">
+              <input type="radio" name="payment_method" value="nagad" class="accent-orange-500" onchange="toggleCashInput(this.value)" />
+              <span class="text-[#F6921E] dark:text-orange-400">Nagad</span>
             </label>
           </div>
         </div>
@@ -78,6 +82,19 @@
             <span class="dark:text-gray-400 text-slate-600">Change Return:</span>
             <span class="text-pink-500 text-lg" id="change-amount">৳0</span>
           </div>
+        </div>
+
+        <div id="cashout-charge-group" class="pt-2 space-y-2 hidden">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs dark:text-gray-400 text-slate-600" id="cashout-charge-label">Cashout Charge (৳)</label>
+            <div class="flex items-center gap-1">
+              <button type="button" onclick="applyCashoutPercent(1.85)" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-pink-500/10 text-[#E2136E] dark:text-pink-400 border border-pink-500/20 hover:bg-pink-500/20 transition-colors" title="Apply 1.85% bKash Cashout Rate">1.85%</button>
+              <button type="button" onclick="applyCashoutPercent(1.5)" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-orange-500/10 text-[#F6921E] dark:text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-colors" title="Apply 1.5% Nagad Cashout Rate">1.5%</button>
+              <button type="button" onclick="applyCashoutPercent(2.0)" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-500/10 text-sky-500 border border-sky-500/20 hover:bg-sky-500/20 transition-colors" title="Apply 2% Cashout Rate">2%</button>
+            </div>
+          </div>
+          <input type="number" name="cashout_charge" id="cashout_charge" min="0" step="0.01" value="0" placeholder="e.g. 15" class="form-input" oninput="onManualCashoutInput()" />
+          <p class="text-[10px] dark:text-gray-500 text-slate-500">Auto-calculated or enter any custom cashout charge to include in the invoice.</p>
         </div>
       </div>
 
@@ -142,6 +159,14 @@
           <span>Total Discount:</span>
           <span id="discount-total">-৳0.00</span>
         </div>
+        <div class="flex justify-between text-sm dark:text-gray-300 text-slate-700 font-medium">
+          <span>Books Subtotal:</span>
+          <span id="subtotal-total">৳0.00</span>
+        </div>
+        <div id="summary-cashout-row" class="flex justify-between text-sm text-amber-500 font-medium hidden">
+          <span id="summary-cashout-label">Cashout Charge:</span>
+          <span id="cashout-total">+৳0.00</span>
+        </div>
         <div class="border-t dark:border-white/5 border-black/10 pt-3 flex justify-between items-center text-lg font-bold dark:text-white text-slate-900">
           <span>Net Payable Amount:</span>
           <span id="payable-total" class="text-xl text-sky-400">৳0.00</span>
@@ -154,6 +179,7 @@
 
 <script>
   let selectedItems = [];
+  let autoCashoutRate = 0; // 0 when cash or manual override, 1.85 for bKash, 1.5 for Nagad
 
   function escapeHtml(str) {
     return String(str ?? '')
@@ -219,7 +245,6 @@
   }
 
   function addBookToBill(book) {
-    // Check if already added
     const existing = selectedItems.find(item => item.id === book.id);
     if (existing) {
       if (existing.qty >= book.stock) {
@@ -335,26 +360,69 @@
     calculateSummary();
   }
 
+  function getBooksSubtotal() {
+    let subtotal = 0;
+    selectedItems.forEach(item => {
+      subtotal += item.effective_price * item.qty;
+    });
+    return subtotal;
+  }
+
+  function applyCashoutPercent(percent) {
+    autoCashoutRate = percent;
+    const subtotal = getBooksSubtotal();
+    const charge = Math.round((subtotal * (percent / 100)) * 100) / 100;
+    document.getElementById('cashout_charge').value = charge.toFixed(2);
+    calculateSummary();
+  }
+
+  function onManualCashoutInput() {
+    autoCashoutRate = 0; // User manually edited the cashout charge
+    calculateSummary();
+  }
+
   function calculateSummary() {
     let originalTotal = 0;
-    let discountTotal = 0;
-    let payableTotal = 0;
+    let subtotal = 0;
 
     selectedItems.forEach(item => {
       originalTotal += item.regular_price * item.qty;
-      payableTotal += item.effective_price * item.qty;
+      subtotal += item.effective_price * item.qty;
     });
 
-    discountTotal = originalTotal - payableTotal;
+    const discountTotal = originalTotal - subtotal;
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    const cashoutInput = document.getElementById('cashout_charge');
+    const summaryCashoutRow = document.getElementById('summary-cashout-row');
+    const summaryCashoutLabel = document.getElementById('summary-cashout-label');
+
+    let cashoutCharge = 0;
+    if (paymentMethod === 'bkash' || paymentMethod === 'nagad') {
+      if (autoCashoutRate > 0) {
+        cashoutCharge = Math.round((subtotal * (autoCashoutRate / 100)) * 100) / 100;
+        cashoutInput.value = cashoutCharge.toFixed(2);
+      } else {
+        const parsed = parseFloat(cashoutInput.value);
+        cashoutCharge = (!isNaN(parsed) && parsed >= 0) ? parsed : 0;
+      }
+      const methodLabel = paymentMethod === 'bkash' ? 'bKash' : 'Nagad';
+      summaryCashoutLabel.innerText = `Cashout Charge (${methodLabel}):`;
+      document.getElementById('cashout-total').innerText = `+৳${cashoutCharge.toFixed(2)}`;
+      summaryCashoutRow.classList.remove('hidden');
+    } else {
+      summaryCashoutRow.classList.add('hidden');
+    }
+
+    const payableTotal = subtotal + cashoutCharge;
 
     document.getElementById('original-total').innerText = `৳${originalTotal.toFixed(2)}`;
     document.getElementById('discount-total').innerText = `-৳${discountTotal.toFixed(2)}`;
+    document.getElementById('subtotal-total').innerText = `৳${subtotal.toFixed(2)}`;
     document.getElementById('payable-total').innerText = `৳${payableTotal.toFixed(2)}`;
 
-    // Calculate Change
+    // Calculate Change for Cash
     const cashInput = document.getElementById('cash_tendered');
     const changeDisplay = document.getElementById('change-display');
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
     
     if (paymentMethod === 'cash' && cashInput.value) {
       const tendered = parseFloat(cashInput.value);
@@ -370,12 +438,29 @@
   }
 
   function toggleCashInput(method) {
-    const group = document.getElementById('cash-tendered-group');
+    const cashGroup = document.getElementById('cash-tendered-group');
+    const cashoutGroup = document.getElementById('cashout-charge-group');
+    const cashoutLabel = document.getElementById('cashout-charge-label');
+    const cashoutInput = document.getElementById('cashout_charge');
+
     if (method === 'cash') {
-      group.classList.remove('hidden');
+      cashGroup.classList.remove('hidden');
+      cashoutGroup.classList.add('hidden');
+      autoCashoutRate = 0;
+      cashoutInput.value = '0';
     } else {
-      group.classList.add('hidden');
+      cashGroup.classList.add('hidden');
       document.getElementById('cash_tendered').value = '';
+      cashoutGroup.classList.remove('hidden');
+      if (method === 'bkash') {
+        cashoutLabel.innerText = 'bKash Cashout Charge (৳)';
+        applyCashoutPercent(1.85);
+        return;
+      } else if (method === 'nagad') {
+        cashoutLabel.innerText = 'Nagad Cashout Charge (৳)';
+        applyCashoutPercent(1.5);
+        return;
+      }
     }
     calculateSummary();
   }
@@ -429,7 +514,7 @@
   }
 
   async function onScanSuccess(decodedText, decodedResult) {
-    if (decodedText === lastScannedCode) return; // Prevent rapid duplicate scans
+    if (decodedText === lastScannedCode) return;
     
     lastScannedCode = decodedText;
     document.getElementById('scanner-status').innerText = `Scanned: ${decodedText}... loading`;
@@ -438,18 +523,17 @@
   }
 
   async function lookupBarcode(decodedText) {
-    // Play a beep sound
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // 800Hz beep
-      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); // Volume
+      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
       oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.1); // 100ms
+      oscillator.stop(audioCtx.currentTime + 0.1);
     } catch(e) {}
 
     try {
@@ -457,7 +541,6 @@
       const data = await res.json();
       
       if (data.success && data.book) {
-        // Stop the scanner momentarily
         if (html5QrcodeScanner && isScanning) {
             html5QrcodeScanner.pause(true);
         }
@@ -471,7 +554,6 @@
             document.getElementById('scanner-status').className = "text-center text-sm mt-3 text-slate-500 font-semibold";
         }
         
-        // Resume scanner
         if (html5QrcodeScanner && isScanning) {
             html5QrcodeScanner.resume();
         }
@@ -484,7 +566,6 @@
       document.getElementById('scanner-status').innerText = "Network error";
     }
 
-    // Reset last scanned code after 2 seconds to allow scanning same book again if needed
     clearTimeout(scanTimeout);
     scanTimeout = setTimeout(() => {
       lastScannedCode = null;
@@ -497,7 +578,6 @@
     // ignore
   }
 
-  // Close dropdown on click outside
   document.addEventListener('click', function(e) {
     const results = document.getElementById('search-results');
     const search = document.getElementById('book-search');

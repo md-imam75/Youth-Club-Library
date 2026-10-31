@@ -145,6 +145,11 @@
                   <span class="w-1.5 h-1.5 rounded-full bg-[#d12053]"></span>
                   bKash
                 </span>
+              {% elif bill.payment_method == 'nagad' %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 dark:bg-orange-950/40 text-[#F6921E] border border-orange-200 dark:border-orange-900/40">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#F6921E]"></span>
+                  Nagad
+                </span>
               {% else %}
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -156,6 +161,11 @@
             <!-- Total Amount -->
             <td class="px-5 py-4">
               <div class="font-bold text-slate-900 dark:text-white text-sm">৳{{ bill.total_amount }}</div>
+              {% if bill.cashout_charge and bill.cashout_charge > 0 %}
+                <div class="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
+                  Includes Cashout: ৳{{ bill.cashout_charge }}
+                </div>
+              {% endif %}
               {% if bill.cash_tendered %}
                 <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                   Tendered: ৳{{ bill.cash_tendered }}

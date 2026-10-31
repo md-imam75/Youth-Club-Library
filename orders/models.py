@@ -181,11 +181,17 @@ class Order(models.Model):
 
 
 class OfflineBill(models.Model):
+    PAYMENT_CHOICES = [
+        ('cash', 'Cash'),
+        ('bkash', 'bKash'),
+        ('nagad', 'Nagad'),
+    ]
     bill_number = models.CharField(max_length=50, unique=True)
     customer_name = models.CharField(max_length=150)
     customer_mobile = models.CharField(max_length=20, blank=True)
     customer_email = models.EmailField(blank=True)
-    payment_method = models.CharField(max_length=10, choices=[('cash', 'Cash'), ('bkash', 'bKash')], default='cash')
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='cash')
+    cashout_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     cash_tendered = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     change_returned = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
@@ -198,6 +204,10 @@ class OfflineBill(models.Model):
 
     def __str__(self):
         return f"Bill {self.bill_number} — {self.customer_name}"
+
+    @property
+    def subtotal_amount(self):
+        return self.total_amount - (self.cashout_charge or 0)
 
 
 class OfflineBillItem(models.Model):

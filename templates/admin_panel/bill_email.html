@@ -12,8 +12,12 @@
   <p><strong>Invoice Details:</strong></p>
   <ul>
     <li>Bill Number: <strong>{{ bill.bill_number }}</strong></li>
+    {% if bill.cashout_charge and bill.cashout_charge > 0 %}
+    <li>Subtotal: <strong>৳{{ bill.subtotal_amount }}</strong></li>
+    <li>Cashout Charge ({{ bill.get_payment_method_display }}): <strong>৳{{ bill.cashout_charge }}</strong></li>
+    {% endif %}
     <li>Total Amount Paid: <strong>৳{{ bill.total_amount }}</strong></li>
-    <li>Payment Method: <strong style="text-transform: capitalize;">{{ bill.payment_method }}</strong></li>
+    <li>Payment Method: <strong>{{ bill.get_payment_method_display }}</strong></li>
     <li>Date: {{ bill.created_at|date:"d M Y, h:i A" }}</li>
   </ul>
 

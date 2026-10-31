@@ -162,7 +162,7 @@
     {% endif %}
     <tr>
       <td class="meta-label">Payment Method:</td>
-      <td class="meta-value" style="text-transform: capitalize;">{{ bill.payment_method }}</td>
+      <td class="meta-value">{{ bill.get_payment_method_display }}</td>
     </tr>
   </table>
 
@@ -210,13 +210,19 @@
   </table>
 
   <!-- Invoice Calculation Summary -->
-  <table class="summary-table" style="width: 40%; margin-left: 60%; margin-top: 10px;">
+  <table class="summary-table" style="width: 45%; margin-left: 55%; margin-top: 10px;">
     <tr>
       <td class="summary-label">Subtotal:</td>
       <td class="summary-value" id="subtotal-val">
-        ৳{{ bill.total_amount }}
+        ৳{{ bill.subtotal_amount }}
       </td>
     </tr>
+    {% if bill.payment_method == 'bkash' or bill.payment_method == 'nagad' or bill.cashout_charge > 0 %}
+    <tr>
+      <td class="summary-label">Cashout Charge ({{ bill.get_payment_method_display }}):</td>
+      <td class="summary-value">৳{{ bill.cashout_charge }}</td>
+    </tr>
+    {% endif %}
     <tr class="grand-total">
       <td class="summary-label" style="color: #0284c7;">Net Payable:</td>
       <td class="summary-value" style="color: #0284c7;">৳{{ bill.total_amount }}</td>

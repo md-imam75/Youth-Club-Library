@@ -1406,7 +1406,9 @@ def admin_make_bill(request):
             customer_name = request.POST.get('customer_name', '').strip()
             customer_mobile = request.POST.get('customer_mobile', '').strip()
             customer_email = request.POST.get('customer_email', '').strip()
-            payment_method = request.POST.get('payment_method', 'cash')
+            payment_method = request.POST.get('payment_method', 'cash').strip().lower()
+            if payment_method not in ('cash', 'bkash', 'nagad'):
+                payment_method = 'cash'
             items_json = request.POST.get('items_json', '[]')
 
             cash_tendered_raw = request.POST.get('cash_tendered')
@@ -1416,6 +1418,17 @@ def admin_make_bill(request):
                     cash_tendered = Decimal(str(cash_tendered_raw).strip())
                 except Exception:
                     cash_tendered = None
+
+            cashout_charge = Decimal('0.00')
+            if payment_method in ('bkash', 'nagad'):
+                cashout_raw = request.POST.get('cashout_charge', '').strip()
+                if cashout_raw:
+                    try:
+                        parsed_charge = Decimal(str(cashout_raw))
+                        if parsed_charge >= Decimal('0.00'):
+                            cashout_charge = parsed_charge.quantize(Decimal('0.01'))
+                    except Exception:
+                        cashout_charge = Decimal('0.00')
 
             if not customer_name:
                 messages.error(request, "Customer name is required.")
@@ -1447,10 +1460,19 @@ def admin_make_bill(request):
                 customer_mobile=customer_mobile,
                 customer_email=customer_email,
                 payment_method=payment_method,
+                cashout_charge=cashout_charge,
                 total_amount=Decimal('0.00')
             )
 
-            total_amount = Decimal('0.00')
+            if payment_method == 'cash':
+                order_payment_method = Order.PAYMENT_OFFLINE
+            elif payment_method == 'nagad':
+                order_payment_method = Order.PAYMENT_NAGAD
+            else:
+                order_payment_method = Order.PAYMENT_BKASH
+
+            subtotal_amount = Decimal('0.00')
+            first_item = True
             for item in items:
                 book_id = item.get('id')
                 qty = int(item.get('qty', 1))
@@ -1470,7 +1492,7 @@ def admin_make_bill(request):
                     discount_percent = int(((regular_price - offer_price) / regular_price) * 100)
 
                 item_total = effective_price * qty
-                total_amount += item_total
+                subtotal_amount += item_total
 
                 OfflineBillItem.objects.create(
                     bill=bill,
@@ -1486,6 +1508,8 @@ def admin_make_bill(request):
                 )
 
                 # Create standard Order record to integrate with "All Orders"
+                order_total_cost = item_total + (cashout_charge if first_item else Decimal('0.00'))
+                first_item = False
                 Order.objects.create(
                     user=None,
                     book=book,
@@ -1495,8 +1519,8 @@ def admin_make_bill(request):
                     delivery_option='offline_store',
                     delivery_cost=Decimal('0.00'),
                     book_price=effective_price,
-                    total_cost=item_total,
-                    payment_method=Order.PAYMENT_OFFLINE if payment_method == 'cash' else Order.PAYMENT_BKASH,
+                    total_cost=order_total_cost,
+                    payment_method=order_payment_method,
                     payment_status=Order.PAYMENT_STATUS_PAID,
                     customer_name=customer_name,
                     customer_mobile=customer_mobile,
@@ -1505,6 +1529,7 @@ def admin_make_bill(request):
                     group_number=bill_number,
                 )
 
+            total_amount = subtotal_amount + cashout_charge
             bill.total_amount = total_amount
             bill.cash_tendered = cash_tendered
             if payment_method == 'cash' and cash_tendered and cash_tendered >= total_amount:
@@ -1512,7 +1537,7 @@ def admin_make_bill(request):
             else:
                 bill.change_returned = Decimal('0.00')
 
-            bill.save(update_fields=['total_amount', 'cash_tendered', 'change_returned'])
+            bill.save(update_fields=['cashout_charge', 'total_amount', 'cash_tendered', 'change_returned'])
 
             # Generate PDF for emailing safely
             try:

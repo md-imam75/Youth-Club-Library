@@ -4,8 +4,10 @@ Thank you for buying from Youth Club Library. We have successfully generated you
 
 Invoice Details:
 - Bill Number: {{ bill.bill_number }}
-- Total Amount Paid: ৳{{ bill.total_amount }}
-- Payment Method: {{ bill.payment_method|capfirst }}
+{% if bill.cashout_charge and bill.cashout_charge > 0 %}- Subtotal: ৳{{ bill.subtotal_amount }}
+- Cashout Charge ({{ bill.get_payment_method_display }}): ৳{{ bill.cashout_charge }}
+{% endif %}- Total Amount Paid: ৳{{ bill.total_amount }}
+- Payment Method: {{ bill.get_payment_method_display }}
 - Date: {{ bill.created_at|date:"d M Y, h:i A" }}
 
 Your official PDF receipt is attached to this email.
