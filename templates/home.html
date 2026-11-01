@@ -1,50 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Youth Club Library- Browse. Borrow. Purchase{% endblock %}
-{% block meta_description %}Youth Club Library — Discover a modern, immersive digital-first library space. Browse, buy, or borrow books with an active membership.{% endblock %}
+{% block title %}Youth Club Library — Browse, Borrow & Purchase Books in Chattogram{% endblock %}
+{% block meta_description %}Youth Club Library — Chattogram's premier private open Islamic and community library. Borrow books with an active membership or purchase titles with fast delivery.{% endblock %}
 
 {% block content %}
 
-<!-- Custom Styling for the Immersive Landing Page -->
 <style>
-  /* Glassmorphism utility */
-  .premium-glass {
-    background: rgba(255, 255, 255, 0.45);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  /* Subtle architectural dot grid for Hero */
+  .editorial-grid-bg {
+    background-image: radial-gradient(rgba(15, 23, 42, 0.07) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
-  .dark .premium-glass {
-    background: rgba(15, 23, 42, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  .dark .editorial-grid-bg {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 
-  /* Wireframe background grid */
-  .wireframe-grid {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
-    background-size: 80px 80px;
+  /* 3D Perspective Book Showcase in Hero */
+  .book-3d-stage {
+    perspective: 1200px;
   }
-  .dark .wireframe-grid {
-    background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 80px 80px;
+  .book-3d-card {
+    transform-style: preserve-3d;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+  }
+  .book-3d-card:hover {
+    transform: translateY(-8px) rotateY(-8deg) rotateX(3deg);
+  }
+  .book-spine-edge {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    right: -8px;
+    width: 8px;
+    background: repeating-linear-gradient(
+      90deg,
+      #f8fafc 0px,
+      #cbd5e1 2px,
+      #f8fafc 4px
+    );
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    box-shadow: inset -1px 0 2px rgba(0, 0, 0, 0.18);
   }
 
-  /* Glow accents */
-  .glow-cyan {
-    background: radial-gradient(circle, rgba(14, 165, 233, 0.15), transparent 70%);
-  }
-  .glow-emerald {
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.12), transparent 70%);
-  }
-  .glow-purple {
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.1), transparent 70%);
-  }
-
-  /* Infinite marquee scroll */
+  /* Infinite marquee scroll for New Arrivals */
   .marquee-container {
     overflow: hidden;
     white-space: nowrap;
@@ -55,7 +55,7 @@
   .marquee-track {
     display: flex;
     width: max-content;
-    animation: marquee-scroll 35s linear infinite;
+    animation: marquee-scroll 38s linear infinite;
   }
   .marquee-track:hover {
     animation-play-state: paused;
@@ -65,7 +65,6 @@
     100% { transform: translateX(-50%); }
   }
 
-  /* Mobile marquee responsiveness: transform into a responsive grid */
   @media (max-width: 640px) {
     .marquee-container {
       padding: 0 16px;
@@ -75,11 +74,11 @@
     }
   }
 
-  /* Scroll fade animation classes */
+  /* Subtle scroll reveal */
   .reveal {
     opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
   }
   .reveal.active {
     opacity: 1;
@@ -87,151 +86,317 @@
   }
 </style>
 
-<!-- ─── HERO SECTION ──────────────────────────────────────────────────────────── -->
-<section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 wireframe-grid">
-  <!-- Neon decorative glows -->
-  <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
-    <div class="absolute top-1/4 -left-20 w-[500px] h-[500px] rounded-full glow-cyan blur-3xl"></div>
-    <div class="absolute bottom-1/4 -right-20 w-[500px] h-[500px] rounded-full glow-emerald blur-3xl"></div>
-    <div class="absolute top-1/2 left-1/3 w-[300px] h-[300px] rounded-full glow-purple blur-3xl"></div>
-  </div>
+<!-- ─── 1. HERO SECTION ───────────────────────────────────────────────────────── -->
+<section class="relative overflow-hidden pt-28 pb-16 lg:pt-36 lg:pb-24 border-b border-slate-200/80 dark:border-white/10 bg-slate-50/70 dark:bg-[#080f1e] editorial-grid-bg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
 
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10 w-full">
-    <div class="grid lg:grid-cols-12 gap-12 items-center">
-      <!-- Left Column: Premium Typography & CTAs (7 spans) -->
-      <div class="lg:col-span-7 space-y-8 text-left lg:pl-4 xl:pl-8 order-last lg:order-first">
-        <div class="inline-flex items-center gap-2 premium-glass px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider dark:text-sky-400 text-sky-600 border dark:border-white/10 border-black/5 shadow-sm">
-          <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
-          Chattogram's First Private Open Islamic Library
+      <!-- Left Column: Editorial Typography, Command Search & CTAs (7 cols) -->
+      <div class="lg:col-span-7 space-y-6 text-left">
+        <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-sky-600 dark:bg-sky-400"></span>
+          <span class="text-xs font-semibold tracking-wide text-slate-800 dark:text-slate-200">
+            Chattogram's First Private Open Islamic Library
+          </span>
         </div>
 
-        <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.1] dark:text-white text-slate-900 tracking-tight">
-          Where Every<br />
-          <span class="text-sky-600 dark:text-sky-400">Page Counts</span>
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] tracking-tight text-slate-900 dark:text-white">
+          Where Every Page <br />
+          <span class="text-sky-600 dark:text-sky-400">Builds Wisdom.</span>
         </h1>
 
-        <p class="text-base sm:text-lg dark:text-gray-400 text-slate-600 leading-relaxed max-w-lg">
-          Discover a high-end, digital-first space for community reading. Borrow thousands of books with an active membership or purchase your favorites with instant home delivery.
+        <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl">
+          Borrow from thousands of curated Islamic, historical, and academic titles with an active membership, or purchase your favorite books with fast home delivery across Chattogram.
         </p>
 
-        <!-- Search Bar Form -->
-        <form method="get" action="{% url 'books' %}" class="relative max-w-lg w-full">
-          <div class="relative flex items-center">
-            <svg class="w-5 h-5 absolute left-4 dark:text-gray-400 text-slate-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" name="q" placeholder="Search by title, author, category..." 
-                   class="w-full pl-12 pr-28 py-3.5 bg-white/10 dark:bg-slate-900/40 backdrop-blur-md border dark:border-white/10 border-black/10 rounded-full focus:outline-none focus:border-sky-500/50 dark:text-white text-slate-900 text-sm transition-all placeholder-slate-400 dark:placeholder-gray-500 shadow-inner" />
-            <button type="submit" 
-                    class="absolute right-2.5 px-5 py-2.5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-full font-bold text-xs transition-all shadow-md">
-              Search
-            </button>
-          </div>
-        </form>
+        <!-- Elevated Command-Style Search Bar -->
+        <div class="max-w-xl pt-1">
+          <form method="get" action="{% url 'books' %}" class="w-full">
+            <div class="flex items-center bg-white dark:bg-slate-900 border border-slate-300/90 dark:border-white/15 rounded-xl p-1.5 shadow-sm focus-within:border-sky-600 dark:focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-500/10 transition-all">
+              <div class="pl-3.5 pr-2 text-slate-400 dark:text-slate-500 pointer-events-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </div>
+              <input
+                type="text"
+                name="q"
+                placeholder="Search by book title, author, publication, or category..."
+                class="w-full bg-transparent text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none py-2.5 pr-3"
+              />
+              <button
+                type="submit"
+                class="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs sm:text-sm rounded-lg transition-colors shrink-0 shadow-sm"
+              >
+                Search Catalog
+              </button>
+            </div>
+          </form>
 
-        <div class="flex flex-wrap gap-4 pt-2">
-          <a href="{% url 'books' %}"
-             class="pulse-cta inline-flex items-center gap-2.5 px-8 py-4 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-full font-bold text-base transition-all shadow-xl hover:shadow-sky-500/25 active:scale-[0.98]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-            Browse Catalog
-          </a>
-          <a href="{% url 'membership' %}"
-             class="inline-flex items-center gap-2.5 px-8 py-4 premium-glass hover:bg-white/10 dark:hover:bg-white/5 text-slate-900 dark:text-white rounded-full font-bold text-base transition-all border dark:border-white/15 border-black/10 hover:border-sky-500/50">
-            <svg class="w-5 h-5 dark:text-sky-400 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-            Become a Member
-          </a>
+          <!-- Quick Discovery Tags -->
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Explore:</span>
+            <a href="{% url 'books' %}?sort=newest" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-sky-500/50 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+              New Releases
+            </a>
+            <a href="{% url 'categories' %}" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-sky-500/50 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+              All Categories
+            </a>
+            <a href="{% url 'authors' %}" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-sky-500/50 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+              Scholars & Authors
+            </a>
+            <a href="{% url 'publications' %}" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-sky-500/50 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+              Publications
+            </a>
+          </div>
         </div>
 
-
+        <!-- Primary & Secondary Action Buttons -->
+        <div class="flex flex-wrap items-center gap-3.5 pt-2">
+          <a href="{% url 'books' %}"
+             class="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-sky-500 dark:hover:bg-sky-400 dark:text-slate-950 font-bold text-sm transition-all shadow-sm hover:-translate-y-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            Browse All Books
+          </a>
+          <a href="{% url 'membership' %}"
+             class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-slate-800 dark:text-white font-bold text-sm hover:border-sky-500/60 dark:hover:border-sky-400/60 transition-all">
+            Become a Member →
+          </a>
+        </div>
       </div>
 
-      <!-- Right Column: Interactive 3D Canvas Centerpiece (5 spans) -->
-      <div class="lg:col-span-5 hidden lg:flex justify-center items-center relative lg:min-h-[400px] z-10 lg:order-last">
-        <!-- Floating abstract canvas background glow -->
-        <div class="absolute w-72 h-72 rounded-full glow-cyan blur-3xl opacity-30 animate-pulse"></div>
-        <canvas id="canvas-3d" class="w-full h-[300px] lg:h-[400px] outline-none cursor-grab active:cursor-grabbing"></canvas>
+      <!-- Right Column: Curated 3D-Perspective Book Stack Showcase (5 cols) -->
+      <div class="lg:col-span-5">
+        <div id="hero-showcase-card" class="bg-white dark:bg-[#0d1629] border border-slate-200/90 dark:border-white/10 rounded-2xl p-6 shadow-lg transition-transform duration-300">
+          <!-- Card Header -->
+          <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-100 dark:border-white/10">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 block">Curator's Desk</span>
+              <h2 class="text-sm font-bold text-slate-900 dark:text-white mt-0.5">Featured Library Picks</h2>
+            </div>
+            <span class="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+              Borrow or Buy
+            </span>
+          </div>
+
+          <!-- 3D Perspective Book Trio (Dynamic from featured_books or new_books) -->
+          <div class="book-3d-stage grid grid-cols-3 gap-4 sm:gap-5 items-end py-2">
+            {% if featured_books %}
+              {% for book in featured_books|slice:":3" %}
+              <a href="{% url 'book_detail' book.pk %}"
+                 class="book-3d-card block group {% if forloop.counter == 2 %}-translate-y-3{% endif %}">
+                <div class="relative aspect-[3/4] rounded-lg overflow-visible bg-slate-900 border {% if forloop.counter == 2 %}border-sky-500/50 ring-2 ring-sky-500/20 shadow-xl{% else %}border-slate-700/80 shadow-md{% endif %}">
+                  <div class="book-spine-edge"></div>
+                  <div class="w-full h-full rounded-lg overflow-hidden relative">
+                    {% if book.cover_image %}
+                      <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    {% else %}
+                      <div class="w-full h-full p-3.5 flex flex-col justify-between bg-gradient-to-br from-slate-800 to-slate-950 text-white">
+                        <span class="text-xs font-semibold text-sky-400 truncate">{{ book.category.name|default:"Library" }}</span>
+                        <div class="my-auto py-2 border-y border-white/10">
+                          <p class="font-bold text-xs leading-snug line-clamp-3">{{ book.title }}</p>
+                          <p class="text-xs text-slate-400 mt-1 truncate">{{ book.author.name|default:"Unknown" }}</p>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-400">৳{{ book.effective_price|floatformat:0 }}</span>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="mt-3 pr-1">
+                  <p class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{{ book.title }}</p>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <span class="text-xs font-extrabold text-sky-600 dark:text-sky-400">৳{{ book.effective_price|floatformat:0 }}</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[70px]">{{ book.author.name|default:"" }}</span>
+                  </div>
+                </div>
+              </a>
+              {% endfor %}
+            {% else %}
+              <!-- Fallback Curated Trio if no featured books are flagged yet -->
+              {% for book in new_books|slice:":3" %}
+              <a href="{% url 'book_detail' book.pk %}"
+                 class="book-3d-card block group {% if forloop.counter == 2 %}-translate-y-3{% endif %}">
+                <div class="relative aspect-[3/4] rounded-lg overflow-visible bg-slate-900 border border-slate-700/80 shadow-md">
+                  <div class="book-spine-edge"></div>
+                  <div class="w-full h-full rounded-lg overflow-hidden relative">
+                    {% if book.cover_image %}
+                      <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover" />
+                    {% else %}
+                      <div class="w-full h-full p-3.5 flex flex-col justify-between bg-slate-900 text-white">
+                        <span class="text-xs font-semibold text-sky-400">Catalog</span>
+                        <p class="font-bold text-xs leading-snug line-clamp-3">{{ book.title }}</p>
+                        <span class="text-xs font-bold text-emerald-400">৳{{ book.effective_price|floatformat:0 }}</span>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ book.title }}</p>
+                  <span class="text-xs font-extrabold text-sky-600 dark:text-sky-400">৳{{ book.effective_price|floatformat:0 }}</span>
+                </div>
+              </a>
+              {% endfor %}
+            {% endif %}
+          </div>
+
+          <!-- Card Footer -->
+          <div class="mt-5 pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+            <span>Kazir Dewri Branch · Tue–Sun (5 PM – 9 PM)</span>
+            <a href="{% url 'books' %}" class="font-bold text-sky-600 dark:text-sky-400 hover:underline">Explore All →</a>
+          </div>
+        </div>
       </div>
 
     </div>
   </div>
-
-  <!-- Scroll Down Indicator -->
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-bounce pointer-events-none">
-    <span class="text-[10px] dark:text-gray-500 text-slate-400 uppercase tracking-[0.25em] font-semibold">Scroll</span>
-    <svg class="w-4 h-4 dark:text-gray-500 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-    </svg>
-  </div>
 </section>
 
 
-<!-- ─── STATISTICS SECTION ──────────────────────────────────────────────────────── -->
-<section class="py-12 relative overflow-hidden bg-slate-50 dark:bg-[#0a1120] border-y dark:border-white/5 border-black/5 reveal">
+<!-- ─── 2. ARCHITECTURAL BENTO STATISTICS STRIP ───────────────────────────────── -->
+<section class="border-b border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0a1222] reveal">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x dark:divide-white/5 divide-black/5">
-      <div>
-        <div class="text-4xl sm:text-5xl font-extrabold dark:text-white text-slate-900 mb-2 counter-num" data-target="{{ total_books }}">0</div>
-        <div class="text-[10px] sm:text-xs font-bold text-sky-500 uppercase tracking-[0.2em]">Books</div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/80 dark:divide-white/10">
+
+      <!-- Total Books -->
+      <div class="py-7 px-4 sm:px-6 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Collection</p>
+          <div class="flex items-baseline gap-0.5 mt-1">
+            <span class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white counter-num" data-target="{{ total_books }}">0</span>
+            <span class="text-xl font-extrabold text-sky-600 dark:text-sky-400">+</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Curated physical books</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
       </div>
-      <div>
-        <div class="text-4xl sm:text-5xl font-extrabold dark:text-white text-slate-900 mb-2 counter-num" data-target="{{ total_members }}">0</div>
-        <div class="text-[10px] sm:text-xs font-bold text-sky-500 uppercase tracking-[0.2em]">Members</div>
+
+      <!-- Active Members -->
+      <div class="py-7 px-4 sm:px-6 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Community</p>
+          <div class="flex items-baseline gap-0.5 mt-1">
+            <span class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white counter-num" data-target="{{ total_members }}">0</span>
+            <span class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">+</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Active library members</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
       </div>
-      <div>
-        <div class="text-4xl sm:text-5xl font-extrabold dark:text-white text-slate-900 mb-2 counter-num" data-target="{{ total_authors }}">0</div>
-        <div class="text-[10px] sm:text-xs font-bold text-sky-500 uppercase tracking-[0.2em]">Authors</div>
+
+      <!-- Authors -->
+      <div class="py-7 px-4 sm:px-6 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Scholars & Writers</p>
+          <div class="flex items-baseline gap-0.5 mt-1">
+            <span class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white counter-num" data-target="{{ total_authors }}">0</span>
+            <span class="text-xl font-extrabold text-amber-500">+</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Classical & modern authors</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+        </div>
       </div>
-      <div>
-        <div class="text-4xl sm:text-5xl font-extrabold dark:text-white text-slate-900 mb-2 counter-num" data-target="{{ total_categories }}">0</div>
-        <div class="text-[10px] sm:text-xs font-bold text-sky-500 uppercase tracking-[0.2em]">Categories</div>
+
+      <!-- Categories -->
+      <div class="py-7 px-4 sm:px-6 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Subjects</p>
+          <div class="flex items-baseline gap-0.5 mt-1">
+            <span class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white counter-num" data-target="{{ total_categories }}">0</span>
+            <span class="text-xl font-extrabold text-sky-600 dark:text-sky-400">+</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Specialized categories</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+          </svg>
+        </div>
       </div>
+
     </div>
   </div>
 </section>
 
 
-<!-- ─── FEATURED BOOKS SECTION ────────────────────────────────────────────────── -->
+<!-- ─── 3. FEATURED BOOKS SECTION ─────────────────────────────────────────────── -->
 {% if featured_books %}
-<section class="py-24 px-4 relative overflow-hidden reveal">
-  <div class="absolute inset-0 glow-purple blur-3xl opacity-5 pointer-events-none"></div>
-
+<section class="py-20 px-4 sm:px-6 lg:px-8 relative reveal">
   <div class="max-w-7xl mx-auto">
-    <div class="flex items-end justify-between mb-12">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 pb-4 border-b border-slate-200/80 dark:border-white/10">
       <div>
-        <span class="text-xs font-bold text-sky-500 uppercase tracking-[0.2em] block mb-2">Curated selection</span>
-        <h2 class="font-display text-3xl sm:text-4xl font-extrabold dark:text-white text-slate-900 tracking-tight">Featured Books</h2>
+        <span class="text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider block mb-1">Curated Selection</span>
+        <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Featured Books</h2>
       </div>
-      <a href="{% url 'books' %}" class="inline-flex items-center gap-1.5 dark:text-sky-400 text-sky-600 hover:dark:text-sky-300 hover:text-sky-500 transition-colors text-xs font-bold uppercase tracking-wider">
-        View all catalog
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      <a href="{% url 'books' %}" class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 hover:underline">
+        View Full Catalog
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
     </div>
 
-    <!-- Featured Grid Layout -->
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
       {% for book in featured_books|slice:":10" %}
-      <a href="{% url 'book_detail' book.pk %}" class="premium-glass rounded-2xl p-3.5 sm:p-4 border border-transparent dark:hover:border-sky-500/20 hover:border-sky-500/10 hover:-translate-y-2 hover:shadow-2xl hover:dark:shadow-sky-500/10 transition-all duration-500 flex flex-col h-full group">
+      <a href="{% url 'book_detail' book.pk %}"
+         class="bg-white dark:bg-[#0d1629] rounded-xl p-3.5 sm:p-4 border border-slate-200/90 dark:border-white/10 hover:border-sky-500/60 dark:hover:border-sky-400/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
         <!-- Cover Wrap -->
-        <div class="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-slate-900/10 dark:bg-black/10 border dark:border-white/5 border-black/5">
+        <div class="relative aspect-[3/4] rounded-lg overflow-hidden mb-3.5 bg-slate-100 dark:bg-slate-900 border border-slate-200/60 dark:border-white/5">
           {% if book.cover_image %}
-            <img src="{{ book.cover_image.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ book.title }}" />
+            <img src="{{ book.cover_image.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ book.title }}" loading="lazy" />
           {% else %}
-            <div class="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-800 to-slate-950 text-slate-400">
-              <svg class="w-8 h-8 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-              <span class="text-[10px] font-bold text-center leading-tight">{{ book.title }}</span>
+            <div class="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-800 to-slate-950 text-slate-300">
+              <svg class="w-8 h-8 mb-2 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              <span class="text-xs font-bold text-center leading-tight line-clamp-3">{{ book.title }}</span>
             </div>
           {% endif %}
+
+          <!-- Top Badges (Category & Discount) -->
+          <div class="absolute top-2 left-2 right-2 flex items-center justify-between gap-1 pointer-events-none">
+            {% if book.category %}
+              <span class="px-2 py-0.5 rounded bg-slate-900/80 text-white backdrop-blur-sm text-xs font-medium truncate max-w-[110px]">
+                {{ book.category.name }}
+              </span>
+            {% else %}
+              <span></span>
+            {% endif %}
+            {% if book.discount_percent > 0 %}
+              <span class="px-2 py-0.5 rounded bg-rose-600 text-white text-xs font-bold shrink-0">
+                -{{ book.discount_percent }}%
+              </span>
+            {% endif %}
+          </div>
         </div>
-        <!-- Meta -->
+
+        <!-- Book Meta & Price -->
         <div class="flex-1 flex flex-col justify-between">
           <div>
-            <h3 class="dark:text-white text-slate-900 font-bold text-sm line-clamp-1 group-hover:text-sky-400 transition-colors">{{ book.title }}</h3>
-            <p class="dark:text-gray-400 text-slate-600 text-[11px] mt-0.5 line-clamp-1">{{ book.author.name|default:"Unknown" }}</p>
+            <h3 class="text-slate-900 dark:text-white font-bold text-sm line-clamp-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{{ book.title }}</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5 line-clamp-1">{{ book.author.name|default:"Unknown Author" }}</p>
           </div>
-          <div class="flex items-center justify-between border-t dark:border-white/5 border-black/5 pt-3 mt-3">
-            <span class="text-xs font-bold dark:text-sky-400 text-sky-600 group-hover:underline">View Details</span>
+
+          <div class="flex items-center justify-between border-t border-slate-100 dark:border-white/10 pt-3 mt-3">
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-sm font-extrabold text-slate-900 dark:text-white">৳{{ book.effective_price|floatformat:0 }}</span>
+              {% if book.offer_price %}
+                <span class="text-xs text-slate-400 line-through">৳{{ book.regular_price|floatformat:0 }}</span>
+              {% endif %}
+            </div>
             {% if book.stock_quantity > 0 %}
-              <span class="text-[9px] font-extrabold uppercase tracking-wider text-emerald-400">In Stock</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">In Stock</span>
             {% else %}
-              <span class="text-[9px] font-extrabold uppercase tracking-wider text-red-400">Out of Stock</span>
+              <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold">Out of Stock</span>
             {% endif %}
           </div>
         </div>
@@ -243,87 +408,88 @@
 {% endif %}
 
 
-<!-- ─── NEW ARRIVALS MARQUEE SECTION ────────────────────────────────────────── -->
+<!-- ─── 4. NEW ARRIVALS MARQUEE SECTION ───────────────────────────────────────── -->
 {% if new_books %}
-<section class="py-24 relative overflow-hidden bg-slate-50/50 dark:bg-[#070d18] border-y dark:border-white/5 border-black/5 reveal">
-  <!-- Glowing gradients -->
-  <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] glow-cyan blur-3xl opacity-10"></div>
-  </div>
-
+<section class="py-20 relative overflow-hidden bg-slate-100/70 dark:bg-[#070d19] border-y border-slate-200/80 dark:border-white/10 reveal">
   <div class="relative z-10 w-full">
-    <!-- Section Title Container -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 flex items-end justify-between">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
       <div>
-        <span class="text-xs font-bold text-emerald-500 uppercase tracking-[0.2em] block mb-2">Just Arrived</span>
-        <h2 class="font-display text-3xl sm:text-4xl font-extrabold dark:text-white text-slate-900 tracking-tight">New Arrivals</h2>
+        <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">Just Arrived</span>
+        <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">New Arrivals</h2>
       </div>
-      <a href="{% url 'books' %}" class="inline-flex items-center gap-1.5 dark:text-emerald-400 text-emerald-600 hover:dark:text-emerald-300 hover:text-emerald-500 transition-colors text-xs font-bold uppercase tracking-wider">
-        View new arrivals
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      <a href="{% url 'books' %}?sort=newest" class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 hover:underline">
+        View All New Arrivals
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
     </div>
 
     <!-- Infinite Marquee Track -->
-    <div class="marquee-container py-4">
-      <div class="marquee-track gap-6">
+    <div class="marquee-container py-2">
+      <div class="marquee-track gap-5">
         <!-- Loop 1 -->
         {% for book in new_books %}
-        <a href="{% url 'book_detail' book.pk %}" class="premium-glass rounded-2xl p-3.5 sm:p-4 border border-transparent dark:hover:border-emerald-500/20 hover:border-emerald-500/10 hover:-translate-y-2 hover:shadow-2xl hover:dark:shadow-emerald-500/10 transition-all duration-500 flex flex-col w-[160px] sm:w-[190px] shrink-0 group shadow-sm">
-          <!-- Cover Wrap -->
-          <div class="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-slate-900/10 dark:bg-black/10 border dark:border-white/5 border-black/5 shrink-0">
+        <a href="{% url 'book_detail' book.pk %}"
+           class="bg-white dark:bg-[#0d1629] rounded-xl p-3.5 border border-slate-200/90 dark:border-white/10 hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 flex flex-col w-[180px] sm:w-[205px] shrink-0 group">
+          <div class="relative aspect-[3/4] rounded-lg overflow-hidden mb-3 bg-slate-100 dark:bg-slate-900 border border-slate-200/60 dark:border-white/5 shrink-0">
             {% if book.cover_image %}
-              <img src="{{ book.cover_image.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ book.title }}" />
+              <img src="{{ book.cover_image.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ book.title }}" loading="lazy" />
             {% else %}
-              <div class="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-800 to-slate-950 text-slate-400">
-                <svg class="w-8 h-8 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                <span class="text-[10px] font-bold text-center leading-tight">{{ book.title }}</span>
+              <div class="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-800 to-slate-950 text-slate-300">
+                <span class="text-xs font-bold text-center leading-tight line-clamp-3">{{ book.title }}</span>
               </div>
             {% endif %}
+            {% if book.discount_percent > 0 %}
+              <span class="absolute top-2 right-2 px-2 py-0.5 rounded bg-rose-600 text-white text-xs font-bold">
+                -{{ book.discount_percent }}%
+              </span>
+            {% endif %}
           </div>
-          <!-- Meta -->
           <div class="flex-1 flex flex-col justify-between min-w-0">
             <div>
-              <h3 class="dark:text-white text-slate-900 font-bold text-sm truncate group-hover:text-sky-400 transition-colors">{{ book.title }}</h3>
-              <p class="dark:text-gray-400 text-slate-600 text-[11px] truncate mt-0.5">{{ book.author.name|default:"Unknown" }}</p>
+              <h3 class="text-slate-900 dark:text-white font-bold text-sm truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{{ book.title }}</h3>
+              <p class="text-slate-500 dark:text-slate-400 text-xs truncate mt-0.5">{{ book.author.name|default:"Unknown Author" }}</p>
             </div>
-            <div class="flex items-center justify-between border-t dark:border-white/5 border-black/5 pt-3 mt-3">
-              <span class="text-xs font-bold dark:text-emerald-400 text-emerald-600 group-hover:underline">Details</span>
+            <div class="flex items-center justify-between border-t border-slate-100 dark:border-white/10 pt-2.5 mt-2.5">
+              <span class="text-xs font-extrabold text-slate-900 dark:text-white">৳{{ book.effective_price|floatformat:0 }}</span>
               {% if book.stock_quantity > 0 %}
-                <span class="text-[9px] font-extrabold uppercase tracking-wider text-emerald-400">In Stock</span>
+                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">In Stock</span>
               {% else %}
-                <span class="text-[9px] font-extrabold uppercase tracking-wider text-red-400">Out of Stock</span>
+                <span class="text-xs font-semibold text-rose-500">Out</span>
               {% endif %}
             </div>
           </div>
         </a>
         {% endfor %}
-        <!-- Loop 2 (seamless duplication) -->
+
+        <!-- Loop 2 (Seamless Duplication) -->
         {% for book in new_books %}
-        <a href="{% url 'book_detail' book.pk %}" class="premium-glass rounded-2xl p-3.5 sm:p-4 border border-transparent dark:hover:border-emerald-500/20 hover:border-emerald-500/10 hover:-translate-y-2 hover:shadow-2xl hover:dark:shadow-emerald-500/10 transition-all duration-500 flex flex-col w-[160px] sm:w-[190px] shrink-0 group shadow-sm">
-          <!-- Cover Wrap -->
-          <div class="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-slate-900/10 dark:bg-black/10 border dark:border-white/5 border-black/5 shrink-0">
+        <a href="{% url 'book_detail' book.pk %}"
+           class="bg-white dark:bg-[#0d1629] rounded-xl p-3.5 border border-slate-200/90 dark:border-white/10 hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 flex flex-col w-[180px] sm:w-[205px] shrink-0 group">
+          <div class="relative aspect-[3/4] rounded-lg overflow-hidden mb-3 bg-slate-100 dark:bg-slate-900 border border-slate-200/60 dark:border-white/5 shrink-0">
             {% if book.cover_image %}
-              <img src="{{ book.cover_image.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ book.title }}" />
+              <img src="{{ book.cover_image.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ book.title }}" loading="lazy" />
             {% else %}
-              <div class="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-800 to-slate-950 text-slate-400">
-                <svg class="w-8 h-8 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                <span class="text-[10px] font-bold text-center leading-tight">{{ book.title }}</span>
+              <div class="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-800 to-slate-950 text-slate-300">
+                <span class="text-xs font-bold text-center leading-tight line-clamp-3">{{ book.title }}</span>
               </div>
             {% endif %}
+            {% if book.discount_percent > 0 %}
+              <span class="absolute top-2 right-2 px-2 py-0.5 rounded bg-rose-600 text-white text-xs font-bold">
+                -{{ book.discount_percent }}%
+              </span>
+            {% endif %}
           </div>
-          <!-- Meta -->
           <div class="flex-1 flex flex-col justify-between min-w-0">
             <div>
-              <h3 class="dark:text-white text-slate-900 font-bold text-sm truncate group-hover:text-sky-400 transition-colors">{{ book.title }}</h3>
-              <p class="dark:text-gray-400 text-slate-600 text-[11px] truncate mt-0.5">{{ book.author.name|default:"Unknown" }}</p>
+              <h3 class="text-slate-900 dark:text-white font-bold text-sm truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{{ book.title }}</h3>
+              <p class="text-slate-500 dark:text-slate-400 text-xs truncate mt-0.5">{{ book.author.name|default:"Unknown Author" }}</p>
             </div>
-            <div class="flex items-center justify-between border-t dark:border-white/5 border-black/5 pt-3 mt-3">
-              <span class="text-xs font-bold dark:text-emerald-400 text-emerald-600 group-hover:underline">Details</span>
+            <div class="flex items-center justify-between border-t border-slate-100 dark:border-white/10 pt-2.5 mt-2.5">
+              <span class="text-xs font-extrabold text-slate-900 dark:text-white">৳{{ book.effective_price|floatformat:0 }}</span>
               {% if book.stock_quantity > 0 %}
-                <span class="text-[9px] font-extrabold uppercase tracking-wider text-emerald-400">In Stock</span>
+                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">In Stock</span>
               {% else %}
-                <span class="text-[9px] font-extrabold uppercase tracking-wider text-red-400">Out of Stock</span>
+                <span class="text-xs font-semibold text-rose-500">Out</span>
               {% endif %}
             </div>
           </div>
@@ -336,68 +502,103 @@
 {% endif %}
 
 
-<!-- ─── REQUEST A BOOK SECTION ────────────────────────────────────────────────── -->
-<section class="py-24 px-4 relative overflow-hidden reveal bg-slate-50 dark:bg-[#0a1120] border-t dark:border-white/5 border-black/5">
-  <div class="max-w-4xl mx-auto text-center">
-    <div class="relative z-10 premium-glass rounded-3xl p-10 sm:p-16 border dark:border-white/10 border-black/10 shadow-xl overflow-hidden">
-      <!-- Glow spots -->
-      <div class="absolute -top-24 -left-24 w-80 h-80 rounded-full glow-sky blur-3xl opacity-20 pointer-events-none"></div>
-      <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full glow-emerald blur-3xl opacity-20 pointer-events-none"></div>
+<!-- ─── 5. REQUEST A BOOK SECTION (Split Architectural Banner) ────────────────── -->
+<section class="py-20 px-4 sm:px-6 lg:px-8 reveal">
+  <div class="max-w-7xl mx-auto">
+    <div class="bg-white dark:bg-[#0d1629] border border-slate-200/90 dark:border-white/10 rounded-2xl p-8 sm:p-10 lg:p-12 shadow-sm">
+      <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
 
-      <div class="relative space-y-6 max-w-2xl mx-auto">
-        <div class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center bg-sky-500/10 border border-sky-500/20 text-sky-500">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        <!-- Left Column: Callout & Action -->
+        <div class="lg:col-span-7 space-y-4 text-left">
+          <div class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Custom Acquisition Desk
+          </div>
+          <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Can't find a book on our shelves?
+          </h2>
+          <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed max-w-xl">
+            If the book you are looking for is not currently in our catalog, submit a request. Our library team sources requested Islamic, academic, and general titles every week.
+          </p>
+          <div class="pt-2">
+            <a href="{% url 'request_book' %}"
+               class="inline-flex items-center gap-2 px-7 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold text-sm transition-all shadow-sm hover:-translate-y-0.5">
+              Request a Book →
+            </a>
+          </div>
         </div>
-        <h2 class="font-display text-3xl sm:text-5xl font-extrabold dark:text-white text-slate-900 tracking-tight">
-          Can't find a book?
-        </h2>
-        <p class="dark:text-gray-400 text-slate-600 text-base leading-relaxed">
-          If the book you are looking for is not available in our library, you can request it. We will try our best to bring it for you as soon as possible.
-        </p>
-        <div class="pt-2">
-          <a href="{% url 'request_book' %}"
-             class="inline-flex items-center justify-center gap-2 px-10 py-4 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-full font-bold text-base transition-all shadow-xl hover:shadow-sky-500/20 pulse-cta">
-            Request a Book
-          </a>
+
+        <!-- Right Column: 3-Step Acquisition Workflow -->
+        <div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 border-t lg:border-t-0 lg:border-l border-slate-200/80 dark:border-white/10 pt-6 lg:pt-0 lg:pl-10">
+          <div class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Submit Title & Author</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Share the book name, author, or publisher details.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Library Sourcing Review</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">We check availability with local and national publishers.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Ready to Borrow or Buy</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Get notified as soon as the book arrives at our branch.</p>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
   </div>
 </section>
 
 
-<!-- ─── UPCOMING BOOKS SECTION ────────────────────────────────────────────────── -->
+<!-- ─── 6. UPCOMING BOOKS SECTION ─────────────────────────────────────────────── -->
 {% if upcoming_books %}
-<section class="py-24 px-4 relative overflow-hidden reveal">
+<section class="py-20 px-4 sm:px-6 lg:px-8 relative border-t border-slate-200/80 dark:border-white/10 reveal">
   <div class="max-w-7xl mx-auto">
-    <div class="mb-12 text-center sm:text-left">
-      <span class="text-xs font-bold text-accent-500 uppercase tracking-[0.2em] block mb-2">Coming Soon</span>
-      <h2 class="font-display text-3xl sm:text-4xl font-extrabold dark:text-white text-slate-900 tracking-tight">Upcoming Publications</h2>
+    <div class="mb-10 pb-4 border-b border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block mb-1">Coming Soon</span>
+        <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Upcoming Publications</h2>
+      </div>
+      <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Pre-release titles arriving soon at Youth Club Library</span>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
       {% for book in upcoming_books|slice:":10" %}
-      <div class="premium-glass rounded-2xl p-4 border dark:border-white/5 border-black/5 hover:-translate-y-2 transition-all duration-300 flex flex-col h-full opacity-80 hover:opacity-100 shadow-sm">
-        <div class="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-slate-900/10 dark:bg-black/10 border dark:border-white/5 border-black/5">
+      <div class="bg-white dark:bg-[#0d1629] rounded-xl p-3.5 sm:p-4 border border-slate-200/90 dark:border-white/10 hover:border-amber-500/40 transition-all duration-300 flex flex-col h-full shadow-sm">
+        <div class="relative aspect-[3/4] rounded-lg overflow-hidden mb-3.5 bg-slate-100 dark:bg-slate-900 border border-slate-200/60 dark:border-white/5">
           {% if book.cover_image %}
-            <img src="{{ book.cover_image.url }}" class="w-full h-full object-cover" alt="{{ book.title }}" />
+            <img src="{{ book.cover_image.url }}" class="w-full h-full object-cover" alt="{{ book.title }}" loading="lazy" />
           {% else %}
-            <div class="w-full h-full bg-slate-800 flex items-center justify-center text-xs font-bold text-center text-slate-500 p-2">{{ book.title }}</div>
+            <div class="w-full h-full bg-slate-800 flex items-center justify-center text-xs font-bold text-center text-slate-300 p-3">{{ book.title }}</div>
           {% endif %}
-          <div class="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px]">
-            <span class="px-2.5 py-1 rounded bg-accent-500/20 text-accent-400 border border-accent-500/30 text-[9px] font-extrabold uppercase tracking-wider">Upcoming</span>
+          <div class="absolute top-2 left-2">
+            <span class="px-2.5 py-1 rounded-md bg-amber-500 text-slate-950 text-xs font-bold uppercase tracking-wider shadow-sm">
+              Upcoming
+            </span>
           </div>
         </div>
         <div class="flex-1 flex flex-col justify-between">
           <div>
-            <h3 class="dark:text-white text-slate-900 font-bold text-sm line-clamp-1">{{ book.title }}</h3>
-            <p class="dark:text-gray-400 text-slate-600 text-[11px] mt-0.5 line-clamp-1">{{ book.author.name|default:"Unknown" }}</p>
+            <h3 class="text-slate-900 dark:text-white font-bold text-sm line-clamp-1">{{ book.title }}</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5 line-clamp-1">{{ book.author.name|default:"Unknown Author" }}</p>
           </div>
-          {% if book.expected_release %}
-          <div class="border-t dark:border-white/5 border-black/5 pt-3 mt-3">
-            <span class="dark:text-gray-500 text-slate-500 text-[10px] uppercase font-semibold tracking-wider">Release: {{ book.expected_release|date:"M Y" }}</span>
+          <div class="border-t border-slate-100 dark:border-white/10 pt-3 mt-3 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-900 dark:text-white">৳{{ book.effective_price|floatformat:0 }}</span>
+            {% if book.expected_release %}
+              <span class="text-xs text-amber-600 dark:text-amber-400 font-semibold">{{ book.expected_release|date:"M Y" }}</span>
+            {% else %}
+              <span class="text-xs text-slate-400 font-medium">Arriving Soon</span>
+            {% endif %}
           </div>
-          {% endif %}
         </div>
       </div>
       {% endfor %}
@@ -407,71 +608,74 @@
 {% endif %}
 
 
-<!-- ─── OFFLINE LOCATION & MAP SECTION ────────────────────────────────────────── -->
-<section class="py-24 px-4 relative overflow-hidden reveal">
+<!-- ─── 7. OFFLINE LOCATION & MAP SECTION ─────────────────────────────────────── -->
+<section class="py-20 px-4 sm:px-6 lg:px-8 border-t border-slate-200/80 dark:border-white/10 bg-slate-50/60 dark:bg-[#070d19] reveal">
   <div class="max-w-7xl mx-auto">
-    <div class="grid lg:grid-cols-12 gap-12 items-center">
-      
-      <!-- Info Column (5 spans) -->
-      <div class="lg:col-span-5 space-y-8 text-left">
-        <div>
-          <span class="text-xs font-bold text-sky-500 uppercase tracking-[0.2em] block mb-2">Offline Library</span>
-          <h2 class="font-display text-3xl sm:text-4xl font-extrabold dark:text-white text-slate-900 leading-tight tracking-tight">
-            Come Visit Us <span class="text-sky-600 dark:text-sky-400">Offline</span>
-          </h2>
-          <p class="dark:text-gray-400 text-slate-600 mt-4 leading-relaxed text-sm">
-            Drop by our main branch in Chattogram to pick up your borrowed books, attend discussion meetings, or find a quiet study desk.
-          </p>
-        </div>
+    <div class="grid lg:grid-cols-12 gap-8 items-stretch">
 
-        <div class="space-y-4">
-          <!-- Address Card -->
-          <div class="flex items-start gap-4 p-4 premium-glass rounded-2xl border dark:border-white/5 border-black/5">
-            <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 flex-shrink-0">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </div>
-            <div>
-              <h4 class="dark:text-white text-slate-900 font-bold text-sm">Library Address</h4>
-              <p class="dark:text-gray-400 text-slate-600 text-xs mt-1 leading-relaxed">Opposite to International Convention Center, Kazir Dewri, Chattogram</p>
-            </div>
+      <!-- Left Column: Branch Details Card (5 cols) -->
+      <div class="lg:col-span-5 bg-white dark:bg-[#0d1629] border border-slate-200/90 dark:border-white/10 rounded-2xl p-7 sm:p-8 flex flex-col justify-between shadow-sm">
+        <div class="space-y-6">
+          <div>
+            <span class="text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider block mb-1">Main Reading Room</span>
+            <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Visit Us in Chattogram
+            </h2>
+            <p class="text-slate-600 dark:text-slate-400 mt-2.5 leading-relaxed text-sm">
+              Drop by our main branch in Kazir Dewri to pick up your borrowed books, browse shelves in person, or find a quiet study desk.
+            </p>
           </div>
 
-          <!-- Working Hours Card -->
-          <div class="flex items-start gap-4 p-4 premium-glass rounded-2xl border dark:border-white/5 border-black/5">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-white/10">
+            <!-- Address -->
+            <div class="flex items-start gap-3.5">
+              <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <div>
+                <h3 class="text-slate-900 dark:text-white font-bold text-sm">Library Address</h3>
+                <p class="text-slate-600 dark:text-slate-400 text-xs mt-1 leading-relaxed">
+                  Opposite to International Convention Center, Kazir Dewri, Chattogram
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 class="dark:text-white text-slate-900 font-bold text-sm">Working Hours</h4>
-              <p class="dark:text-gray-400 text-slate-600 text-xs mt-1">Tuesday – Sunday: 05:00 PM – 09:00 PM</p>
-              <p class="text-red-400/80 text-[10px] mt-0.5 font-bold uppercase tracking-wider">Monday: Closed</p>
+
+            <!-- Working Hours -->
+            <div class="flex items-start gap-3.5">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <div>
+                <h3 class="text-slate-900 dark:text-white font-bold text-sm">Working Hours</h3>
+                <p class="text-slate-600 dark:text-slate-400 text-xs mt-1">Tuesday – Sunday: 05:00 PM – 09:00 PM</p>
+                <span class="inline-block mt-1.5 px-2.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+                  Monday: Closed
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div>
+        <div class="pt-6 mt-6 border-t border-slate-100 dark:border-white/10">
           <a href="https://maps.app.goo.gl/7hzRE2jJKcorPGP1A" target="_blank" rel="noopener noreferrer"
-             class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-2xl font-bold text-sm transition-all shadow-md">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="25" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            Get Directions
+             class="w-full py-3.5 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-sky-500 dark:hover:bg-sky-400 dark:text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Get Directions on Google Maps
           </a>
         </div>
       </div>
 
-      <!-- Map Column (7 spans) -->
-      <div class="lg:col-span-7">
-        <div class="relative group">
-          <!-- Glass backing glow -->
-          <div class="absolute -inset-1 bg-gradient-to-r from-sky-500 to-emerald-500 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-700"></div>
-          <div class="relative rounded-3xl overflow-hidden border dark:border-white/10 border-black/10 shadow-2xl">
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3689.873289053919!2d91.82143097619222!3d22.348981241121085!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30acd899479bdfad%3A0x9d4b684534f595f5!2sKazir%20Dewri%20More%2C%20Chattogram!5e0!3m2!1sen!2sbd!4v1783920000000!5m2!1sen!2sbd"
-              class="w-full h-80 sm:h-96 border-0 filter grayscale invert contrast-100 opacity-90 hover:opacity-100 hover:filter-none transition-all duration-700"
-              allowfullscreen="" 
-              loading="lazy" 
-              referrerpolicy="no-referrer-when-downgrade">
-            </iframe>
-          </div>
+      <!-- Right Column: Framed Google Map (7 cols — Clean Natural Map) -->
+      <div class="lg:col-span-7 bg-white dark:bg-[#0d1629] border border-slate-200/90 dark:border-white/10 rounded-2xl p-3 shadow-sm flex flex-col">
+        <div class="relative flex-1 rounded-xl overflow-hidden border border-slate-200/60 dark:border-white/5 min-h-[320px] sm:min-h-[380px]">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3689.873289053919!2d91.82143097619222!3d22.348981241121085!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30acd899479bdfad%3A0x9d4b684534f595f5!2sKazir%20Dewri%20More%2C%20Chattogram!5e0!3m2!1sen!2sbd!4v1783920000000!5m2!1sen!2sbd"
+            class="w-full h-full min-h-[320px] sm:min-h-[380px] border-0"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Youth Club Library Kazir Dewri Map">
+          </iframe>
         </div>
       </div>
 
@@ -480,83 +684,77 @@
 </section>
 
 
-<!-- ─── POPULAR MEMBERSHIP PLANS SECTION ────────────────────────────────────── -->
-<section class="py-24 px-4 relative overflow-hidden reveal">
+<!-- ─── 8. POPULAR MEMBERSHIP PLANS SECTION ───────────────────────────────────── -->
+<section class="py-20 px-4 sm:px-6 lg:px-8 border-t border-slate-200/80 dark:border-white/10 reveal">
   <div class="max-w-7xl mx-auto">
-    <!-- Section Header with Arrows -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10 pb-4 border-b border-slate-200/80 dark:border-white/10">
       <div>
-        <span class="text-xs font-bold text-sky-500 uppercase tracking-[0.2em] block mb-2">Flexible Tiers</span>
-        <h2 class="font-display text-3xl sm:text-5xl font-extrabold dark:text-white text-slate-900 tracking-tight">
-          Choose from the most popular plans
+        <span class="text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider block mb-1">Library Membership</span>
+        <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Flexible Borrowing Plans
         </h2>
-        <a href="{% url 'membership' %}" class="inline-flex items-center gap-1.5 mt-3 text-xs font-extrabold uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition-colors">
-          Compare all plans
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        <a href="{% url 'membership' %}" class="inline-flex items-center gap-1.5 mt-2 text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 hover:underline">
+          Compare all plans & benefits
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </a>
       </div>
-      
+
       <!-- Slider Arrows -->
-      <div class="flex items-center gap-3 shrink-0">
-        <button id="plans-prev" class="w-11 h-11 rounded-full border dark:border-white/10 border-black/10 flex items-center justify-center dark:text-white text-slate-800 dark:hover:bg-white/5 hover:bg-black/5 active:scale-95 transition-all">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+      <div class="flex items-center gap-2.5 shrink-0">
+        <button id="plans-prev" type="button" aria-label="Previous Plans"
+                class="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-white hover:border-sky-500/50 active:scale-95 transition-all shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/></svg>
         </button>
-        <button id="plans-next" class="w-11 h-11 rounded-full border dark:border-white/10 border-black/10 flex items-center justify-center dark:text-white text-slate-800 dark:hover:bg-white/5 hover:bg-black/5 active:scale-95 transition-all">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        <button id="plans-next" type="button" aria-label="Next Plans"
+                class="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-white hover:border-sky-500/50 active:scale-95 transition-all shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/></svg>
         </button>
       </div>
     </div>
 
     <!-- Plans Track Container -->
-    <div id="plans-track" class="flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth pb-6">
+    <div id="plans-track" class="flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth pb-4">
       {% for plan in plans %}
-      <div class="snap-start shrink-0 w-[290px] sm:w-[320px] rounded-3xl premium-glass border dark:border-white/10 border-black/10 p-8 shadow-xl relative overflow-hidden flex flex-col justify-between group">
-        <!-- Glow spots for popular cards -->
-        {% if plan.is_popular %}
-        <div class="absolute -top-12 -right-12 w-32 h-32 rounded-full glow-sky blur-2xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-        {% endif %}
-        
+      <div class="snap-start shrink-0 w-[290px] sm:w-[330px] rounded-2xl bg-white dark:bg-[#0d1629] {% if plan.is_popular %}border-2 border-sky-600 dark:border-sky-400 shadow-md{% else %}border border-slate-200/90 dark:border-white/10 shadow-sm{% endif %} p-7 flex flex-col justify-between transition-all">
         <div>
-          <!-- Popular Badge -->
-          <div class="h-8 mb-4">
+          <!-- Plan Header & Badge -->
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <h3 class="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {{ plan.name }}
+            </h3>
             {% if plan.is_popular %}
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-500/10 border border-sky-500/25 text-sky-400">
-              <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-              Most Popular
-            </span>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-600 text-white">
+                Most Popular
+              </span>
             {% endif %}
           </div>
 
-          <!-- Plan Name -->
-          <h3 class="text-3xl font-extrabold dark:text-white text-slate-900 tracking-tight leading-none mb-2">
-            {{ plan.name }}
-          </h3>
-          <p class="dark:text-gray-400 text-slate-500 text-xs leading-relaxed mb-8">
+          <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed mb-6">
             {% if plan.name == 'Basic' %}
-              Perfect for students and casual community readers.
+              Ideal for students and casual community readers.
             {% elif plan.name == 'Premium' %}
-              Excellent for academic researchers and avid readers.
+              Built for academic researchers and regular readers.
             {% else %}
-              Unlimited access with elite privileges & fast home delivery.
+              Full borrowing privileges with priority home delivery.
             {% endif %}
           </p>
 
           <!-- Price Display -->
-          <div class="mb-8">
-            <div class="text-[10px] dark:text-gray-500 text-slate-400 line-through">
+          <div class="mb-6 pb-6 border-b border-slate-100 dark:border-white/10">
+            <div class="text-xs text-slate-400 line-through">
               ৳{{ plan.price|add:50|floatformat:0 }}
             </div>
             <div class="flex items-baseline gap-1 mt-0.5">
-              <span class="text-4xl font-black dark:text-white text-slate-900">৳{{ plan.price|floatformat:0 }}</span>
-              <span class="text-xs dark:text-gray-400 text-slate-500 font-semibold">/ {{ plan.duration_label }}</span>
+              <span class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">৳{{ plan.price|floatformat:0 }}</span>
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">/ {{ plan.duration_label }}</span>
             </div>
           </div>
 
-          <!-- Feature Bullets (curated first 3 features) -->
-          <ul class="space-y-3.5 mb-8 border-t dark:border-white/5 border-black/5 pt-6">
+          <!-- Feature Bullets -->
+          <ul class="space-y-3 mb-8">
             {% for feature in plan.characteristics|slice:":3" %}
-            <li class="flex items-start gap-2.5 text-xs dark:text-gray-300 text-slate-700">
-              <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
               <span>{{ feature }}</span>
             </li>
             {% endfor %}
@@ -564,14 +762,15 @@
         </div>
 
         <!-- CTA Button -->
-        <a href="{% url 'membership' %}" class="w-full py-4 rounded-2xl font-bold text-xs uppercase tracking-wider text-center transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2
-          {% if plan.is_popular %}
-            bg-gradient-to-r from-sky-500 via-primary-600 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-white shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:-translate-y-0.5
-          {% else %}
-            bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 shadow-md hover:shadow-xl hover:-translate-y-0.5
-          {% endif %}">
-          <span>Choose Plan</span>
-          <svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        <a href="{% url 'membership' %}"
+           class="w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider text-center transition-all flex items-center justify-center gap-2
+           {% if plan.is_popular %}
+             bg-sky-600 hover:bg-sky-500 text-white shadow-sm
+           {% else %}
+             bg-slate-900 hover:bg-slate-800 text-white dark:bg-white/10 dark:hover:bg-white/15 dark:text-white
+           {% endif %}">
+          <span>Choose {{ plan.name }}</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </a>
       </div>
       {% endfor %}
@@ -580,347 +779,183 @@
 </section>
 
 
-<!-- ─── REVIEWS / TESTIMONIALS SECTION ──────────────────────────────────────── -->
-<section class="py-24 px-4 relative overflow-hidden reveal">
-  <!-- Glowing gradients -->
-  <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] glow-purple blur-3xl opacity-10"></div>
-  </div>
-
-  <div class="relative z-10 max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="text-center max-w-3xl mx-auto mb-16">
-      <span class="text-xs font-bold text-sky-500 uppercase tracking-[0.2em] block mb-2">Verified Testimonials</span>
-      <h2 class="font-display text-3xl sm:text-5xl font-extrabold dark:text-white text-slate-900 tracking-tight leading-tight">
-        Loved by Chattogram's <br class="hidden sm:inline" />Active Reading Community
+<!-- ─── 9. VERIFIED COMMUNITY REVIEWS SECTION ─────────────────────────────────── -->
+<section class="py-20 px-4 sm:px-6 lg:px-8 border-t border-slate-200/80 dark:border-white/10 bg-slate-50/60 dark:bg-[#070d19] reveal">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span class="text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider block mb-1">Verified Testimonials</span>
+      <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        Trusted by Chattogram's Reading Community
       </h2>
-      <p class="dark:text-gray-400 text-slate-600 text-sm mt-4">
-        Rated <strong class="dark:text-white text-slate-800">4.9/5</strong> stars based on 1,500+ student and professional reviews.
+      <p class="text-slate-600 dark:text-slate-400 text-sm mt-3">
+        Rated <strong class="text-slate-900 dark:text-white">4.9/5</strong> by students, researchers, and book lovers across the city.
       </p>
     </div>
 
-    <!-- Reviews Grid (3 columns) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       {% for testimonial in testimonials %}
-      <!-- Card -->
-      <div class="premium-glass rounded-2xl p-6 sm:p-8 border dark:border-white/5 border-black/10 hover:-translate-y-1.5 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+      <div class="bg-white dark:bg-[#0d1629] rounded-2xl p-6 sm:p-7 border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col justify-between">
         <div class="space-y-4">
-          <!-- Rating Stars -->
-          <div class="flex items-center gap-1 text-emerald-400">
+          <!-- Amber Star Rating -->
+          <div class="flex items-center gap-1 text-amber-500">
             {% with ''|center:testimonial.rating as range %}
             {% for _ in range %}
             <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
             {% endfor %}
             {% endwith %}
           </div>
-          <p class="dark:text-gray-300 text-slate-700 text-xs sm:text-sm leading-relaxed italic">
+          <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
             "{{ testimonial.review_text }}"
           </p>
         </div>
-        <div class="border-t dark:border-white/5 border-black/5 pt-4 mt-6 flex justify-between items-center text-xs">
-          <div>
-            <h4 class="dark:text-white text-slate-900 font-bold">{{ testimonial.name }}</h4>
-            <p class="dark:text-gray-500 text-slate-500 text-[10px] mt-0.5">{{ testimonial.role }}</p>
+
+        <div class="border-t border-slate-100 dark:border-white/10 pt-4 mt-6 flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 font-bold text-xs flex items-center justify-center shrink-0">
+              {{ testimonial.name|slice:":1"|upper }}
+            </div>
+            <div>
+              <h4 class="text-slate-900 dark:text-white font-bold text-xs">{{ testimonial.name }}</h4>
+              <p class="text-slate-500 dark:text-slate-400 text-xs">{{ testimonial.role }}</p>
+            </div>
           </div>
-          <span class="text-sky-500 font-extrabold text-[10px] uppercase tracking-wider bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">Verified</span>
+          <span class="text-emerald-600 dark:text-emerald-400 font-semibold text-xs bg-emerald-500/10 px-2.5 py-0.5 rounded-md border border-emerald-500/20">
+            Verified
+          </span>
         </div>
       </div>
       {% empty %}
-      <div class="col-span-3 text-center py-10 dark:text-gray-500 text-slate-500 text-sm">No reviews added yet.</div>
+      <div class="col-span-3 text-center py-10 text-slate-500 dark:text-slate-400 text-sm">No reviews added yet.</div>
       {% endfor %}
+    </div>
 
-    <!-- Verified Source Badge -->
-    <div class="text-center mt-12 text-xs dark:text-gray-400 text-slate-600 flex items-center justify-center gap-2">
-      <span>See our verified reviews on</span>
-      <span class="font-extrabold dark:text-white text-slate-800">Google Maps</span>
+    <div class="text-center mt-10 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5">
+      <span>See our verified community feedback on</span>
+      <strong class="text-slate-800 dark:text-white">Google Maps</strong>
       <span>&</span>
-      <span class="font-extrabold dark:text-white text-slate-800">Facebook Group</span>
+      <strong class="text-slate-800 dark:text-white">Facebook Group</strong>
     </div>
   </div>
 </section>
 
 
-<!-- ─── MEMBERSHIP & SIGNUP CTA ──────────────────────────────────────────────── -->
-<section class="py-24 px-4 relative overflow-hidden reveal">
-  <div class="max-w-4xl mx-auto text-center">
-    <div class="relative z-10 premium-glass rounded-3xl p-10 sm:p-16 border dark:border-white/10 border-black/10 shadow-xl overflow-hidden">
-      <!-- Glow spots -->
-      <div class="absolute -top-24 -left-24 w-80 h-80 rounded-full glow-cyan blur-3xl opacity-20"></div>
-      <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full glow-emerald blur-3xl opacity-20"></div>
+<!-- ─── 10. MEMBERSHIP CTA & CONNECT ONLINE SECTION ──────────────────────────── -->
+<section class="py-20 px-4 sm:px-6 lg:px-8 border-t border-slate-200/80 dark:border-white/10 reveal">
+  <div class="max-w-7xl mx-auto space-y-16">
 
-      <div class="relative space-y-6 max-w-2xl mx-auto">
-        <div class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center bg-sky-500/10 border border-sky-500/20 text-sky-400">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/></svg>
-        </div>
-        <h2 class="font-display text-3xl sm:text-5xl font-extrabold dark:text-white text-slate-900 tracking-tight">
+    <!-- Ready to Start Reading Callout -->
+    <div class="bg-slate-900 dark:bg-[#0d1629] text-white rounded-2xl p-8 sm:p-12 border border-slate-800 dark:border-white/10 shadow-lg flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+      <div class="space-y-3 max-w-2xl">
+        <span class="text-xs font-bold uppercase tracking-wider text-sky-400 block">Start Your Reading Journey</span>
+        <h2 class="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
           Ready to Start Reading?
         </h2>
-        <p class="dark:text-gray-400 text-slate-600 text-base leading-relaxed">
-          Join Youth Club Library today. Get access to borrow hundreds of titles, enjoy member-only discounts, and join our vibrant readers community.
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+          Join Youth Club Library today. Borrow from hundreds of titles, enjoy member-only discounts on book purchases, and connect with Chattogram's active readers.
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-          {% if not user.is_authenticated %}
-          <a href="{% url 'account_signup' %}"
-             class="inline-flex items-center justify-center gap-2 px-10 py-4 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white rounded-full font-bold text-base transition-all shadow-xl hover:shadow-sky-500/20 pulse-cta">
-            Join Free Today
-          </a>
-          {% endif %}
-          <a href="{% url 'membership' %}"
-             class="inline-flex items-center justify-center gap-2 px-10 py-4 premium-glass hover:bg-white/10 dark:hover:bg-white/5 text-slate-900 dark:text-white rounded-full font-bold text-base transition-all border dark:border-white/15 border-black/10">
-            Membership Plans →
-          </a>
-        </div>
-        <p class="text-[11px] dark:text-gray-500 text-slate-500">Membership plans start from just ৳99/month. Pause or cancel anytime.</p>
+        <p class="text-xs text-slate-400 pt-1">Membership plans start from ৳99/month. Pause or cancel anytime.</p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3.5 shrink-0">
+        {% if not user.is_authenticated %}
+        <a href="{% url 'account_signup' %}"
+           class="px-7 py-3.5 bg-sky-500 hover:bg-sky-400 text-slate-950 rounded-xl font-bold text-sm transition-all shadow-sm">
+          Join Free Today
+        </a>
+        {% endif %}
+        <a href="{% url 'membership' %}"
+           class="px-7 py-3.5 bg-white/10 hover:bg-white/15 text-white border border-white/15 rounded-xl font-bold text-sm transition-all">
+          Membership Plans →
+        </a>
       </div>
     </div>
-  </div>
-</section>
 
+    <!-- Connect Online -->
+    <div class="text-center max-w-4xl mx-auto">
+      <div class="space-y-2 mb-8">
+        <span class="text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider block">Connect Online</span>
+        <h3 class="font-display text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Join Our Book Communities</h3>
+        <p class="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
+          Follow our official channels to discuss book reviews, suggest new titles, and get instant restock updates.
+        </p>
+      </div>
 
-<!-- ─── CONNECT ONLINE SECTION ────────────────────────────────────────────────── -->
-<section class="py-24 px-4 relative overflow-hidden reveal">
-  <div class="max-w-4xl mx-auto text-center">
-    <div class="space-y-3 mb-12">
-      <span class="text-xs font-bold text-sky-500 uppercase tracking-[0.2em] block">Connect Online</span>
-      <h3 class="font-display text-2xl sm:text-3xl font-extrabold dark:text-white text-slate-900">Join Our Book Communities</h3>
-      <p class="dark:text-gray-400 text-slate-600 text-sm max-w-md mx-auto">Follow our official groups and channels to discuss reviews, suggest titles, and get instant updates.</p>
+      <div class="flex flex-wrap justify-center gap-4">
+        {% for link in active_social_links %}
+        {% if link.icon_type == 'facebook' %}
+        <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
+           class="flex items-center gap-3.5 px-5 py-3.5 bg-white dark:bg-[#0d1629] rounded-xl border border-slate-200/90 dark:border-white/10 hover:border-blue-500/50 transition-all shadow-sm group">
+          <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </div>
+          <div class="text-left">
+            <h4 class="text-slate-900 dark:text-white font-bold text-xs sm:text-sm">{{ link.name }}</h4>
+            <p class="text-slate-500 dark:text-slate-400 text-xs">Facebook Community</p>
+          </div>
+        </a>
+        {% elif link.icon_type == 'telegram' %}
+        <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
+           class="flex items-center gap-3.5 px-5 py-3.5 bg-white dark:bg-[#0d1629] rounded-xl border border-slate-200/90 dark:border-white/10 hover:border-sky-500/50 transition-all shadow-sm group">
+          <div class="w-9 h-9 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .02c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.89 8.243l-1.996 9.417c-.15.666-.547.83-.105.516l-3.04-2.24-1.467 1.412c-.162.162-.3.3-.612.3l.218-3.1 5.642-5.1c.245-.218-.053-.34-.378-.124l-6.974 4.39-3.003-.94c-.653-.204-.666-.653.136-.967l11.73-4.522c.542-.197 1.017.127.848.868z"/></svg>
+          </div>
+          <div class="text-left">
+            <h4 class="text-slate-900 dark:text-white font-bold text-xs sm:text-sm">{{ link.name }}</h4>
+            <p class="text-slate-500 dark:text-slate-400 text-xs">Telegram Channel</p>
+          </div>
+        </a>
+        {% elif link.icon_type == 'whatsapp' %}
+        <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
+           class="flex items-center gap-3.5 px-5 py-3.5 bg-white dark:bg-[#0d1629] rounded-xl border border-slate-200/90 dark:border-white/10 hover:border-emerald-500/50 transition-all shadow-sm group">
+          <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </div>
+          <div class="text-left">
+            <h4 class="text-slate-900 dark:text-white font-bold text-xs sm:text-sm">{{ link.name }}</h4>
+            <p class="text-slate-500 dark:text-slate-400 text-xs">WhatsApp Group</p>
+          </div>
+        </a>
+        {% else %}
+        <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
+           class="flex items-center gap-3.5 px-5 py-3.5 bg-white dark:bg-[#0d1629] rounded-xl border border-slate-200/90 dark:border-white/10 hover:border-slate-400 transition-all shadow-sm group">
+          <div class="w-9 h-9 rounded-lg bg-slate-500/10 border border-slate-500/20 flex items-center justify-center text-slate-600 dark:text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+          </div>
+          <div class="text-left">
+            <h4 class="text-slate-900 dark:text-white font-bold text-xs sm:text-sm">{{ link.name }}</h4>
+            <p class="text-slate-500 dark:text-slate-400 text-xs">Community Link</p>
+          </div>
+        </a>
+        {% endif %}
+        {% empty %}
+        <div class="text-slate-500 dark:text-slate-400 text-sm">No social media links active yet.</div>
+        {% endfor %}
+      </div>
     </div>
 
-    <div class="flex flex-wrap justify-center gap-6">
-      {% for link in active_social_links %}
-      {% if link.icon_type == 'facebook' %}
-      <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
-         class="flex items-center gap-3.5 px-6 py-4 premium-glass rounded-2xl border dark:border-white/5 border-black/10 hover:border-blue-500/30 transition-all hover:scale-[1.02] shadow-md group">
-        <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-        </div>
-        <div class="text-left">
-          <h4 class="dark:text-white text-slate-900 font-bold text-sm">{{ link.name }}</h4>
-          <p class="dark:text-gray-500 text-slate-500 text-[10px] mt-0.5">Facebook Page</p>
-        </div>
-      </a>
-      {% elif link.icon_type == 'telegram' %}
-      <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
-         class="flex items-center gap-3.5 px-6 py-4 premium-glass rounded-2xl border dark:border-white/5 border-black/10 hover:border-sky-500/30 transition-all hover:scale-[1.02] shadow-md group">
-        <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .02c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.89 8.243l-1.996 9.417c-.15.666-.547.83-.105.516l-3.04-2.24-1.467 1.412c-.162.162-.3.3-.612.3l.218-3.1 5.642-5.1c.245-.218-.053-.34-.378-.124l-6.974 4.39-3.003-.94c-.653-.204-.666-.653.136-.967l11.73-4.522c.542-.197 1.017.127.848.868z"/></svg>
-        </div>
-        <div class="text-left">
-          <h4 class="dark:text-white text-slate-900 font-bold text-sm">{{ link.name }}</h4>
-          <p class="dark:text-gray-500 text-slate-500 text-[10px] mt-0.5">Telegram Group</p>
-        </div>
-      </a>
-      {% elif link.icon_type == 'whatsapp' %}
-      <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
-         class="flex items-center gap-3.5 px-6 py-4 premium-glass rounded-2xl border dark:border-white/5 border-black/10 hover:border-emerald-500/30 transition-all hover:scale-[1.02] shadow-md group">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        </div>
-        <div class="text-left">
-          <h4 class="dark:text-white text-slate-900 font-bold text-sm">{{ link.name }}</h4>
-          <p class="dark:text-gray-500 text-slate-500 text-[10px] mt-0.5">WhatsApp Group</p>
-        </div>
-      </a>
-      {% else %}
-      <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
-         class="flex items-center gap-3.5 px-6 py-4 premium-glass rounded-2xl border dark:border-white/5 border-black/10 hover:border-gray-500/30 transition-all hover:scale-[1.02] shadow-md group">
-        <div class="w-10 h-10 rounded-xl bg-gray-500/10 border border-gray-500/20 flex items-center justify-center dark:text-gray-400 text-slate-600">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-        </div>
-        <div class="text-left">
-          <h4 class="dark:text-white text-slate-900 font-bold text-sm">{{ link.name }}</h4>
-          <p class="dark:text-gray-500 text-slate-500 text-[10px] mt-0.5">Social Link</p>
-        </div>
-      </a>
-      {% endif %}
-      {% empty %}
-      <div class="dark:text-gray-500 text-slate-500 text-sm">No social media links active yet.</div>
-      {% endfor %}
-    </div>
   </div>
 </section>
 
 {% endblock %}
 
 {% block extra_scripts %}
-<!-- Load Three.js from Cloudflare CDN for 3D geometric centerpiece rendering -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
 <script>
-  // ─── THREE.JS 3D CANVAS CENTERPIECE ──────────────────────────────────────────
-  (function init3D() {
-    const canvas = document.getElementById('canvas-3d');
-    if (!canvas) return;
-
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-
-    const scene = new THREE.Scene();
-    
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.z = 8.5;
-
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    const bookGroup = new THREE.Group();
-    const sceneGroup = new THREE.Group(); // Group for everything
-
-    // Page edges material (subtle off-white/silver)
-    const pagesMaterial = new THREE.MeshPhongMaterial({
-      color: 0xf3f4f6, // Light silver-white page edge
-      shininess: 10,
-    });
-
-    function createPremiumBook(colorHex) {
-      const bGroup = new THREE.Group();
-
-      const coverMaterial = new THREE.MeshPhongMaterial({
-        color: colorHex,
-        shininess: 90,
-        specular: 0xc0c0c0 // Silver metallic shine
-      });
-
-      // 1. Back Cover
-      const backCoverGeom = new THREE.BoxGeometry(2.4, 3.4, 0.06);
-      const backCover = new THREE.Mesh(backCoverGeom, coverMaterial);
-      backCover.position.z = -0.19;
-      bGroup.add(backCover);
-
-      // 2. Front Cover
-      const frontCoverGeom = new THREE.BoxGeometry(2.4, 3.4, 0.06);
-      const frontCover = new THREE.Mesh(frontCoverGeom, coverMaterial);
-      frontCover.position.z = 0.19;
-      bGroup.add(frontCover);
-
-      // 3. Spine
-      const spineGeom = new THREE.BoxGeometry(0.06, 3.4, 0.44);
-      const spine = new THREE.Mesh(spineGeom, coverMaterial);
-      spine.position.x = -1.2;
-      bGroup.add(spine);
-
-      // 4. Inner Pages Block
-      const pagesGeom = new THREE.BoxGeometry(2.25, 3.25, 0.32);
-      const pages = new THREE.Mesh(pagesGeom, pagesMaterial);
-      pages.position.x = 0.05;
-      bGroup.add(pages);
-
-      // Add silver geometric wireframe overlay on the cover
-      const coverWireGeom = new THREE.BoxGeometry(2.42, 3.42, 0.46);
-      const coverWireMat = new THREE.MeshBasicMaterial({
-        color: 0xc0c0c0, // Silver wireframe
-        wireframe: true,
-        transparent: true,
-        opacity: 0.25
-      });
-      const coverWire = new THREE.Mesh(coverWireGeom, coverWireMat);
-      bGroup.add(coverWire);
-
-      return bGroup;
-    }
-
-    // Main Book (Navy Blue)
-    const book1 = createPremiumBook(0x0f172a);
-    book1.position.set(0, 0, 0);
-    sceneGroup.add(book1);
-
-    // Second Book (Navy Blue)
-    const book2 = createPremiumBook(0x0f172a);
-    book2.position.set(-1.2, 0.3, -1.5);
-    book2.rotation.z = 0.1;
-    book2.rotation.y = -0.2;
-    sceneGroup.add(book2);
-
-    // Third Book (Navy Blue)
-    const book3 = createPremiumBook(0x0f172a);
-    book3.position.set(1.5, -0.4, -1.0);
-    book3.rotation.z = -0.15;
-    book3.rotation.y = 0.3;
-    sceneGroup.add(book3);
-    
-    scene.add(sceneGroup);
-
-    // Dynamic cinematic light sources
-    const ambientLight = new THREE.AmbientLight(0x1a1a2e, 1.8); // Deep ambient
-    scene.add(ambientLight);
-
-    const spotlight = new THREE.SpotLight(0xffffff, 2.5); // Soft spotlight
-    spotlight.position.set(4, 8, 5);
-    spotlight.angle = Math.PI / 6;
-    spotlight.penumbra = 0.4;
-    scene.add(spotlight);
-
-    const pointLight = new THREE.PointLight(0xffffff, 1.5, 15); // Silver/white fill
-    pointLight.position.set(-3, 2, 3);
-    scene.add(pointLight);
-
-    let mouseX = 0, mouseY = 0;
-    let targetX = 0, targetY = 0;
-
-    window.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const cX = rect.left + rect.width / 2;
-      const cY = rect.top + rect.height / 2;
-      mouseX = (e.clientX - cX) / (window.innerWidth / 2);
-      mouseY = (e.clientY - cY) / (window.innerHeight / 2);
-    });
-
-    const clock = new THREE.Clock();
-    
-    function animate() {
-      requestAnimationFrame(animate);
-
-      const elapsedTime = clock.getElapsedTime();
-
-      // Smooth hover bounce for the whole scene group
-      sceneGroup.position.y = Math.sin(elapsedTime * 1.5) * 0.15;
-      
-      // Interpolate towards mouse pointer with easing (LERP)
-      targetX = mouseX * 0.5;
-      targetY = mouseY * 0.3;
-
-      // Base auto rotation + mouse interaction for the cluster
-      sceneGroup.rotation.y = elapsedTime * 0.25 + targetX;
-      sceneGroup.rotation.x = 0.1 + (targetY * 0.5); // Mostly upright
-      sceneGroup.rotation.z = Math.sin(elapsedTime * 0.8) * 0.05; // Slight tilt
-
-      renderer.render(scene, camera);
-    }
-
-    animate();
-
-    window.addEventListener('resize', () => {
-      const newWidth = canvas.clientWidth;
-      const newHeight = canvas.clientHeight;
-      camera.aspect = newWidth / newHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(newWidth, newHeight);
-    });
-  })();
-
   // ─── SCROLL REVEAL ANIMATIONS (INTERSECTION OBSERVER) ─────────────────────────
   (function initScrollReveal() {
     const reveals = document.querySelectorAll('.reveal');
-    
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('active');
-          // Once revealed, no need to track it anymore
           observer.unobserve(entry.target);
         }
       });
     }, {
-      threshold: 0.1, // trigger early
-      rootMargin: "0px 0px -50px 0px" // trigger slightly before entering
+      threshold: 0.08,
+      rootMargin: "0px 0px -40px 0px"
     });
 
-    reveals.forEach(reveal => {
-      // Set initial state
-      reveal.classList.add('reveal');
-      observer.observe(reveal);
-    });
+    reveals.forEach(reveal => observer.observe(reveal));
   })();
 
   // ─── ANIMATED COUNTERS ───────────────────────────────────────────────────────
@@ -928,7 +963,7 @@
     const animateCounter = (el) => {
       const target = parseInt(el.dataset.target || '0', 10);
       if (target === 0) { el.textContent = '0'; return; }
-      const duration = 2000;
+      const duration = 1600;
       const step = Math.ceil(target / (duration / 16));
       let current = 0;
       const tick = () => {
@@ -943,7 +978,7 @@
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           animateCounter(entry.target);
-          observer.unobserve(entry.target); // only animate once
+          observer.unobserve(entry.target);
         }
       });
     }, { threshold: 0.1 });
@@ -958,7 +993,7 @@
     const nextBtn = document.getElementById('plans-next');
     if (!track || !prevBtn || !nextBtn) return;
 
-    const scrollAmount = 340; // width of card + gap
+    const scrollAmount = 350;
 
     prevBtn.addEventListener('click', () => {
       track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });

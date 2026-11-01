@@ -10,13 +10,13 @@ from youth_club_library.throttle import is_throttled
 def home_view(request):
     """Home page: hero, carousels, counters, CTA."""
     featured_books = Book.objects.filter(is_featured=True, is_upcoming=False).select_related(
-        'author', 'publication'
+        'author', 'publication', 'category'
     )[:12]
     new_books = Book.objects.filter(is_new=True, is_upcoming=False).select_related(
-        'author', 'publication'
+        'author', 'publication', 'category'
     )[:12]
     upcoming_books = Book.objects.filter(is_upcoming=True).select_related(
-        'author', 'publication'
+        'author', 'publication', 'category'
     )[:12]
 
     # Cache homepage counters for 60s to avoid 4 COUNT(*) queries on every landing page hit
