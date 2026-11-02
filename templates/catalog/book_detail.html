@@ -1,5 +1,50 @@
 {% extends "base.html" %}
-{% block title %}{{ book.title }} — {{ SITE_NAME }}{% endblock %}
+{% block title %}{{ book.title }}{% if book.author %} by {{ book.author.name }}{% endif %} — {{ SITE_NAME }}{% endblock %}
+{% block og_type %}book{% endblock %}
+{% block og_title %}{{ book.title }}{% if book.author %} by {{ book.author.name }}{% endif %} — {{ SITE_NAME }}{% endblock %}
+{% block og_description %}{{ book.description|truncatechars:200|default:"Explore, borrow or purchase this book at Youth Club Library in Chattogram." }}{% endblock %}
+{% if book.cover_image %}
+{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{{ book.cover_image.url }}{% endblock %}
+{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{{ book.cover_image.url }}{% endblock %}
+{% endif %}
+
+{% block page_structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "{{ book.title|escapejs }}",
+  "url": "{{ request.build_absolute_uri }}",
+  {% if book.cover_image %}
+  "image": "{{ request.scheme }}://{{ request.get_host }}{{ book.cover_image.url }}",
+  {% endif %}
+  {% if book.author %}
+  "author": {
+    "@type": "Person",
+    "name": "{{ book.author.name|escapejs }}"
+  },
+  {% endif %}
+  {% if book.publication %}
+  "publisher": {
+    "@type": "Organization",
+    "name": "{{ book.publication.name|escapejs }}"
+  },
+  {% endif %}
+  {% if book.description %}
+  "description": "{{ book.description|truncatechars:300|escapejs }}",
+  {% endif %}
+  "inLanguage": "{{ book.language|default:'Bangla' }}",
+  {% if book.isbn %}"isbn": "{{ book.isbn }}",{% endif %}
+  {% if book.pages %}"numberOfPages": {{ book.pages }},{% endif %}
+  "offers": {
+    "@type": "Offer",
+    "price": "{{ book.effective_price }}",
+    "priceCurrency": "BDT",
+    "availability": "{% if book.is_in_stock %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
+  }
+}
+</script>
+{% endblock %}
 {% block meta_description %}{{ book.description|truncatechars:160|default:"Buy or borrow this book from Youth Club Library." }}{% endblock %}
 
 {% block content %}

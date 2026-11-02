@@ -7,6 +7,7 @@ Models: Author, Publication, Category, Book, BookReview
 from django.db import models
 from django.utils.text import slugify
 from django.db.models import Avg
+from django.urls import reverse
 
 
 class Author(models.Model):
@@ -22,6 +23,9 @@ class Author(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('books_by_author', kwargs={'pk': self.pk})
 
     @property
     def book_count(self):
@@ -51,6 +55,9 @@ class Publication(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('books_by_publication', kwargs={'pk': self.pk})
+
     @property
     def book_count(self):
         if hasattr(self, 'num_books'):
@@ -71,6 +78,9 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('books_by_category', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -204,6 +214,9 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('book_detail', kwargs={'pk': self.pk})
 
     @property
     def effective_price(self):

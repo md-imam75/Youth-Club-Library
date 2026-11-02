@@ -582,3 +582,31 @@ def join_waitlist(request, pk):
     WaitlistEntry.objects.get_or_create(user=request.user, book=book)
     messages.success(request, f"You have been added to the waitlist for '{book.title}'. We will email you when it's back in stock.")
     return redirect('book_detail', pk=pk)
+
+
+def robots_txt_view(request):
+    """Dynamic robots.txt pointing to the host sitemap and protecting private routes."""
+    from django.http import HttpResponse
+    from django.conf import settings
+    scheme = 'https' if not settings.DEBUG or request.is_secure() else 'http'
+    sitemap_url = f"{scheme}://{request.get_host()}/sitemap.xml"
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Allow: /about/",
+        "Allow: /books/",
+        "Allow: /authors/",
+        "Allow: /publications/",
+        "Allow: /categories/",
+        "Allow: /membership/",
+        "",
+        "Disallow: /admin/",
+        "Disallow: /admin-panel/",
+        "Disallow: /accounts/",
+        "Disallow: /orders/",
+        "Disallow: /waitlist/",
+        "Disallow: /*?*q=*",
+        "",
+        f"Sitemap: {sitemap_url}",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")

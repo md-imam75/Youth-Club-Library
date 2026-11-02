@@ -6,8 +6,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.sitemaps.views import sitemap
+from catalog.sitemaps import sitemaps
+from catalog.views import robots_txt_view
 
 urlpatterns = [
+    # SEO: Robots & Sitemap
+    path('robots.txt', robots_txt_view, name='robots_txt'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+
     # Django Admin
     path('admin/', admin.site.urls),
 
