@@ -8,9 +8,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 from catalog.sitemaps import sitemaps
-from catalog.views import robots_txt_view
+from catalog.views import robots_txt_view, google_verification_view
 
 urlpatterns = [
+    # Google Search Console Verification
+    path('google<str:code>.html', google_verification_view, name='google_verification'),
+
     # SEO: Robots & Sitemap
     path('robots.txt', robots_txt_view, name='robots_txt'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),

@@ -15,6 +15,8 @@
   <meta name="description" content="{% block meta_description %}Youth Club Library — Chattogram's premier non-profit open Islamic and community library in Kazir Dewri. Free walk-in reading room, membership borrowing, and curated literature.{% endblock %}" />
   <meta name="keywords" content="{% block meta_keywords %}Youth Club Library, Islamic library Chittagong, Islamic books Chattogram, borrow Islamic books, buy Islamic books online, Kazir Dewri library, Islamic literature Bangladesh, books of Great Scholars{% endblock %}" />
   <meta name="author" content="Youth Club Chittagong" />
+  <meta name="google-site-verification" content="db62f61ca2486d84" />
+  <meta name="google-site-verification" content="54f3891b35d1bb11" />
   <meta name="robots" content="{% block meta_robots %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endblock %}" />
   <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}" />
 
@@ -30,7 +32,7 @@
   <meta property="og:title" content="{% block og_title %}{{ page_title|default:"Youth Club Library" }} — {{ SITE_NAME }}{% endblock %}" />
   <meta property="og:description" content="{% block og_description %}Chattogram's premier non-profit open Islamic and community library in Kazir Dewri. Free walk-in reading, home borrowing, and curated books.{% endblock %}" />
   <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}" />
-  <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-preview.png' %}{% endblock %}" />
+  <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endblock %}" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:locale:alternate" content="bn_BD" />
 
@@ -38,7 +40,7 @@
   <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}" />
   <meta name="twitter:title" content="{% block twitter_title %}{{ page_title|default:"Youth Club Library" }} — {{ SITE_NAME }}{% endblock %}" />
   <meta name="twitter:description" content="{% block twitter_description %}Chattogram's premier non-profit open Islamic and community library in Kazir Dewri.{% endblock %}" />
-  <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-preview.png' %}{% endblock %}" />
+  <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endblock %}" />
 
   <!-- Structured Data: Library & WebSite Schema -->
   <script type="application/ld+json">

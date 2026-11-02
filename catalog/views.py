@@ -610,3 +610,9 @@ def robots_txt_view(request):
         f"Sitemap: {sitemap_url}",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
+
+
+def google_verification_view(request, code):
+    """Serve Google Search Console HTML verification file."""
+    from django.http import HttpResponse
+    return HttpResponse(f"google-site-verification: google{code}.html\n", content_type="text/html")
