@@ -585,11 +585,9 @@ def join_waitlist(request, pk):
 
 
 def robots_txt_view(request):
-    """Dynamic robots.txt pointing to the host sitemap and protecting private routes."""
+    """Dynamic robots.txt pointing to canonical sitemap and protecting private routes."""
     from django.http import HttpResponse
-    from django.conf import settings
-    scheme = 'https' if not settings.DEBUG or request.is_secure() else 'http'
-    sitemap_url = f"{scheme}://{request.get_host()}/sitemap.xml"
+    sitemap_url = "https://www.youthclublibrary.com/sitemap.xml"
     lines = [
         "User-agent: *",
         "Allow: /",

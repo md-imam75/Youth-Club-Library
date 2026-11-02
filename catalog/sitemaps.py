@@ -14,7 +14,15 @@ from django.urls import reverse
 from .models import Book, Category, Author, Publication
 
 
-class StaticViewSitemap(Sitemap):
+class BaseLibrarySitemap(Sitemap):
+    """Base sitemap enforcing HTTPS and canonical domain www.youthclublibrary.com."""
+    protocol = 'https'
+
+    def get_domain(self, site=None):
+        return 'www.youthclublibrary.com'
+
+
+class StaticViewSitemap(BaseLibrarySitemap):
     """Sitemap for main structural and navigational pages."""
     changefreq = 'weekly'
     priority = 0.8
@@ -47,7 +55,7 @@ class StaticViewSitemap(Sitemap):
         return 'weekly'
 
 
-class BookSitemap(Sitemap):
+class BookSitemap(BaseLibrarySitemap):
     """Sitemap for individual book detail pages."""
     changefreq = 'weekly'
     priority = 0.8
@@ -59,7 +67,7 @@ class BookSitemap(Sitemap):
         return obj.updated_at
 
 
-class CategorySitemap(Sitemap):
+class CategorySitemap(BaseLibrarySitemap):
     """Sitemap for book category pages."""
     changefreq = 'weekly'
     priority = 0.7
@@ -68,7 +76,7 @@ class CategorySitemap(Sitemap):
         return Category.objects.all().order_by('name')
 
 
-class AuthorSitemap(Sitemap):
+class AuthorSitemap(BaseLibrarySitemap):
     """Sitemap for authors & scholars."""
     changefreq = 'monthly'
     priority = 0.6
@@ -77,7 +85,7 @@ class AuthorSitemap(Sitemap):
         return Author.objects.all().order_by('name')
 
 
-class PublicationSitemap(Sitemap):
+class PublicationSitemap(BaseLibrarySitemap):
     """Sitemap for publications."""
     changefreq = 'monthly'
     priority = 0.6
