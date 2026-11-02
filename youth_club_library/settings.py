@@ -226,6 +226,8 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.CustomSignupForm'
+ACCOUNT_SESSION_REMEMBER = None  # None = ask user via checkbox ("Remember me for 30 days")
+ACCOUNT_SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days (2,592,000 seconds)
 
 # Rate limiting / Brute-force protection for logins
 ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5
@@ -276,7 +278,7 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 # Session timeout — 7 days (in seconds). Adjust as needed.
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days (2,592,000 seconds)
 
 # Cache (memory cache for development; use Redis/Memcached in production)
 CACHES = {
