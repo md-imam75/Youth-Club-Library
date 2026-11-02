@@ -50,9 +50,23 @@ def home_view(request):
 
 
 def about_view(request):
-    """About Us page."""
+    """About Us page: story, vision, 5 pillars, schedule, and live stats."""
+    stats = cache.get('home_stats_v1')
+    if stats is None:
+        stats = {
+            'total_members': UserMembership.objects.filter(status='Active').count(),
+            'total_books': Book.objects.filter(is_upcoming=False).count(),
+            'total_authors': Author.objects.count(),
+            'total_categories': Category.objects.count(),
+        }
+        cache.set('home_stats_v1', stats, 60)
+
     context = {
         'page_title': 'About Us',
+        'total_members': stats['total_members'],
+        'total_books': stats['total_books'],
+        'total_authors': stats['total_authors'],
+        'total_categories': stats['total_categories'],
     }
     return render(request, 'catalog/about.html', context)
 
