@@ -74,7 +74,7 @@
         </a>
         <span class="text-slate-300 dark:text-slate-700">/</span>
         <span class="px-2.5 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/40 font-bold">
-          Scholars & Authors Archive
+          Authors
         </span>
       </div>
 
@@ -83,47 +83,6 @@
           <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           Request an Author's Book
         </a>
-      </div>
-    </div>
-
-    <!-- ─── PAGE HEADER BANNER ─────────────────────────────────────────────── -->
-    <div id="authors-header" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-white/10 shadow-sm relative overflow-hidden">
-      <!-- Top Accent Bar -->
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-emerald-500 to-amber-500"></div>
-
-      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative z-10">
-        <div class="space-y-3 max-w-3xl">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/40 text-sky-700 dark:text-sky-300 text-xs font-bold tracking-wide">
-            <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-            SCHOLARS & INTELLECTUALS ARCHIVE • CHATTOGRAM
-          </div>
-
-          {% if query %}
-            <h1 class="font-display text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
-              Authors matching "<span class="text-sky-600 dark:text-sky-400">{{ query }}</span>"
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              Showing cataloged authors and scholars matching your search keyword.
-            </p>
-          {% else %}
-            <h1 class="font-display text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
-              Distinguished <span class="text-sky-600 dark:text-sky-400">Authors & Scholars</span>
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              Explore classical Islamic scholars, contemporary researchers, and celebrated authors whose works are cataloged and ready for reading and borrowing in our library.
-            </p>
-          {% endif %}
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2.5">
-          <div class="px-3.5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-white/10 text-xs font-bold font-mono text-slate-700 dark:text-slate-200">
-            <span class="text-sky-600 dark:text-sky-400 font-display text-sm">{{ total_count }}</span> Authors Cataloged
-          </div>
-          <div class="px-3.5 py-2 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/40 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Sorted by Most Books
-          </div>
-        </div>
       </div>
     </div>
 
@@ -353,15 +312,10 @@
       const doc = parser.parseFromString(text, 'text/html');
 
       const newResults = doc.getElementById('authors-results');
-      const newHeader = doc.getElementById('authors-header');
       const currentResults = document.getElementById('authors-results');
-      const currentHeader = document.getElementById('authors-header');
 
       if (newResults && currentResults) {
         currentResults.innerHTML = newResults.innerHTML;
-      }
-      if (newHeader && currentHeader) {
-        currentHeader.innerHTML = newHeader.innerHTML;
       }
 
       if (updateHistory) {
