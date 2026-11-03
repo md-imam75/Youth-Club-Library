@@ -23,6 +23,7 @@ urlpatterns = [
     # Books CRUD
     path('books/',                  views.admin_books,             name='admin_books'),
     path('books/barcodes/print/',   views.admin_print_barcodes,    name='admin_print_barcodes'),
+    path('books/check-duplicate/',  views.admin_check_book_duplicate, name='admin_check_book_duplicate'),
     path('books/add/',              views.admin_book_add,          name='admin_book_add'),
     path('books/<int:pk>/edit/',    views.admin_book_edit,         name='admin_book_edit'),
     path('books/<int:pk>/delete/',  views.admin_book_delete,       name='admin_book_delete'),

@@ -5,7 +5,7 @@
 <!-- Tom Select CSS -->
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet" />
 <style>
-  /* Custom modern overrides for Tom Select matching the glassmorphic dark theme and responsive light theme */
+  /* Tom Select styling matching the glassmorphic dark theme and responsive light theme */
   .ts-control {
     background: rgba(0, 0, 0, 0.02) !important;
     border: 1px solid rgba(0, 0, 0, 0.1) !important;
@@ -13,7 +13,7 @@
     color: #0f172a !important;
     padding: 0.65rem 0.875rem !important;
     font-size: 0.875rem !important;
-    transition: all 0.3s ease !important;
+    transition: all 0.25s ease !important;
     box-shadow: none !important;
   }
   .dark .ts-control {
@@ -71,156 +71,463 @@
     font-size: 0.875rem !important;
     transition: background 0.15s ease, color 0.15s ease !important;
   }
+
+  /* 3D Realistic Spine Shadow for Preview Card */
+  .book-preview-spine {
+    box-shadow: -6px 8px 18px rgba(0, 0, 0, 0.22), 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+  }
+  .book-preview-spine::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 6px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.4) 0%, rgba(0,0,0,0.15) 100%);
+    pointer-events-none;
+  }
+
+  /* Upload dropzone dragover animation */
+  .dropzone-active {
+    border-color: #0ea5e9 !important;
+    background-color: rgba(14, 165, 233, 0.08) !important;
+    transform: scale(1.01);
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-3xl">
+<div class="max-w-7xl mx-auto pb-12">
 
   <!-- Header -->
-  <div class="flex items-center gap-4 mb-8">
-    <a href="{% url 'admin_books' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
-    <div>
-      <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
-      <p class="dark:text-gray-500 text-slate-500 text-sm">All fields marked * are required.</p>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div class="flex items-center gap-3.5">
+      <a href="{% url 'admin_books' %}" 
+         class="w-10 h-10 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-all shadow-sm"
+         title="Back to Catalog">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </a>
+      <div>
+        <div class="flex items-center gap-2.5">
+          <h2 class="text-2xl font-bold dark:text-white text-slate-900 tracking-tight">{{ page_title }}</h2>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-500 dark:text-sky-400 border border-sky-500/20">
+            Workstation Mode
+          </span>
+        </div>
+        <p class="dark:text-gray-400 text-slate-500 text-xs mt-0.5">High-volume catalog workstation with live preview, paste dropzone & instant margin calculation.</p>
+      </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Hint -->
+    <div class="hidden md:flex items-center gap-2 text-xs dark:text-gray-400 text-slate-500 bg-black/5 dark:bg-white/5 border dark:border-white/10 border-black/5 px-3.5 py-1.5 rounded-xl">
+      <span class="inline-flex items-center gap-1 font-mono">
+        <kbd class="px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[11px] font-semibold">Ctrl</kbd>+<kbd class="px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[11px] font-semibold">Enter</kbd>
+        <span class="text-[11px] font-sans ml-0.5">Save</span>
+      </span>
+      <span class="text-slate-300 dark:text-slate-700">•</span>
+      <span class="inline-flex items-center gap-1 font-mono">
+        <kbd class="px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[11px] font-semibold">Shift</kbd>+<kbd class="px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[11px] font-semibold">Enter</kbd>
+        <span class="text-[11px] font-sans ml-0.5">Save & Add Another</span>
+      </span>
     </div>
   </div>
 
-  <form method="post" enctype="multipart/form-data" class="space-y-6">
+  <form method="post" enctype="multipart/form-data" id="book-workstation-form" class="space-y-6">
     {% csrf_token %}
 
-    <!-- Basic Info -->
-    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10">
-      <h3 class="dark:text-white text-slate-900 font-semibold mb-5 flex items-center gap-2">
-        <span class="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400 text-xs">1</span>
-        Basic Information
-      </h3>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Title <span class="text-red-400">*</span></label>
-          {{ form.title }}
-          {% if form.title.errors %}<p class="text-red-400 text-xs mt-1">{{ form.title.errors|join:", " }}</p>{% endif %}
-        </div>
-        <div class="grid sm:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Author</label>
-            {{ form.author }}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- ================= LEFT COLUMN: FORM SECTIONS (8 COLS) ================= -->
+      <div class="lg:col-span-8 space-y-6">
+        
+        <!-- Section 1: Book Identity & Taxonomy -->
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 shadow-sm">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="dark:text-white text-slate-900 font-semibold text-base flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg bg-sky-500/10 dark:bg-sky-500/20 flex items-center justify-center text-sky-500 dark:text-sky-400 text-xs font-bold">1</span>
+              Identity & Taxonomy
+            </h3>
+            <span class="text-xs text-slate-400 dark:text-gray-500">* Required</span>
           </div>
-          <div>
-            <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Publication</label>
-            {{ form.publication }}
+
+          <div class="space-y-4">
+            <!-- Title with Live Duplicate Warning -->
+            <div>
+              <label for="id_title" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">
+                Book Title <span class="text-rose-500">*</span>
+              </label>
+              {{ form.title }}
+              {% if form.title.errors %}
+                <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ form.title.errors|join:", " }}</p>
+              {% endif %}
+
+              <!-- Duplicate Warning Alert Box -->
+              <div id="duplicate-warning" class="hidden mt-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div class="flex-1 leading-relaxed">
+                  <span class="font-bold" id="dup-match-type">Warning: Duplicate book detected!</span>
+                  <p class="mt-0.5 text-slate-600 dark:text-gray-300" id="dup-book-info"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Author, Publication, Category -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label for="id_author" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">Author</label>
+                {{ form.author }}
+                {% if form.author.errors %}<p class="text-rose-500 text-xs mt-1">{{ form.author.errors|join:", " }}</p>{% endif %}
+              </div>
+              <div>
+                <label for="id_publication" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">Publication</label>
+                {{ form.publication }}
+                {% if form.publication.errors %}<p class="text-rose-500 text-xs mt-1">{{ form.publication.errors|join:", " }}</p>{% endif %}
+                <p id="pub-discount-pill" class="hidden text-[11px] mt-1.5 text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1"></p>
+              </div>
+              <div>
+                <label for="id_category" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">Category</label>
+                {{ form.category }}
+                {% if form.category.errors %}<p class="text-rose-500 text-xs mt-1">{{ form.category.errors|join:", " }}</p>{% endif %}
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label for="id_description" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">Description / Synopsis</label>
+              {{ form.description }}
+              {% if form.description.errors %}<p class="text-rose-500 text-xs mt-1">{{ form.description.errors|join:", " }}</p>{% endif %}
+            </div>
           </div>
-          <div>
-            <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Category</label>
-            {{ form.category }}
+        </div>
+
+        <!-- Section 2: Pricing, Profit Margin & Stock -->
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 shadow-sm">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="dark:text-white text-slate-900 font-semibold text-base flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400 text-xs font-bold">2</span>
+              Financials, Margin & Stock
+            </h3>
+            <span class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
+              Live Margin Calculator
+            </span>
+          </div>
+
+          <!-- Price Inputs -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label for="id_regular_price" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">
+                Regular Price (৳) <span class="text-rose-500">*</span>
+              </label>
+              {{ form.regular_price }}
+              {% if form.regular_price.errors %}
+                <p class="text-rose-500 text-xs mt-1 font-medium">{{ form.regular_price.errors|join:", " }}</p>
+              {% endif %}
+            </div>
+            <div>
+              <label for="id_offer_price" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">
+                Offer / Sale Price (৳)
+              </label>
+              {{ form.offer_price }}
+              {% if form.offer_price.errors %}
+                <p class="text-rose-500 text-xs mt-1 font-medium">{{ form.offer_price.errors|join:", " }}</p>
+              {% endif %}
+            </div>
+            <div>
+              <label for="id_buying_price" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">
+                Buying / Cost Price (৳) <span class="text-rose-500">*</span>
+              </label>
+              {{ form.buying_price }}
+              <p class="text-[11px] text-slate-400 dark:text-gray-500 mt-1">Internal only — hidden from buyers</p>
+              {% if form.buying_price.errors %}
+                <p class="text-rose-500 text-xs mt-1 font-medium">{{ form.buying_price.errors|join:", " }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Quick Discount Chips -->
+          <div class="mb-4 pt-1">
+            <span class="text-[11px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider block mb-2">Quick Discount Preset:</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" class="discount-chip px-3 py-1 rounded-lg text-xs font-semibold border border-black/10 dark:border-white/10 hover:border-sky-500 hover:text-sky-500 dark:hover:text-sky-400 transition-colors" data-discount="15">15% Off</button>
+              <button type="button" class="discount-chip px-3 py-1 rounded-lg text-xs font-semibold border border-black/10 dark:border-white/10 hover:border-sky-500 hover:text-sky-500 dark:hover:text-sky-400 transition-colors" data-discount="20">20% Off</button>
+              <button type="button" class="discount-chip px-3 py-1 rounded-lg text-xs font-semibold border border-black/10 dark:border-white/10 hover:border-sky-500 hover:text-sky-500 dark:hover:text-sky-400 transition-colors" data-discount="25">25% Off</button>
+              <button type="button" class="discount-chip px-3 py-1 rounded-lg text-xs font-semibold border border-black/10 dark:border-white/10 hover:border-sky-500 hover:text-sky-500 dark:hover:text-sky-400 transition-colors" data-discount="30">30% Off</button>
+              <button type="button" class="discount-chip px-3 py-1 rounded-lg text-xs font-semibold border border-black/10 dark:border-white/10 hover:border-sky-500 hover:text-sky-500 dark:hover:text-sky-400 transition-colors" data-discount="35">35% Off</button>
+              <button type="button" id="clear-offer-chip" class="px-2.5 py-1 rounded-lg text-xs text-slate-400 hover:text-rose-500 transition-colors">Clear</button>
+            </div>
+          </div>
+
+          <!-- Live Margin & Profit HUD Strip -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs mb-4">
+            <div class="flex items-center gap-6">
+              <div>
+                <span class="text-slate-400 dark:text-gray-500 block text-[10px] uppercase font-bold tracking-wider">Net Profit</span>
+                <span id="hud-profit" class="font-bold text-sm text-slate-900 dark:text-white font-mono">—</span>
+              </div>
+              <div>
+                <span class="text-slate-400 dark:text-gray-500 block text-[10px] uppercase font-bold tracking-wider">Profit Margin</span>
+                <span id="hud-margin" class="font-bold text-sm text-slate-900 dark:text-white font-mono">—</span>
+              </div>
+              <div>
+                <span class="text-slate-400 dark:text-gray-500 block text-[10px] uppercase font-bold tracking-wider">Customer Discount</span>
+                <span id="hud-discount" class="font-bold text-sm text-slate-900 dark:text-white font-mono">—</span>
+              </div>
+            </div>
+            <div id="hud-status-badge" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300">
+              Awaiting Prices
+            </div>
+          </div>
+
+          <!-- Stock & Borrowing -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center pt-2">
+            <div>
+              <label for="id_stock_quantity" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">
+                Stock Quantity
+              </label>
+              {{ form.stock_quantity }}
+              {% if form.stock_quantity.errors %}<p class="text-rose-500 text-xs mt-1">{{ form.stock_quantity.errors|join:", " }}</p>{% endif %}
+            </div>
+            <div class="pt-4 sm:pt-6">
+              <label class="flex items-center gap-3 cursor-pointer select-none">
+                {{ form.can_borrow }}
+                <div>
+                  <span class="text-sm font-semibold dark:text-gray-200 text-slate-800">Allow Library Borrowing</span>
+                  <p class="text-xs text-slate-400 dark:text-gray-500">Subscribers can borrow this book</p>
+                </div>
+              </label>
+            </div>
           </div>
         </div>
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Description</label>
-          {{ form.description }}
-        </div>
-      </div>
-    </div>
 
-    <!-- Details -->
-    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10">
-      <h3 class="dark:text-white text-slate-900 font-semibold mb-5 flex items-center gap-2">
-        <span class="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400 text-xs">2</span>
-        Book Details
-      </h3>
-      <div class="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">ISBN</label>
-          {{ form.isbn }}
+        <!-- Section 3: Book Specifications -->
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 shadow-sm">
+          <h3 class="dark:text-white text-slate-900 font-semibold text-base mb-5 flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-500 dark:text-indigo-400 text-xs font-bold">3</span>
+            Book Specifications
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label for="id_isbn" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">ISBN</label>
+              {{ form.isbn }}
+              {% if form.isbn.errors %}<p class="text-rose-500 text-xs mt-1">{{ form.isbn.errors|join:", " }}</p>{% endif %}
+            </div>
+            <div>
+              <label for="id_pages" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">Pages</label>
+              {{ form.pages }}
+              {% if form.pages.errors %}<p class="text-rose-500 text-xs mt-1">{{ form.pages.errors|join:", " }}</p>{% endif %}
+            </div>
+            <div>
+              <label for="id_language" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">Language</label>
+              {{ form.language }}
+              {% if form.language.errors %}<p class="text-rose-500 text-xs mt-1">{{ form.language.errors|join:", " }}</p>{% endif %}
+            </div>
+            <div>
+              <label for="id_edition" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">Edition</label>
+              {{ form.edition }}
+              {% if form.edition.errors %}<p class="text-rose-500 text-xs mt-1">{{ form.edition.errors|join:", " }}</p>{% endif %}
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Pages</label>
-          {{ form.pages }}
-        </div>
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Language</label>
-          {{ form.language }}
-        </div>
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Edition</label>
-          {{ form.edition }}
-        </div>
-      </div>
-    </div>
 
-    <!-- Pricing -->
-    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10">
-      <h3 class="dark:text-white text-slate-900 font-semibold mb-5 flex items-center gap-2">
-        <span class="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs">3</span>
-        Pricing & Stock
-      </h3>
-      <div class="grid sm:grid-cols-3 gap-4 mb-4">
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Regular Price (৳) <span class="text-red-400">*</span></label>
-          {{ form.regular_price }}
-          {% if form.regular_price.errors %}<p class="text-red-400 text-xs mt-1">{{ form.regular_price.errors|join:", " }}</p>{% endif %}
-        </div>
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Offer / Sale Price (৳)</label>
-          {{ form.offer_price }}
-          <p id="discount-hint" class="text-xs mt-1 text-emerald-400 hidden"></p>
-        </div>
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Buying / Cost Price (৳) <span class="text-red-400">*</span></label>
-          {{ form.buying_price }}
-          <p class="text-gray-600 text-xs mt-1">Internal — not shown to customers</p>
-        </div>
-      </div>
-      <div class="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Stock Quantity</label>
-          {{ form.stock_quantity }}
-        </div>
-        <div class="flex items-center gap-3 mt-5">
-          <label class="flex items-center gap-2 cursor-pointer">
-            {{ form.can_borrow }}
-            <span class="text-sm dark:text-gray-300 text-slate-700">Allow borrowing</span>
-          </label>
-        </div>
-      </div>
-    </div>
+        <!-- Section 4: Cover Image & Direct Paste Dropzone -->
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="dark:text-white text-slate-900 font-semibold text-base flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center text-amber-500 dark:text-amber-400 text-xs font-bold">4</span>
+              Cover Image & Quick Paste
+            </h3>
+            <span class="text-xs font-mono text-sky-500 dark:text-sky-400 font-medium">Ctrl + V Supported</span>
+          </div>
 
-    <!-- Flags & Cover -->
-    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10">
-      <h3 class="dark:text-white text-slate-900 font-semibold mb-5 flex items-center gap-2">
-        <span class="w-6 h-6 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400 text-xs">4</span>
-        Display Flags & Cover Image
-      </h3>
-      <div class="flex flex-wrap gap-6 mb-5">
-        <label class="flex items-center gap-2 cursor-pointer">
-          {{ form.is_featured }}
-          <span class="text-sm dark:text-gray-300 text-slate-700">Featured (shown on homepage)</span>
-        </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          {{ form.is_new }}
-          <span class="text-sm dark:text-gray-300 text-slate-700">New arrival</span>
-        </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          {{ form.is_upcoming }}
-          <span class="text-sm dark:text-gray-300 text-slate-700">Coming soon</span>
-        </label>
-      </div>
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Cover Image</label>
-        {% if book and book.cover_image %}
-        <div class="flex items-center gap-4 mb-3">
-          <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-16 h-24 object-cover rounded-lg" />
-          <p class="dark:text-gray-500 text-slate-500 text-xs">Current cover — upload a new file to replace it.</p>
-        </div>
-        {% endif %}
-        {{ form.cover_image }}
-      </div>
-    </div>
+          <!-- Hidden Native File Input -->
+          <div class="hidden">
+            {{ form.cover_image }}
+          </div>
 
-    <!-- Submit -->
-    <div class="flex items-center gap-4">
-      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
-      <a href="{% url 'admin_books' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
+          <!-- Modern Drag & Drop / Direct Paste Zone -->
+          <div id="cover-dropzone" 
+               class="border-2 border-dashed border-slate-300 dark:border-white/15 rounded-2xl p-6 text-center cursor-pointer hover:border-sky-500 dark:hover:border-sky-400 transition-all bg-slate-50/50 dark:bg-white/[0.02]">
+            <div id="dropzone-empty-state" class="flex flex-col items-center justify-center py-4">
+              <div class="w-12 h-12 rounded-2xl bg-sky-500/10 dark:bg-sky-500/20 text-sky-500 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p class="text-sm font-semibold text-slate-700 dark:text-gray-200">
+                Click to browse, or paste image with <kbd class="px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-xs font-mono font-bold">Ctrl+V</kbd>
+              </p>
+              <p class="text-xs text-slate-400 dark:text-gray-500 mt-1">
+                You can copy any cover image from the web and press Ctrl+V anywhere on this page.
+              </p>
+            </div>
+
+            <!-- Image Loaded State inside Dropzone -->
+            <div id="dropzone-preview-state" class="{% if not book or not book.cover_image %}hidden{% endif %} flex items-center justify-center gap-4 py-2">
+              <img id="dropzone-preview-img" 
+                   src="{% if book and book.cover_image %}{{ book.cover_image.url }}{% endif %}" 
+                   alt="Cover Preview" 
+                   class="w-20 h-28 object-cover rounded-xl shadow-md border border-black/10 dark:border-white/10" />
+              <div class="text-left">
+                <p id="dropzone-file-name" class="text-xs font-semibold text-slate-800 dark:text-white max-w-xs truncate">
+                  {% if book and book.cover_image %}Current Cover: {{ book.cover_image.name }}{% else %}Cover Image Ready{% endif %}
+                </p>
+                <p class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium">✓ Ready for upload</p>
+                <button type="button" id="change-cover-btn" class="mt-2.5 text-xs font-medium text-sky-500 hover:underline">
+                  Replace with new file
+                </button>
+              </div>
+            </div>
+          </div>
+          {% if form.cover_image.errors %}
+            <p class="text-rose-500 text-xs mt-1.5">{{ form.cover_image.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Section 5: Homepage Display Flags -->
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 shadow-sm">
+          <h3 class="dark:text-white text-slate-900 font-semibold text-base mb-4 flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-yellow-500/10 dark:bg-yellow-500/20 flex items-center justify-center text-yellow-500 dark:text-yellow-400 text-xs font-bold">5</span>
+            Catalog Badges & Placement
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-black/5 dark:border-white/5 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer transition-colors">
+              {{ form.is_featured }}
+              <div>
+                <span class="text-xs font-semibold text-slate-800 dark:text-gray-200 block">Featured</span>
+                <span class="text-[11px] text-slate-400 dark:text-gray-500">Homepage Showcase</span>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-black/5 dark:border-white/5 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer transition-colors">
+              {{ form.is_new }}
+              <div>
+                <span class="text-xs font-semibold text-slate-800 dark:text-gray-200 block">New Arrival</span>
+                <span class="text-[11px] text-slate-400 dark:text-gray-500">Highlighted as Fresh</span>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-black/5 dark:border-white/5 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer transition-colors">
+              {{ form.is_upcoming }}
+              <div>
+                <span class="text-xs font-semibold text-slate-800 dark:text-gray-200 block">Coming Soon</span>
+                <span class="text-[11px] text-slate-400 dark:text-gray-500">Pre-launch catalog</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= RIGHT COLUMN: STICKY WORKSTATION RAIL (4 COLS) ================= -->
+      <div class="lg:col-span-4 lg:sticky lg:top-6 space-y-6">
+        
+        <!-- Action Buttons Card -->
+        <div class="stat-card rounded-2xl p-5 border dark:border-white/10 border-black/10 shadow-lg">
+          <h4 class="text-xs font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider mb-3.5">
+            Workstation Controls
+          </h4>
+          
+          <div class="space-y-3">
+            <!-- Save and Add Another (Batch Entry Mode) -->
+            <button type="submit" 
+                    name="_addanother" 
+                    value="1" 
+                    id="btn-save-add-another"
+                    class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group">
+              <svg class="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Save & Add Another</span>
+              <span class="text-[10px] font-mono opacity-80 border border-white/20 rounded px-1.5 py-0.5 ml-auto">Shift+Enter</span>
+            </button>
+
+            <!-- Standard Save Button -->
+            <button type="submit" 
+                    id="btn-save-standard"
+                    class="w-full btn-primary py-3 px-4 text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{{ action }}</span>
+              <span class="text-[10px] font-mono opacity-80 border border-white/20 rounded px-1.5 py-0.5 ml-auto">Ctrl+Enter</span>
+            </button>
+
+            <!-- Cancel Button -->
+            <a href="{% url 'admin_books' %}" 
+               class="w-full py-2.5 px-4 rounded-xl text-center block text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-all">
+              Discard & Return to List
+            </a>
+          </div>
+
+          <div class="mt-4 pt-3.5 border-t border-black/5 dark:border-white/5 text-[11px] text-slate-400 dark:text-gray-500 flex items-center gap-1.5">
+            <span class="text-emerald-500 font-bold">●</span>
+            <span>Taxonomy retention active for batch cataloging</span>
+          </div>
+        </div>
+
+        <!-- Sticky Live Customer Preview Card -->
+        <div class="stat-card rounded-2xl p-5 border dark:border-white/10 border-black/10 shadow-lg">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-xs font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Live Customer Preview
+            </h4>
+            <span class="text-[10px] font-mono text-slate-400 dark:text-gray-500">Homepage Card</span>
+          </div>
+
+          <!-- Preview Card Shell (Mirrors website card design) -->
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 p-4 shadow-sm overflow-hidden transition-all">
+            
+            <!-- Book Cover Preview -->
+            <div class="relative w-full aspect-[3/4] bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-xl overflow-hidden flex items-center justify-center mb-3.5 border border-black/5 dark:border-white/5">
+              <img id="card-preview-cover" 
+                   src="{% if book and book.cover_image %}{{ book.cover_image.url }}{% endif %}" 
+                   alt="Preview" 
+                   class="{% if not book or not book.cover_image %}hidden{% endif %} w-full h-full object-cover book-preview-spine" />
+              
+              <div id="card-preview-placeholder" class="{% if book and book.cover_image %}hidden{% endif %} flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 p-4 text-center">
+                <svg class="w-10 h-10 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <span class="text-xs font-medium">Cover Preview</span>
+              </div>
+
+              <!-- Discount Ribbon -->
+              <span id="card-preview-badge" class="hidden absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-500 text-white shadow-sm font-mono">
+                -0%
+              </span>
+            </div>
+
+            <!-- Meta details -->
+            <div class="space-y-1">
+              <div class="flex items-center justify-between text-[11px] text-slate-400 dark:text-gray-400">
+                <span id="card-preview-pub" class="truncate max-w-[150px]">Publication</span>
+                <span id="card-preview-stock" class="text-emerald-500 font-semibold">In Stock</span>
+              </div>
+
+              <h4 id="card-preview-title" class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 leading-snug">
+                {% if book %}{{ book.title }}{% else %}Book Title Appears Here{% endif %}
+              </h4>
+
+              <p id="card-preview-author" class="text-xs text-slate-500 dark:text-gray-400 truncate">
+                {% if book and book.author %}{{ book.author.name }}{% else %}Author Name{% endif %}
+              </p>
+
+              <!-- Price Row -->
+              <div class="pt-2 flex items-baseline gap-2">
+                <span id="card-preview-price-current" class="text-base font-bold text-slate-900 dark:text-white font-mono">৳0</span>
+                <span id="card-preview-price-regular" class="hidden text-xs text-slate-400 line-through font-mono">৳0</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </form>
 </div>
@@ -229,158 +536,449 @@
 {% block extra_scripts %}
 <!-- Tom Select JS -->
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const authorSelect = document.getElementById('id_author');
-    const pubSelect = document.getElementById('id_publication');
-    const catSelect = document.getElementById('id_category');
+document.addEventListener('DOMContentLoaded', function() {
+  const formEl = document.getElementById('book-workstation-form');
+  const titleEl = document.getElementById('id_title');
+  const authorSelect = document.getElementById('id_author');
+  const pubSelect = document.getElementById('id_publication');
+  const catSelect = document.getElementById('id_category');
+  const regularPriceEl = document.getElementById('id_regular_price');
+  const offerPriceEl = document.getElementById('id_offer_price');
+  const buyingPriceEl = document.getElementById('id_buying_price');
+  const stockEl = document.getElementById('id_stock_quantity');
+  const isbnEl = document.getElementById('id_isbn');
+  const coverInput = document.getElementById('id_cover_image');
+  const coverDropzone = document.getElementById('cover-dropzone');
+  const dropzoneEmpty = document.getElementById('dropzone-empty-state');
+  const dropzonePreviewState = document.getElementById('dropzone-preview-state');
+  const dropzonePreviewImg = document.getElementById('dropzone-preview-img');
+  const dropzoneFileName = document.getElementById('dropzone-file-name');
+  const changeCoverBtn = document.getElementById('change-cover-btn');
 
-    const ajaxCreateHandler = (modelType) => {
-      return function(input, callback) {
-        fetch('{% url "admin_create_ajax" %}', {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model_type: modelType,
-            name: input
-          })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            callback({ value: data.id, text: data.name });
-          } else {
-            alert('Error creating item: ' + data.error);
-            callback(false);
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          alert('Network error. Please try again.');
+  // Preview Card Elements
+  const previewTitle = document.getElementById('card-preview-title');
+  const previewAuthor = document.getElementById('card-preview-author');
+  const previewPub = document.getElementById('card-preview-pub');
+  const previewStock = document.getElementById('card-preview-stock');
+  const previewPriceCurrent = document.getElementById('card-preview-price-current');
+  const previewPriceRegular = document.getElementById('card-preview-price-regular');
+  const previewBadge = document.getElementById('card-preview-badge');
+  const previewCoverImg = document.getElementById('card-preview-cover');
+  const previewPlaceholder = document.getElementById('card-preview-placeholder');
+
+  // Margin HUD Elements
+  const hudProfit = document.getElementById('hud-profit');
+  const hudMargin = document.getElementById('hud-margin');
+  const hudDiscount = document.getElementById('hud-discount');
+  const hudBadge = document.getElementById('hud-status-badge');
+  const pubDiscountPill = document.getElementById('pub-discount-pill');
+
+  // Duplicate Warning Elements
+  const dupWarning = document.getElementById('duplicate-warning');
+  const dupMatchType = document.getElementById('dup-match-type');
+  const dupBookInfo = document.getElementById('dup-book-info');
+
+  let tomAuthor = null;
+  let tomPub = null;
+  let tomCat = null;
+  let pubDiscount = 0;
+  let userTouchedOffer = false;
+
+  // ── TomSelect Dynamic AJAX Helpers ─────────────────────────────────────
+  const ajaxCreateHandler = (modelType) => {
+    return function(input, callback) {
+      fetch('{% url "admin_create_ajax" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ model_type: modelType, name: input })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          callback({ value: data.id, text: data.name });
+        } else {
+          alert('Error creating item: ' + data.error);
           callback(false);
-        });
-      };
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Network error. Please try again.');
+        callback(false);
+      });
     };
+  };
 
-    const renderOptionCreate = (data, escape) => {
-      return '<div class="create p-2 text-xs text-sky-400 font-semibold hover:bg-sky-500/10 cursor-pointer">➕ Add new: <strong>' + escape(data.input) + '</strong></div>';
-    };
+  const renderOptionCreate = (data, escape) => {
+    return '<div class="create p-2 text-xs text-sky-400 font-semibold hover:bg-sky-500/10 cursor-pointer">➕ Add new: <strong>' + escape(data.input) + '</strong></div>';
+  };
 
-    if (authorSelect) {
-      new TomSelect(authorSelect, {
-        placeholder: 'Search/Select Author...',
-        sortField: { field: 'text', direction: 'asc' },
-        create: ajaxCreateHandler('author'),
-        createFilter: function(input) { return input.trim().length > 0; },
-        render: {
-          option_create: renderOptionCreate
-        }
-      });
-    }
+  if (authorSelect) {
+    tomAuthor = new TomSelect(authorSelect, {
+      placeholder: 'Search/Select Author...',
+      sortField: { field: 'text', direction: 'asc' },
+      create: ajaxCreateHandler('author'),
+      createFilter: input => input.trim().length > 0,
+      render: { option_create: renderOptionCreate },
+      onChange: function() { updateLivePreview(); }
+    });
+  }
 
-    if (pubSelect) {
-      new TomSelect(pubSelect, {
-        placeholder: 'Search/Select Publication...',
-        sortField: { field: 'text', direction: 'asc' },
-        create: ajaxCreateHandler('publication'),
-        createFilter: function(input) { return input.trim().length > 0; },
-        render: {
-          option_create: renderOptionCreate
-        }
-      });
-    }
-
-    if (catSelect) {
-      new TomSelect(catSelect, {
-        placeholder: 'Search/Select Category...',
-        sortField: { field: 'text', direction: 'asc' },
-        create: ajaxCreateHandler('category'),
-        createFilter: function(input) { return input.trim().length > 0; },
-        render: {
-          option_create: renderOptionCreate
-        }
-      });
-    }
-    // ── Publication Discount Auto-Fill ──────────────────────────────
-    const regularPriceEl = document.getElementById('id_regular_price');
-    const offerPriceEl = document.getElementById('id_offer_price');
-    const discountHint = document.getElementById('discount-hint');
-    let pubDiscount = 0;          // current publication's discount %
-    let userTouchedOffer = false;  // true once admin manually edits offer_price
-
-    // Mark offer_price as manually touched if admin types in it
-    if (offerPriceEl) {
-      offerPriceEl.addEventListener('input', () => { userTouchedOffer = true; });
-    }
-
-    function autoFillOfferPrice() {
-      if (userTouchedOffer || !regularPriceEl || !offerPriceEl) return;
-      const regularPrice = parseFloat(regularPriceEl.value);
-      if (!regularPrice || regularPrice <= 0 || pubDiscount <= 0) return;
-      const calculated = Math.round(regularPrice * (1 - pubDiscount / 100));
-      offerPriceEl.value = calculated;
-    }
-
-    function fetchPubDiscount(pubId) {
-      if (!pubId) {
-        pubDiscount = 0;
-        if (discountHint) discountHint.classList.add('hidden');
-        return;
+  if (pubSelect) {
+    tomPub = new TomSelect(pubSelect, {
+      placeholder: 'Search/Select Publication...',
+      sortField: { field: 'text', direction: 'asc' },
+      create: ajaxCreateHandler('publication'),
+      createFilter: input => input.trim().length > 0,
+      render: { option_create: renderOptionCreate },
+      onChange: function(value) {
+        userTouchedOffer = false;
+        fetchPubDiscount(value);
+        updateLivePreview();
       }
-      fetch(`/admin-panel/publication-discount/${pubId}/`, {
+    });
+  }
+
+  if (catSelect) {
+    tomCat = new TomSelect(catSelect, {
+      placeholder: 'Search/Select Category...',
+      sortField: { field: 'text', direction: 'asc' },
+      create: ajaxCreateHandler('category'),
+      createFilter: input => input.trim().length > 0,
+      render: { option_create: renderOptionCreate }
+    });
+  }
+
+  // ── Publication Discount Auto-Fill ────────────────────────────────────
+  function autoFillOfferPrice() {
+    if (userTouchedOffer || !regularPriceEl || !offerPriceEl) return;
+    const regular = parseFloat(regularPriceEl.value) || 0;
+    if (regular > 0 && pubDiscount > 0) {
+      const discounted = Math.round(regular * (1 - pubDiscount / 100));
+      offerPriceEl.value = discounted;
+    }
+    updateFinancialHUD();
+    updateLivePreview();
+  }
+
+  function fetchPubDiscount(pubId) {
+    if (!pubId) {
+      pubDiscount = 0;
+      if (pubDiscountPill) pubDiscountPill.classList.add('hidden');
+      return;
+    }
+    fetch(`/admin-panel/publication-discount/${pubId}/`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      pubDiscount = data.discount || 0;
+      if (pubDiscountPill) {
+        if (pubDiscount > 0) {
+          pubDiscountPill.innerHTML = `<span>📌 Publication discount:</span> <strong>${pubDiscount}% off</strong>`;
+          pubDiscountPill.classList.remove('hidden');
+        } else {
+          pubDiscountPill.classList.add('hidden');
+        }
+      }
+      autoFillOfferPrice();
+    })
+    .catch(() => { pubDiscount = 0; });
+  }
+
+  // Pre-load publication discount if editing or retained
+  if (tomPub && tomPub.getValue()) {
+    fetchPubDiscount(tomPub.getValue());
+  }
+
+  // ── Financials & Profit Margin HUD ─────────────────────────────────────
+  function updateFinancialHUD() {
+    const regular = parseFloat(regularPriceEl ? regularPriceEl.value : 0) || 0;
+    const offer = parseFloat(offerPriceEl ? offerPriceEl.value : 0) || 0;
+    const buying = parseFloat(buyingPriceEl ? buyingPriceEl.value : 0) || 0;
+
+    const sellingPrice = (offer > 0 && offer < regular) ? offer : regular;
+
+    if (sellingPrice > 0 && buying > 0) {
+      const profit = sellingPrice - buying;
+      const marginPct = (profit / sellingPrice) * 100;
+
+      hudProfit.textContent = (profit >= 0 ? '+৳' : '-৳') + Math.abs(profit).toFixed(2);
+      hudMargin.textContent = marginPct.toFixed(1) + '%';
+
+      if (profit > 0) {
+        hudProfit.className = 'font-bold text-sm text-emerald-500 font-mono';
+        hudMargin.className = 'font-bold text-sm text-emerald-500 font-mono';
+        hudBadge.textContent = 'Profitable (' + marginPct.toFixed(0) + '%)';
+        hudBadge.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
+      } else {
+        hudProfit.className = 'font-bold text-sm text-rose-500 font-mono';
+        hudMargin.className = 'font-bold text-sm text-rose-500 font-mono';
+        hudBadge.textContent = 'Loss / Negative Margin';
+        hudBadge.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20';
+      }
+    } else {
+      hudProfit.textContent = '—';
+      hudMargin.textContent = '—';
+      hudBadge.textContent = 'Awaiting Prices';
+      hudBadge.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300';
+    }
+
+    if (regular > 0 && offer > 0 && offer < regular) {
+      const discountPct = Math.round(((regular - offer) / regular) * 100);
+      hudDiscount.textContent = discountPct + '% off';
+      hudDiscount.className = 'font-bold text-sm text-sky-500 font-mono';
+    } else {
+      hudDiscount.textContent = 'None';
+      hudDiscount.className = 'font-bold text-sm text-slate-400 font-mono';
+    }
+  }
+
+  // Quick Discount Buttons
+  document.querySelectorAll('.discount-chip').forEach(btn => {
+    btn.addEventListener('click', function() {
+      userTouchedOffer = true;
+      const discount = parseInt(this.getAttribute('data-discount'), 10);
+      const regular = parseFloat(regularPriceEl.value) || 0;
+      if (regular > 0) {
+        const calculated = Math.round(regular * (1 - discount / 100));
+        offerPriceEl.value = calculated;
+        updateFinancialHUD();
+        updateLivePreview();
+      }
+    });
+  });
+
+  const clearOfferChip = document.getElementById('clear-offer-chip');
+  if (clearOfferChip) {
+    clearOfferChip.addEventListener('click', function() {
+      userTouchedOffer = true;
+      offerPriceEl.value = '';
+      updateFinancialHUD();
+      updateLivePreview();
+    });
+  }
+
+  if (offerPriceEl) {
+    offerPriceEl.addEventListener('input', () => {
+      userTouchedOffer = true;
+      updateFinancialHUD();
+      updateLivePreview();
+    });
+  }
+  if (regularPriceEl) {
+    regularPriceEl.addEventListener('input', () => {
+      autoFillOfferPrice();
+      updateFinancialHUD();
+      updateLivePreview();
+    });
+  }
+  if (buyingPriceEl) {
+    buyingPriceEl.addEventListener('input', updateFinancialHUD);
+  }
+
+  // ── Live Customer Preview Synchronizer ─────────────────────────────────
+  function updateLivePreview() {
+    if (titleEl && previewTitle) {
+      previewTitle.textContent = titleEl.value.trim() || 'Book Title Appears Here';
+    }
+
+    if (previewAuthor) {
+      let authorName = 'Author Name';
+      if (tomAuthor && tomAuthor.getValue()) {
+        const opt = tomAuthor.options[tomAuthor.getValue()];
+        if (opt) authorName = opt.text;
+      }
+      previewAuthor.textContent = authorName;
+    }
+
+    if (previewPub) {
+      let pubName = 'Publication';
+      if (tomPub && tomPub.getValue()) {
+        const opt = tomPub.options[tomPub.getValue()];
+        if (opt) pubName = opt.text;
+      }
+      previewPub.textContent = pubName;
+    }
+
+    if (previewStock && stockEl) {
+      const qty = parseInt(stockEl.value, 10);
+      if (isNaN(qty) || qty <= 0) {
+        previewStock.textContent = 'Out of Stock';
+        previewStock.className = 'text-rose-500 font-semibold';
+      } else {
+        previewStock.textContent = `${qty} in Stock`;
+        previewStock.className = 'text-emerald-500 font-semibold';
+      }
+    }
+
+    const regular = parseFloat(regularPriceEl ? regularPriceEl.value : 0) || 0;
+    const offer = parseFloat(offerPriceEl ? offerPriceEl.value : 0) || 0;
+
+    if (offer > 0 && offer < regular) {
+      previewPriceCurrent.textContent = `৳${Math.round(offer)}`;
+      previewPriceRegular.textContent = `৳${Math.round(regular)}`;
+      previewPriceRegular.classList.remove('hidden');
+
+      const discountPct = Math.round(((regular - offer) / regular) * 100);
+      previewBadge.textContent = `-${discountPct}%`;
+      previewBadge.classList.remove('hidden');
+    } else if (regular > 0) {
+      previewPriceCurrent.textContent = `৳${Math.round(regular)}`;
+      previewPriceRegular.classList.add('hidden');
+      previewBadge.classList.add('hidden');
+    } else {
+      previewPriceCurrent.textContent = '৳0';
+      previewPriceRegular.classList.add('hidden');
+      previewBadge.classList.add('hidden');
+    }
+  }
+
+  if (titleEl) titleEl.addEventListener('input', updateLivePreview);
+  if (stockEl) stockEl.addEventListener('input', updateLivePreview);
+
+  // ── Cover Image Drag, Drop, and Direct Paste (Ctrl+V) ──────────────────
+  function handleImageFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+
+    // Assign file to hidden Django file input using DataTransfer
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    coverInput.files = dt.files;
+
+    // Render Preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const src = e.target.result;
+      dropzonePreviewImg.src = src;
+      dropzoneFileName.textContent = file.name || 'Pasted-cover-image.png';
+      dropzoneEmpty.classList.add('hidden');
+      dropzonePreviewState.classList.remove('hidden');
+
+      // Update right sticky card
+      previewCoverImg.src = src;
+      previewCoverImg.classList.remove('hidden');
+      previewPlaceholder.classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Click on dropzone triggers native file picker
+  if (coverDropzone) {
+    coverDropzone.addEventListener('click', (e) => {
+      if (e.target !== changeCoverBtn && !changeCoverBtn.contains(e.target)) {
+        coverInput.click();
+      }
+    });
+
+    if (changeCoverBtn) {
+      changeCoverBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        coverInput.click();
+      });
+    }
+
+    coverInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        handleImageFile(this.files[0]);
+      }
+    });
+
+    // Drag & Drop
+    ['dragenter', 'dragover'].forEach(evt => {
+      coverDropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        coverDropzone.classList.add('dropzone-active');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+      coverDropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        coverDropzone.classList.remove('dropzone-active');
+      });
+    });
+
+    coverDropzone.addEventListener('drop', e => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleImageFile(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  // Global Paste Listener (Ctrl+V)
+  window.addEventListener('paste', function(e) {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        handleImageFile(file);
+        break;
+      }
+    }
+  });
+
+  // ── Real-Time Duplicate Book Check ─────────────────────────────────────
+  let duplicateDebounce = null;
+  function checkDuplicate() {
+    const titleVal = titleEl ? titleEl.value.trim() : '';
+    const isbnVal = isbnEl ? isbnEl.value.trim() : '';
+
+    if (!titleVal && !isbnVal) {
+      if (dupWarning) dupWarning.classList.add('hidden');
+      return;
+    }
+
+    clearTimeout(duplicateDebounce);
+    duplicateDebounce = setTimeout(() => {
+      const url = new URL('{% url "admin_check_book_duplicate" %}', window.location.origin);
+      if (titleVal) url.searchParams.set('title', titleVal);
+      if (isbnVal) url.searchParams.set('isbn', isbnVal);
+      {% if book %}
+      url.searchParams.set('exclude_id', '{{ book.id }}');
+      {% endif %}
+
+      fetch(url.toString(), {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
       })
       .then(r => r.json())
       .then(data => {
-        pubDiscount = data.discount || 0;
-        if (discountHint) {
-          if (pubDiscount > 0) {
-            discountHint.textContent = `📌 Publication default: ${pubDiscount}% off`;
-            discountHint.classList.remove('hidden');
-          } else {
-            discountHint.classList.add('hidden');
-          }
+        if (data.exists && dupWarning) {
+          dupMatchType.textContent = data.match_type === 'isbn' ? 'Warning: ISBN already in database!' : 'Warning: Title match found!';
+          dupBookInfo.innerHTML = `Book #<strong>${data.book.id}</strong> — <em>"${data.book.title}"</em> by <strong>${data.book.author}</strong> (${data.book.publication}) • Regular: ৳${data.book.regular_price} • Stock: ${data.book.stock}`;
+          dupWarning.classList.remove('hidden');
+        } else if (dupWarning) {
+          dupWarning.classList.add('hidden');
         }
-        autoFillOfferPrice();
       })
-      .catch(() => { pubDiscount = 0; });
-    }
+      .catch(() => {});
+    }, 450);
+  }
 
-    // When publication dropdown changes
-    if (pubSelect) {
-      const pubTom = pubSelect.tomselect;
-      if (pubTom) {
-        pubTom.on('change', function(value) {
-          userTouchedOffer = false;  // reset on new publication selection
-          fetchPubDiscount(value);
-        });
-        // On page load, if editing a book that already has a publication
-        if (pubTom.getValue()) {
-          // Don't auto-fill when editing — just show the hint
-          fetch(`/admin-panel/publication-discount/${pubTom.getValue()}/`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-          })
-          .then(r => r.json())
-          .then(data => {
-            pubDiscount = data.discount || 0;
-            if (discountHint && pubDiscount > 0) {
-              discountHint.textContent = `📌 Publication default: ${pubDiscount}% off`;
-              discountHint.classList.remove('hidden');
-            }
-          })
-          .catch(() => {});
-          userTouchedOffer = true; // treat existing values as manual
-        }
-      }
-    }
+  if (titleEl) titleEl.addEventListener('input', checkDuplicate);
+  if (isbnEl) isbnEl.addEventListener('input', checkDuplicate);
 
-    // When regular_price changes, recalculate offer_price
-    if (regularPriceEl) {
-      regularPriceEl.addEventListener('input', autoFillOfferPrice);
+  // ── Keyboard Shortcuts (Ctrl+Enter to Save, Shift+Enter to Save & Add) ──
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      const addAnotherBtn = document.getElementById('btn-save-add-another');
+      if (addAnotherBtn) addAnotherBtn.click();
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      const saveBtn = document.getElementById('btn-save-standard');
+      if (saveBtn) saveBtn.click();
     }
   });
+
+  // Initialize calculations on first load
+  updateFinancialHUD();
+  updateLivePreview();
+});
 </script>
 {% endblock %}

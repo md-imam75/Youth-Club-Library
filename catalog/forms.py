@@ -25,12 +25,12 @@ class BookForm(forms.ModelForm):
             'description':   forms.Textarea(attrs={'class': 'form-input', 'rows': 4, 'placeholder': 'Short description'}),
             'isbn':          forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'ISBN (optional)'}),
             'pages':         forms.NumberInput(attrs={'class': 'form-input', 'placeholder': 'e.g. 320'}),
-            'language':      forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. Bangla'}),
-            'edition':       forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. 3rd edition'}),
+            'language':      forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. বাংলা'}),
+            'edition':       forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. 1st Edition'}),
             'regular_price': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0.00', 'step': '0.01'}),
             'offer_price':   forms.NumberInput(attrs={'class': 'form-input', 'placeholder': 'Leave blank if no discount', 'step': '0.01'}),
             'buying_price':  forms.NumberInput(attrs={'class': 'form-input', 'placeholder': 'Internal cost (hidden from users)', 'step': '0.01'}),
-            'stock_quantity':forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0'}),
+            'stock_quantity':forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '1'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -44,6 +44,14 @@ class BookForm(forms.ModelForm):
         self.fields['category'].required = False
         self.fields['offer_price'].required = False
         self.fields['isbn'].required = False
+
+        if not self.instance.pk:
+            if 'language' not in self.initial:
+                self.initial['language'] = 'বাংলা'
+            if 'stock_quantity' not in self.initial:
+                self.initial['stock_quantity'] = 1
+            if 'can_borrow' not in self.initial:
+                self.initial['can_borrow'] = True
 
 
 class AuthorForm(forms.ModelForm):

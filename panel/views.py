@@ -504,18 +504,74 @@ def admin_books(request):
 
 
 @staff_required
+def admin_check_book_duplicate(request):
+    """Check if a book with the same title or ISBN already exists (JSON)."""
+    title = request.GET.get('title', '').strip()
+    isbn = request.GET.get('isbn', '').strip()
+    exclude_id = request.GET.get('exclude_id')
+
+    qs = Book.objects.all()
+    if exclude_id and exclude_id.isdigit():
+        qs = qs.exclude(pk=int(exclude_id))
+
+    duplicate = None
+    match_type = None
+
+    if isbn:
+        match_isbn = qs.filter(isbn=isbn).select_related('author', 'publication').first()
+        if match_isbn:
+            duplicate = match_isbn
+            match_type = 'isbn'
+
+    if not duplicate and title:
+        match_title = qs.filter(title__iexact=title).select_related('author', 'publication').first()
+        if match_title:
+            duplicate = match_title
+            match_type = 'title'
+
+    if duplicate:
+        return JsonResponse({
+            'exists': True,
+            'match_type': match_type,
+            'book': {
+                'id': duplicate.id,
+                'title': duplicate.title,
+                'author': duplicate.author.name if duplicate.author else 'No author',
+                'publication': duplicate.publication.name if duplicate.publication else 'No publication',
+                'regular_price': str(duplicate.regular_price),
+                'stock': duplicate.stock_quantity,
+            }
+        })
+
+    return JsonResponse({'exists': False})
+
+
+@staff_required
 def admin_book_add(request):
-    """Add a new book."""
+    """Add a new book with support for batch entry ('Save & Add Another')."""
     if request.method == 'POST':
         form = BookForm(request.POST, request.FILES)
         if form.is_valid():
             book = form.save()
+            if '_addanother' in request.POST:
+                messages.success(request, f'Book "{book.title}" added successfully! Fill details for the next book.')
+                request.session['last_added_book_taxonomy'] = {
+                    'author': book.author_id,
+                    'publication': book.publication_id,
+                    'category': book.category_id,
+                    'language': book.language,
+                }
+                return redirect('admin_book_add')
             messages.success(request, f'Book "{book.title}" added successfully.')
             return redirect('admin_books')
         else:
             messages.error(request, 'Please fix the errors below.')
     else:
-        form = BookForm()
+        initial = {}
+        last_taxonomy = request.session.pop('last_added_book_taxonomy', None)
+        if last_taxonomy:
+            initial.update({k: v for k, v in last_taxonomy.items() if v is not None})
+        form = BookForm(initial=initial)
 
     context = {'page_title': 'Add Book', 'form': form, 'action': 'Add'}
     return render(request, 'admin_panel/book_form.html', context)
