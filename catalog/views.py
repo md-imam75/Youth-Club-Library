@@ -447,7 +447,7 @@ def publications_view(request):
 
 def categories_view(request):
     query = request.GET.get('q', '').strip()
-    sort_by = request.GET.get('sort', 'alpha_asc')
+    sort_by = request.GET.get('sort', 'books_desc')
 
     categories = Category.objects.annotate(num_books=Count('books'))
 
@@ -456,14 +456,15 @@ def categories_view(request):
             Q(name__icontains=query) | Q(description__icontains=query)
         )
 
-    if sort_by == 'alpha_desc':
+    if sort_by == 'alpha_asc':
+        categories = categories.order_by('name')
+    elif sort_by == 'alpha_desc':
         categories = categories.order_by('-name')
-    elif sort_by == 'books_desc':
-        categories = categories.order_by('-num_books', 'name')
     elif sort_by == 'books_asc':
         categories = categories.order_by('num_books', 'name')
-    else:  # default 'alpha_asc'
-        categories = categories.order_by('name')
+    else:  # default 'books_desc' (most books first)
+        sort_by = 'books_desc'
+        categories = categories.order_by('-num_books', 'name')
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
