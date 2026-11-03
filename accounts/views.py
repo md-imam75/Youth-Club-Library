@@ -179,3 +179,37 @@ def delete_account_view(request):
         'page_title': 'Delete Account Confirmation'
     })
 
+
+
+@login_required
+def download_membership_card(request):
+    """Download official digital membership card as PDF for active members."""
+    user = request.user
+    try:
+        membership = user.membership
+        membership.check_expiry()
+    except UserMembership.DoesNotExist:
+        membership = None
+
+    if not membership or membership.status != UserMembership.STATUS_ACTIVE:
+        messages.error(request, 'A membership card is only available for members with an active membership plan.')
+        return redirect('dashboard')
+
+    from panel.views import render_to_pdf
+    from django.http import HttpResponse
+
+    context = {
+        'user': user,
+        'membership': membership,
+        'site_name': 'Youth Club Library',
+    }
+
+    pdf_data = render_to_pdf('accounts/membership_card_pdf.html', context)
+    if pdf_data:
+        response = HttpResponse(pdf_data, content_type='application/pdf')
+        filename = f"Membership_Card_{membership.unique_membership_id}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    messages.error(request, 'Unable to generate your membership card at this time. Please try again.')
+    return redirect('dashboard')

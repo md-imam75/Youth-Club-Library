@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Membership Card - {{ membership.unique_membership_id }}</title>
+  <style>
+    @page {
+      size: a4 portrait;
+      margin: 14mm 16mm 14mm 16mm;
+    }
+    body, table, td, th, div, p, span, h1, h2, h3, h4, h5, h6 {
+      font-family: NotoSansBengali, Helvetica, Arial, sans-serif;
+    }
+    body {
+      font-size: 10pt;
+      color: #1e293b;
+      line-height: 1.4;
+      background-color: #ffffff;
+    }
+
+    .doc-header {
+      width: 100%;
+      border-bottom: 2px solid #0284c7;
+      padding-bottom: 10px;
+      margin-bottom: 25px;
+    }
+    .doc-header td {
+      border: none;
+      padding: 0;
+    }
+    .doc-title {
+      font-size: 16pt;
+      font-weight: bold;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .doc-subtitle {
+      font-size: 9pt;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Card Wrapper on Page */
+    .card-outer {
+      width: 100%;
+      margin: 0 auto 25px auto;
+    }
+
+    /* FRONT OF CARD */
+    .card-front {
+      width: 480px;
+      background-color: #0f172a;
+      color: #ffffff;
+      border: 2px solid #38bdf8;
+      border-radius: 12px;
+      margin: 0 auto 15px auto;
+      padding: 18px 22px;
+    }
+
+    .card-top-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    .card-top-table td {
+      border: none;
+      padding: 0;
+      vertical-align: top;
+    }
+    .org-title {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+    .org-sub {
+      font-size: 7.5pt;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .card-badge {
+      font-size: 8pt;
+      font-weight: bold;
+      background-color: #0369a1;
+      color: #e0f2fe;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-align: right;
+      display: inline-block;
+    }
+
+    .card-body-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      margin-bottom: 12px;
+    }
+    .card-body-table td {
+      border: none;
+      padding: 0;
+      vertical-align: middle;
+    }
+
+    .member-avatar-box {
+      width: 72px;
+      height: 85px;
+      background-color: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      text-align: center;
+      line-height: 85px;
+      font-size: 20pt;
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    .member-info-col {
+      padding-left: 16px;
+    }
+    .info-label {
+      font-size: 7pt;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 1px;
+    }
+    .info-value-name {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+    .info-value-id {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #38bdf8;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .card-bottom-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 8px;
+      margin-top: 10px;
+    }
+    .card-bottom-table td {
+      border: none;
+      padding: 0;
+      vertical-align: bottom;
+      font-size: 8pt;
+    }
+    .valid-val {
+      color: #34d399;
+      font-weight: bold;
+    }
+    .chip-seal {
+      font-size: 7pt;
+      color: #fbbf24;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    /* INSTRUCTIONS & RULES BOX */
+    .rules-box {
+      width: 100%;
+      max-width: 520px;
+      margin: 20px auto 0 auto;
+      background-color: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 8.5pt;
+      color: #475569;
+    }
+    .rules-title {
+      font-weight: bold;
+      color: #0f172a;
+      font-size: 9pt;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .rules-box ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .rules-box li {
+      margin-bottom: 4px;
+    }
+
+    .cut-line-text {
+      text-align: center;
+      font-size: 7.5pt;
+      color: #94a3b8;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Official Document Header -->
+  <table class="doc-header">
+    <tr>
+      <td>
+        <div class="doc-title">Youth Club Library • Chattogram</div>
+        <div class="doc-subtitle">Official Reader Pass & Circulation Credential</div>
+      </td>
+      <td style="text-align: right; vertical-align: middle;">
+        <span style="font-size: 8.5pt; font-weight: bold; color: #0284c7;">
+          VERIFIED ACTIVE PATRON
+        </span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Printable Card Centerpiece -->
+  <div class="card-outer">
+    <div class="card-front">
+      
+      <!-- Top Bar: Org Name & Membership Tier -->
+      <table class="card-top-table">
+        <tr>
+          <td>
+            <div class="org-title">YOUTH CLUB LIBRARY</div>
+            <div class="org-sub">Chattogram • Kazir Dewri Archives</div>
+          </td>
+          <td style="text-align: right;">
+            <div class="card-badge">
+              {{ membership.plan.name|upper|default:"READER PASS" }}
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Body: Member Avatar & Details -->
+      <table class="card-body-table">
+        <tr>
+          <td style="width: 80px;">
+            <div class="member-avatar-box">
+              {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+            </div>
+          </td>
+          <td class="member-info-col">
+            <div class="info-label">Member Name</div>
+            <div class="info-value-name">{{ user.get_full_name }}</div>
+
+            <table style="width: 100%; border: none;">
+              <tr>
+                <td style="width: 55%; border: none; padding: 0;">
+                  <div class="info-label">Member ID</div>
+                  <div class="info-value-id">{{ membership.unique_membership_id }}</div>
+                </td>
+                <td style="width: 45%; border: none; padding: 0;">
+                  <div class="info-label">Contact</div>
+                  <div style="font-size: 8.5pt; color: #e2e8f0; font-weight: bold;">
+                    {{ user.phone|default:user.email }}
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Bottom Bar: Expiry & Security Authentication -->
+      <table class="card-bottom-table">
+        <tr>
+          <td>
+            <span class="info-label" style="display: block;">Valid Until:</span>
+            <span class="valid-val">
+              {% if membership.expires_at %}{{ membership.expires_at|date:"d M Y" }}{% else %}No Expiry{% endif %}
+            </span>
+          </td>
+          <td style="text-align: center;">
+            <span class="chip-seal">★ OFFICIAL SEAL ★</span>
+          </td>
+          <td style="text-align: right;">
+            <span class="info-label" style="display: block;">Status:</span>
+            <span style="color: #38bdf8; font-weight: bold;">ACTIVE</span>
+          </td>
+        </tr>
+      </table>
+
+    </div>
+
+    <div class="cut-line-text">
+      - - - - - - - - - - - - - - - - - - - - - Cut along dashed outline for wallet card - - - - - - - - - - - - - - - - - - - - -
+    </div>
+  </div>
+
+  <!-- Library Guidelines & Borrowing Terms -->
+  <div class="rules-box">
+    <div class="rules-title">Borrowing Privileges & Circulation Guidelines</div>
+    <ul>
+      <li>Present this digital membership pass or Member ID at the circulation desk in <strong>Kazir Dewri, Chattogram</strong>.</li>
+      <li>Standard borrowing duration is <strong>14 days</strong> per checkout. Renewals can be requested via your online dashboard.</li>
+      <li>Free walk-in access to our reading room and physical archives during opening hours (Sun–Fri: 5:00 PM – 9:00 PM).</li>
+      <li>For inquiries, extensions, or book reservations, call <strong>01511234415</strong> or visit <strong>www.youthclublibrary.com</strong>.</li>
+    </ul>
+  </div>
+
+</body>
+</html>
