@@ -554,24 +554,16 @@ def admin_book_add(request):
         if form.is_valid():
             book = form.save()
             if '_addanother' in request.POST:
-                messages.success(request, f'Book "{book.title}" added successfully! Fill details for the next book.')
-                request.session['last_added_book_taxonomy'] = {
-                    'author': book.author_id,
-                    'publication': book.publication_id,
-                    'category': book.category_id,
-                    'language': book.language,
-                }
+                messages.success(request, f'Book "{book.title}" added successfully! Ready for the next book.')
                 return redirect('admin_book_add')
             messages.success(request, f'Book "{book.title}" added successfully.')
             return redirect('admin_books')
         else:
             messages.error(request, 'Please fix the errors below.')
     else:
-        initial = {}
-        last_taxonomy = request.session.pop('last_added_book_taxonomy', None)
-        if last_taxonomy:
-            initial.update({k: v for k, v in last_taxonomy.items() if v is not None})
-        form = BookForm(initial=initial)
+        # Ensure any old session taxonomy cache is cleared
+        request.session.pop('last_added_book_taxonomy', None)
+        form = BookForm()
 
     context = {'page_title': 'Add Book', 'form': form, 'action': 'Add'}
     return render(request, 'admin_panel/book_form.html', context)
