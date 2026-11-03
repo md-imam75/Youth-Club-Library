@@ -359,7 +359,7 @@ def books_by_category_view(request, slug):
 
 def authors_view(request):
     query = request.GET.get('q', '').strip()
-    sort_by = request.GET.get('sort', 'alpha_asc')
+    sort_by = request.GET.get('sort', 'books_desc')
 
     authors = Author.objects.annotate(num_books=Count('books'))
 
@@ -368,16 +368,17 @@ def authors_view(request):
             Q(name__icontains=query) | Q(description__icontains=query)
         )
 
-    if sort_by == 'alpha_desc':
+    if sort_by == 'alpha_asc':
+        authors = authors.order_by('name')
+    elif sort_by == 'alpha_desc':
         authors = authors.order_by('-name')
-    elif sort_by == 'books_desc':
-        authors = authors.order_by('-num_books', 'name')
     elif sort_by == 'books_asc':
         authors = authors.order_by('num_books', 'name')
     elif sort_by == 'newest':
         authors = authors.order_by('-created_at')
-    else:  # default 'alpha_asc'
-        authors = authors.order_by('name')
+    else:  # default 'books_desc' (most books first)
+        sort_by = 'books_desc'
+        authors = authors.order_by('-num_books', 'name')
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -402,7 +403,7 @@ def authors_view(request):
 
 def publications_view(request):
     query = request.GET.get('q', '').strip()
-    sort_by = request.GET.get('sort', 'alpha_asc')
+    sort_by = request.GET.get('sort', 'books_desc')
 
     publications = Publication.objects.annotate(num_books=Count('books'))
 
@@ -411,16 +412,17 @@ def publications_view(request):
             Q(name__icontains=query) | Q(description__icontains=query)
         )
 
-    if sort_by == 'alpha_desc':
+    if sort_by == 'alpha_asc':
+        publications = publications.order_by('name')
+    elif sort_by == 'alpha_desc':
         publications = publications.order_by('-name')
-    elif sort_by == 'books_desc':
-        publications = publications.order_by('-num_books', 'name')
     elif sort_by == 'books_asc':
         publications = publications.order_by('num_books', 'name')
     elif sort_by == 'newest':
         publications = publications.order_by('-created_at')
-    else:  # default 'alpha_asc'
-        publications = publications.order_by('name')
+    else:  # default 'books_desc' (most books first)
+        sort_by = 'books_desc'
+        publications = publications.order_by('-num_books', 'name')
 
     # Pagination
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
