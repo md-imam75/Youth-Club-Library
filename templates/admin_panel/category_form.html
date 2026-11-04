@@ -2,53 +2,320 @@
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl">
+<div class="max-w-6xl mx-auto space-y-6 pb-12">
 
-  <div class="flex items-center gap-4 mb-8">
-    <a href="{% url 'admin_categories' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
-    <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+  <!-- Header -->
+  <div class="flex items-center gap-3.5 mb-6">
+    <a href="{% url 'admin_categories' %}" 
+       class="w-10 h-10 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-all shadow-sm"
+       title="Back to Categories">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+    </a>
+    <div>
+      <div class="flex items-center gap-2.5">
+        <h2 class="text-2xl font-bold dark:text-white text-slate-900 tracking-tight">{{ page_title }}</h2>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-500 dark:text-sky-400 border border-sky-500/20">
+          Workstation
+        </span>
+      </div>
+      <p class="dark:text-gray-400 text-slate-500 text-xs mt-0.5">Genre classifications, unique URL slugs, and featured collection imagery.</p>
+    </div>
   </div>
 
-  <form method="post" enctype="multipart/form-data" class="space-y-6">
+  <form method="post" enctype="multipart/form-data" id="cat-workstation-form" class="space-y-6">
     {% csrf_token %}
 
-    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Category Name <span class="text-red-400">*</span></label>
-        {{ form.name }}
-        {% if form.name.errors %}<p class="text-red-400 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
-      </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- Left Column: Form Fields (8 Cols) -->
+      <div class="lg:col-span-8 space-y-6">
+        
+        <!-- Category Information -->
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 shadow-sm space-y-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="dark:text-white text-slate-900 font-semibold text-base flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg bg-sky-500/10 dark:bg-sky-500/20 flex items-center justify-center text-sky-500 dark:text-sky-400 text-xs font-bold">1</span>
+              Category Identity
+            </h3>
+            <span class="text-xs text-slate-400">* Required</span>
+          </div>
 
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Description</label>
-        {{ form.description }}
-        {% if form.description.errors %}<p class="text-red-400 text-xs mt-1">{{ form.description.errors|join:", " }}</p>{% endif %}
-      </div>
+          <div>
+            <label for="id_name" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">
+              Category Name <span class="text-rose-500">*</span>
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}<p class="text-rose-500 text-xs mt-1.5">{{ form.name.errors|join:", " }}</p>{% endif %}
+          </div>
 
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Category Image</label>
-        {% if cat and cat.image %}
-        <div class="flex items-center gap-4 mb-3">
-          <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-16 h-10 object-cover border dark:border-white/10 border-black/10 rounded" />
-          <p class="dark:text-gray-500 text-slate-500 text-xs">Current image — upload a new file to replace it.</p>
+          <div>
+            <label for="id_slug" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">
+              URL Slug (Optional)
+            </label>
+            {{ form.slug }}
+            <p class="text-[11px] text-slate-400 dark:text-gray-500 mt-1">Unique handle in address bar. Leave blank to generate automatically from name.</p>
+            {% if form.slug.errors %}<p class="text-rose-500 text-xs mt-1.5">{{ form.slug.errors|join:", " }}</p>{% endif %}
+          </div>
+
+          <div>
+            <label for="id_description" class="block text-xs font-medium dark:text-gray-300 text-slate-700 mb-1.5">
+              Description / Overview
+            </label>
+            {{ form.description }}
+            {% if form.description.errors %}<p class="text-rose-500 text-xs mt-1.5">{{ form.description.errors|join:", " }}</p>{% endif %}
+          </div>
         </div>
-        {% endif %}
-        {{ form.image }}
-        {% if form.image.errors %}<p class="text-red-400 text-xs mt-1">{{ form.image.errors|join:", " }}</p>{% endif %}
+
+        <!-- Cover Artwork Section -->
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="dark:text-white text-slate-900 font-semibold text-base flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-500 dark:text-indigo-400 text-xs font-bold">2</span>
+              Category Cover Artwork
+            </h3>
+            <span class="text-xs font-mono text-sky-500 dark:text-sky-400 font-medium">Ctrl + V Supported</span>
+          </div>
+
+          <!-- Hidden Native File Input -->
+          <div class="hidden">
+            {{ form.image }}
+          </div>
+
+          <!-- Modern Drag & Drop / Direct Paste Zone -->
+          <div id="image-dropzone" 
+               class="border-2 border-dashed border-slate-300 dark:border-white/15 rounded-2xl p-6 text-center cursor-pointer hover:border-sky-500 dark:hover:border-sky-400 transition-all bg-slate-50/50 dark:bg-white/[0.02]">
+            <div id="dropzone-empty" class="flex flex-col items-center justify-center py-4">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p class="text-sm font-semibold text-slate-700 dark:text-gray-200">
+                Click to browse image, or paste with <kbd class="px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-xs font-mono font-bold">Ctrl+V</kbd>
+              </p>
+              <p class="text-xs text-slate-400 dark:text-gray-500 mt-1">
+                You can copy any category artwork from your clipboard or browser and press Ctrl+V anywhere.
+              </p>
+            </div>
+
+            <!-- Image Loaded State inside Dropzone -->
+            <div id="dropzone-preview" class="{% if not cat or not cat.image %}hidden{% endif %} flex items-center justify-center gap-4 py-2">
+              <img id="dropzone-img" 
+                   src="{% if cat and cat.image %}{{ cat.image.url }}{% endif %}" 
+                   alt="Category Preview" 
+                   class="w-24 h-16 rounded-xl object-cover shadow-md border border-slate-200 dark:border-white/10" />
+              <div class="text-left">
+                <p id="dropzone-filename" class="text-xs font-semibold text-slate-800 dark:text-white max-w-xs truncate">
+                  {% if cat and cat.image %}Current: {{ cat.image.name }}{% else %}Artwork Ready{% endif %}
+                </p>
+                <p class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium">Ready for upload</p>
+                <button type="button" id="replace-image-btn" class="mt-2 text-xs font-medium text-sky-500 hover:underline">
+                  Replace with new file
+                </button>
+              </div>
+            </div>
+          </div>
+          {% if form.image.errors %}
+            <p class="text-rose-500 text-xs mt-1.5">{{ form.image.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+
       </div>
 
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">URL Slug (optional)</label>
-        {{ form.slug }}
-        <p class="text-gray-600 text-xs mt-1">Short identifier used in URLs. Leave blank to generate automatically from name.</p>
-        {% if form.slug.errors %}<p class="text-red-400 text-xs mt-1">{{ form.slug.errors|join:", " }}</p>{% endif %}
-      </div>
-    </div>
+      <!-- Right Column: Sticky Live Preview & Action Card (4 Cols) -->
+      <div class="lg:col-span-4 lg:sticky lg:top-6 space-y-6">
+        
+        <!-- Action Card -->
+        <div class="stat-card rounded-2xl p-5 border dark:border-white/10 border-black/10 shadow-lg">
+          <h4 class="text-xs font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider mb-3.5">
+            Actions
+          </h4>
+          
+          <div class="space-y-3">
+            <button type="submit" 
+                    class="w-full btn-primary py-3 px-4 text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{{ action }}</span>
+            </button>
 
-    <div class="flex items-center gap-4">
-      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
-      <a href="{% url 'admin_categories' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
+            <a href="{% url 'admin_categories' %}" 
+               class="w-full py-2.5 px-4 rounded-xl text-center block text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-all">
+              Discard & Return
+            </a>
+          </div>
+        </div>
+
+        <!-- Live Category Card Preview -->
+        <div class="stat-card rounded-2xl p-5 border dark:border-white/10 border-black/10 shadow-lg">
+          <h4 class="text-xs font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider mb-4 text-left">
+            Live Category Card Preview
+          </h4>
+
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden">
+            <!-- Artwork Box -->
+            <div class="relative w-full h-32 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 mb-3.5 border border-black/5 dark:border-white/5 flex items-center justify-center">
+              <img id="card-preview-img" 
+                   src="{% if cat and cat.image %}{{ cat.image.url }}{% endif %}" 
+                   alt="Category Preview" 
+                   class="{% if not cat or not cat.image %}hidden{% endif %} w-full h-full object-cover" />
+              <div id="card-preview-placeholder" class="{% if cat and cat.image %}hidden{% endif %} flex flex-col items-center justify-center text-slate-400">
+                <svg class="w-8 h-8 opacity-40 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span class="text-[11px]">Cover Artwork</span>
+              </div>
+              <span id="card-preview-badge" class="absolute bottom-2 left-2 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-black/60 text-white backdrop-blur-sm">
+                {% if cat %}{{ cat.books.count }} Books{% else %}0 Books{% endif %}
+              </span>
+            </div>
+
+            <div class="space-y-1">
+              <h4 id="card-preview-name" class="font-bold text-base text-slate-900 dark:text-white line-clamp-1">
+                {% if cat %}{{ cat.name }}{% else %}Category Name{% endif %}
+              </h4>
+
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] font-mono text-slate-400">slug:</span>
+                <span id="card-preview-slug" class="text-[11px] font-mono font-semibold text-sky-500">
+                  {% if cat and cat.slug %}{{ cat.slug }}{% else %}auto-generated{% endif %}
+                </span>
+              </div>
+
+              <p id="card-preview-desc" class="text-xs text-slate-500 dark:text-gray-400 mt-2 line-clamp-2 leading-relaxed">
+                {% if cat and cat.description %}{{ cat.description }}{% else %}Category synopsis overview appears here...{% endif %}
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const nameInput = document.getElementById('id_name');
+  const slugInput = document.getElementById('id_slug');
+  const descInput = document.getElementById('id_description');
+  const imageInput = document.getElementById('id_image');
+  const dropzone = document.getElementById('image-dropzone');
+  const dropzoneEmpty = document.getElementById('dropzone-empty');
+  const dropzonePreview = document.getElementById('dropzone-preview');
+  const dropzoneImg = document.getElementById('dropzone-img');
+  const dropzoneFilename = document.getElementById('dropzone-filename');
+  const replaceBtn = document.getElementById('replace-image-btn');
+
+  // Preview elements
+  const cardName = document.getElementById('card-preview-name');
+  const cardSlug = document.getElementById('card-preview-slug');
+  const cardDesc = document.getElementById('card-preview-desc');
+  const cardImg = document.getElementById('card-preview-img');
+  const cardPlaceholder = document.getElementById('card-preview-placeholder');
+
+  function slugify(text) {
+    return text.toString().toLowerCase().trim()
+      .replace(/[\s\W-]+/g, '-');
+  }
+
+  if (nameInput) {
+    nameInput.addEventListener('input', () => {
+      const val = nameInput.value.trim();
+      cardName.textContent = val || 'Category Name';
+      if (!slugInput.value) {
+        cardSlug.textContent = val ? slugify(val) : 'auto-generated';
+      }
+    });
+  }
+
+  if (slugInput) {
+    slugInput.addEventListener('input', () => {
+      cardSlug.textContent = slugInput.value.trim() || 'auto-generated';
+    });
+  }
+
+  if (descInput) {
+    descInput.addEventListener('input', () => {
+      cardDesc.textContent = descInput.value.trim() || 'Category synopsis overview appears here...';
+    });
+  }
+
+  function handleImage(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    imageInput.files = dt.files;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const src = e.target.result;
+      dropzoneImg.src = src;
+      dropzoneFilename.textContent = file.name || 'Pasted-artwork.png';
+      dropzoneEmpty.classList.add('hidden');
+      dropzonePreview.classList.remove('hidden');
+
+      cardImg.src = src;
+      cardImg.classList.remove('hidden');
+      cardPlaceholder.classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  if (dropzone) {
+    dropzone.addEventListener('click', (e) => {
+      if (e.target !== replaceBtn && !replaceBtn.contains(e.target)) {
+        imageInput.click();
+      }
+    });
+
+    if (replaceBtn) {
+      replaceBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        imageInput.click();
+      });
+    }
+
+    imageInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) handleImage(this.files[0]);
+    });
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.add('border-sky-500');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.remove('border-sky-500');
+      });
+    });
+
+    dropzone.addEventListener('drop', e => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleImage(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  window.addEventListener('paste', function(e) {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        handleImage(items[i].getAsFile());
+        break;
+      }
+    }
+  });
+});
+</script>
 {% endblock %}

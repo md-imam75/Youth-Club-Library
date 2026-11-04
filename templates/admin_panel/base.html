@@ -660,14 +660,14 @@
         playGlobalBeep(true);
         if (notif) {
           notif.className = "p-3 rounded-xl text-xs font-bold text-center border bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400";
-          notif.innerText = `✅ Successfully added ${amount} ${amount > 1 ? 'copies' : 'copy'}! Total stock is now ${data.new_stock}.`;
+          notif.innerText = `Successfully added ${amount} ${amount > 1 ? 'copies' : 'copy'}! Total stock is now ${data.new_stock}.`;
           notif.classList.remove('hidden');
         }
         if (input) input.value = 1;
       } else {
         if (notif) {
           notif.className = "p-3 rounded-xl text-xs font-bold text-center border bg-red-500/15 border-red-500/30 text-red-600 dark:text-red-400";
-          notif.innerText = `❌ ${data.error || "Failed to restock"}`;
+          notif.innerText = data.error || "Failed to restock";
           notif.classList.remove('hidden');
         } else {
           alert(data.error || "Failed to restock");
@@ -682,7 +682,7 @@
       console.error('Error:', error);
       if (notif) {
         notif.className = "p-3 rounded-xl text-xs font-bold text-center border bg-red-500/15 border-red-500/30 text-red-600 dark:text-red-400";
-        notif.innerText = "❌ Error processing restock request.";
+        notif.innerText = "Error processing restock request.";
         notif.classList.remove('hidden');
       } else {
         alert("Error processing restock.");

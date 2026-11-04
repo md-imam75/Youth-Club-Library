@@ -960,14 +960,35 @@ def publication_discount_ajax(request, pk):
 
 @staff_required
 def admin_authors(request):
-    """List all authors with book counts."""
-    q = request.GET.get('q', '')
-    qs = Author.objects.annotate(num_books=Count('books')).order_by('-created_at')
+    """List all authors with book counts, search, sorting and metrics."""
+    q = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'books_desc')
+    per_page = request.GET.get('per_page', '25')
+
+    qs = Author.objects.annotate(num_books=Count('books'))
     if q:
         qs = qs.filter(name__icontains=q)
 
+    if sort_by == 'books_desc':
+        qs = qs.order_by('-num_books', 'name')
+    elif sort_by == 'books_asc':
+        qs = qs.order_by('num_books', 'name')
+    elif sort_by == 'name_asc':
+        qs = qs.order_by('name')
+    elif sort_by == 'name_desc':
+        qs = qs.order_by('-name')
+    else:  # 'newest'
+        qs = qs.order_by('-created_at')
+
+    try:
+        per_page_int = int(per_page)
+        if per_page_int not in [15, 25, 50, 100]:
+            per_page_int = 25
+    except ValueError:
+        per_page_int = 25
+
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(qs, 15)
+    paginator = Paginator(qs, per_page_int)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -976,10 +997,19 @@ def admin_authors(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    total_authors = Author.objects.count()
+    with_books = Author.objects.filter(books__isnull=False).distinct().count()
+    with_photo = Author.objects.exclude(image='').exclude(image__isnull=True).count()
+
     context = {
         'page_title': 'Manage Authors',
         'authors': page_obj,
         'q': q,
+        'sort_by': sort_by,
+        'per_page': per_page_int,
+        'total_authors': total_authors,
+        'with_books': with_books,
+        'with_photo': with_photo,
     }
     return render(request, 'admin_panel/authors.html', context)
 
@@ -1049,14 +1079,35 @@ def admin_author_delete(request, pk):
 
 @staff_required
 def admin_publications(request):
-    """List all publications with book counts."""
-    q = request.GET.get('q', '')
-    qs = Publication.objects.annotate(num_books=Count('books')).order_by('-created_at')
+    """List all publications with book counts, search, sorting and metrics."""
+    q = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'books_desc')
+    per_page = request.GET.get('per_page', '25')
+
+    qs = Publication.objects.annotate(num_books=Count('books'))
     if q:
         qs = qs.filter(name__icontains=q)
 
+    if sort_by == 'books_desc':
+        qs = qs.order_by('-num_books', 'name')
+    elif sort_by == 'books_asc':
+        qs = qs.order_by('num_books', 'name')
+    elif sort_by == 'discount_desc':
+        qs = qs.order_by('-default_discount_percent', 'name')
+    elif sort_by == 'name_asc':
+        qs = qs.order_by('name')
+    else:  # 'newest'
+        qs = qs.order_by('-created_at')
+
+    try:
+        per_page_int = int(per_page)
+        if per_page_int not in [15, 25, 50, 100]:
+            per_page_int = 25
+    except ValueError:
+        per_page_int = 25
+
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(qs, 15)
+    paginator = Paginator(qs, per_page_int)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -1065,10 +1116,19 @@ def admin_publications(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    total_publications = Publication.objects.count()
+    with_books = Publication.objects.filter(books__isnull=False).distinct().count()
+    with_discount = Publication.objects.filter(default_discount_percent__gt=0).count()
+
     context = {
         'page_title': 'Manage Publications',
         'publications': page_obj,
         'q': q,
+        'sort_by': sort_by,
+        'per_page': per_page_int,
+        'total_publications': total_publications,
+        'with_books': with_books,
+        'with_discount': with_discount,
     }
     return render(request, 'admin_panel/publications.html', context)
 
@@ -1138,14 +1198,35 @@ def admin_publication_delete(request, pk):
 
 @staff_required
 def admin_categories(request):
-    """List all categories with book counts."""
-    q = request.GET.get('q', '')
-    qs = Category.objects.annotate(num_books=Count('books')).order_by('name')
+    """List all categories with book counts, search, sorting and metrics."""
+    q = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'books_desc')
+    per_page = request.GET.get('per_page', '25')
+
+    qs = Category.objects.annotate(num_books=Count('books'))
     if q:
         qs = qs.filter(name__icontains=q)
 
+    if sort_by == 'books_desc':
+        qs = qs.order_by('-num_books', 'name')
+    elif sort_by == 'books_asc':
+        qs = qs.order_by('num_books', 'name')
+    elif sort_by == 'name_asc':
+        qs = qs.order_by('name')
+    elif sort_by == 'name_desc':
+        qs = qs.order_by('-name')
+    else:  # 'newest'
+        qs = qs.order_by('-id')
+
+    try:
+        per_page_int = int(per_page)
+        if per_page_int not in [15, 25, 50, 100]:
+            per_page_int = 25
+    except ValueError:
+        per_page_int = 25
+
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(qs, 15)
+    paginator = Paginator(qs, per_page_int)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -1154,10 +1235,19 @@ def admin_categories(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    total_categories = Category.objects.count()
+    with_books = Category.objects.filter(books__isnull=False).distinct().count()
+    with_image = Category.objects.exclude(image='').exclude(image__isnull=True).count()
+
     context = {
         'page_title': 'Manage Categories',
         'categories': page_obj,
         'q': q,
+        'sort_by': sort_by,
+        'per_page': per_page_int,
+        'total_categories': total_categories,
+        'with_books': with_books,
+        'with_image': with_image,
     }
     return render(request, 'admin_panel/categories.html', context)
 

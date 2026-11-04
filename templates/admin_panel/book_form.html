@@ -376,7 +376,7 @@
                 <p id="dropzone-file-name" class="text-xs font-semibold text-slate-800 dark:text-white max-w-xs truncate">
                   {% if book and book.cover_image %}Current Cover: {{ book.cover_image.name }}{% else %}Cover Image Ready{% endif %}
                 </p>
-                <p class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium">✓ Ready for upload</p>
+                <p class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium">Ready for upload</p>
                 <button type="button" id="change-cover-btn" class="mt-2.5 text-xs font-medium text-sky-500 hover:underline">
                   Replace with new file
                 </button>
@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   const renderOptionCreate = (data, escape) => {
-    return '<div class="create p-2 text-xs text-sky-400 font-semibold hover:bg-sky-500/10 cursor-pointer">➕ Add new: <strong>' + escape(data.input) + '</strong></div>';
+    return '<div class="create p-2 text-xs text-sky-400 font-semibold hover:bg-sky-500/10 cursor-pointer">+ Add new: <strong>' + escape(data.input) + '</strong></div>';
   };
 
   if (authorSelect) {
@@ -680,7 +680,7 @@ document.addEventListener('DOMContentLoaded', function() {
       pubDiscount = data.discount || 0;
       if (pubDiscountPill) {
         if (pubDiscount > 0) {
-          pubDiscountPill.innerHTML = `<span>📌 Publication discount:</span> <strong>${pubDiscount}% off</strong>`;
+          pubDiscountPill.innerHTML = `<span>Publication discount:</span> <strong>${pubDiscount}% off</strong>`;
           pubDiscountPill.classList.remove('hidden');
         } else {
           pubDiscountPill.classList.add('hidden');

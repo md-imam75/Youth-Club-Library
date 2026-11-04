@@ -44,24 +44,26 @@
 
   <!-- Floating Toast Notification -->
   <div id="quick-toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xl border border-white/10 text-xs font-semibold">
-    <span id="toast-icon" class="text-emerald-400 dark:text-emerald-600 font-bold">✓</span>
+    <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+    </span>
     <span id="toast-msg">Updated</span>
   </div>
 
   <!-- Unified Navigation Tabs -->
   <div class="flex border-b dark:border-white/5 border-black/10 gap-2 overflow-x-auto pb-px">
     <a href="{% url 'admin_books' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-sky-500 text-sky-500 dark:text-sky-400 flex items-center gap-2 shrink-0">
-      <span>📚 Books</span>
+      <span>Books</span>
       <span class="bg-sky-500/10 dark:bg-sky-500/20 px-2 py-0.5 rounded-full text-xs font-mono font-bold">{{ total_books }}</span>
     </a>
     <a href="{% url 'admin_authors' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors shrink-0">
-      ✍️ Authors
+      <span>Authors</span>
     </a>
     <a href="{% url 'admin_publications' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors shrink-0">
-      🏛️ Publications
+      <span>Publications</span>
     </a>
     <a href="{% url 'admin_categories' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors shrink-0">
-      🏷️ Categories
+      <span>Categories</span>
     </a>
   </div>
 
@@ -104,7 +106,7 @@
       </div>
       <div class="text-2xl font-black font-display text-slate-900 dark:text-white">{{ total_books }}</div>
       <div class="text-[11px] {% if status_filter == 'all' %}text-sky-600 dark:text-sky-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
-        {% if status_filter == 'all' %}● Viewing all catalog{% else %}Click to view all{% endif %}
+        {% if status_filter == 'all' %}Viewing all catalog{% else %}Click to view all{% endif %}
       </div>
     </a>
 
@@ -117,7 +119,7 @@
       </div>
       <div class="text-2xl font-black font-display text-emerald-600 dark:text-emerald-400">{{ in_stock }}</div>
       <div class="text-[11px] {% if status_filter == 'in_stock' %}text-emerald-600 dark:text-emerald-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
-        {% if status_filter == 'in_stock' %}● Showing ready stock{% else %}Healthy inventory (&gt;3){% endif %}
+        {% if status_filter == 'in_stock' %}Showing ready stock{% else %}Healthy inventory (&gt;3){% endif %}
       </div>
     </a>
 
@@ -130,7 +132,7 @@
       </div>
       <div class="text-2xl font-black font-display text-amber-600 dark:text-amber-400">{{ low_stock }}</div>
       <div class="text-[11px] {% if status_filter == 'low_stock' %}text-amber-600 dark:text-amber-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
-        {% if status_filter == 'low_stock' %}● Showing low stock{% else %}1–3 copies remaining{% endif %}
+        {% if status_filter == 'low_stock' %}Showing low stock{% else %}1–3 copies remaining{% endif %}
       </div>
     </a>
 
@@ -143,7 +145,7 @@
       </div>
       <div class="text-2xl font-black font-display text-rose-600 dark:text-rose-400">{{ out_of_stock }}</div>
       <div class="text-[11px] {% if status_filter == 'out_of_stock' %}text-rose-600 dark:text-rose-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
-        {% if status_filter == 'out_of_stock' %}● Showing empty stock{% else %}Needs procurement (0){% endif %}
+        {% if status_filter == 'out_of_stock' %}Showing empty stock{% else %}Needs procurement (0){% endif %}
       </div>
     </a>
 
@@ -156,7 +158,7 @@
       </div>
       <div class="text-2xl font-black font-display text-purple-600 dark:text-purple-400">{{ featured }}</div>
       <div class="text-[11px] {% if status_filter == 'featured' %}text-purple-600 dark:text-purple-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
-        {% if status_filter == 'featured' %}● Showing featured{% else %}On homepage spotlight{% endif %}
+        {% if status_filter == 'featured' %}Showing featured{% else %}On homepage spotlight{% endif %}
       </div>
     </a>
 
@@ -182,7 +184,9 @@
              class="w-full pl-10 pr-10 py-2.5 rounded-xl text-xs bg-slate-100/80 dark:bg-slate-900/80 border border-transparent focus:border-sky-500 focus:bg-white dark:focus:bg-slate-950 dark:text-white text-slate-900 transition-all outline-none" />
       {% if q %}
       <a href="?status={{ status_filter }}{% if category_id %}&category={{ category_id }}{% endif %}{% if publication_id %}&publication={{ publication_id }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}&per_page={{ per_page }}" 
-         class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white" title="Clear Search">✕</a>
+         class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white" title="Clear Search">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </a>
       {% endif %}
     </div>
 
@@ -236,12 +240,12 @@
       <span>Found <strong>{{ books.paginator.count }}</strong> books matching criteria</span>
       {% if q or status_filter != 'all' or category_id or publication_id or sort_by != 'newest' %}
         <a href="{% url 'admin_books' %}" class="text-rose-500 hover:underline font-semibold flex items-center gap-1">
-          <span>✕ Clear All Filters</span>
+          <span>Clear All Filters</span>
         </a>
       {% endif %}
     </div>
     <div class="hidden sm:block text-[11px] font-mono text-slate-400">
-      💡 Tip: Use <strong class="text-slate-600 dark:text-slate-300">+</strong> or <strong class="text-slate-600 dark:text-slate-300">-</strong> to adjust stock right in the row
+      Tip: Use <strong class="text-slate-600 dark:text-slate-300">+</strong> or <strong class="text-slate-600 dark:text-slate-300">-</strong> to adjust stock right in the row
     </div>
   </div>
 
@@ -290,8 +294,8 @@
                       {{ book.title }}
                     </a>
                     {% if book.slug or book.id %}
-                    <a href="{{ book.get_absolute_url|default:'#' }}" target="_blank" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-sky-500 transition-opacity" title="View customer-facing page">
-                      ↗
+                    <a href="{{ book.get_absolute_url|default:'#' }}" target="_blank" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-sky-500 transition-opacity" title="View live page">
+                      <svg class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                     </a>
                     {% endif %}
                   </div>
@@ -375,7 +379,7 @@
                         id="featured-btn-{{ book.id }}" 
                         onclick="quickToggleFlag({{ book.id }}, 'toggle_featured')" 
                         class="px-2 py-0.5 rounded-md text-[10px] font-bold transition-all {% if book.is_featured %}bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:opacity-80{% else %}text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 hover:text-purple-500{% endif %}">
-                  {% if book.is_featured %}★ Featured{% else %}+ Feature{% endif %}
+                  {% if book.is_featured %}Featured{% else %}+ Feature{% endif %}
                 </button>
                 {% if book.can_borrow %}
                   <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
@@ -395,9 +399,10 @@
               <div class="flex items-center justify-end gap-1.5">
                 <button type="button" 
                         onclick="openBarcodeModal({{ book.id }}, '{{ book.title|escapejs }}', {{ book.stock_quantity }})" 
-                        class="p-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 dark:text-sky-400 transition-colors" 
+                        class="px-2 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 transition-colors font-medium text-xs flex items-center gap-1" 
                         title="Print Barcode Stickers">
-                  🏷️
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                  <span>Barcode</span>
                 </button>
                 <a href="{% url 'admin_book_edit' book.pk %}" 
                    class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors">
@@ -406,7 +411,7 @@
                 <a href="{% url 'admin_book_delete' book.pk %}" 
                    class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors" 
                    title="Delete Book">
-                  🗑️
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </a>
               </div>
             </td>
@@ -431,7 +436,8 @@
         <button type="button" 
                 onclick="printSelectedBarcodes()" 
                 class="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold transition-colors flex items-center gap-1.5">
-          🏷️ Print Selected Barcodes
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          <span>Print Selected Barcodes</span>
         </button>
       </div>
       <button type="button" onclick="clearSelection()" class="text-slate-400 hover:text-white">
@@ -446,8 +452,8 @@
   <!-- Barcode Modal -->
   <div id="barcode-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full border border-black/10 dark:border-white/10 shadow-2xl text-center space-y-4">
-      <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center mx-auto text-xl">
-        🏷️
+      <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center mx-auto">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
       </div>
       <div>
         <h4 class="font-bold text-base text-slate-900 dark:text-white" id="modal-book-title">Book Title</h4>
@@ -472,10 +478,9 @@
   let activeBarcodeBookId = null;
 
   // Floating Toast
-  function showToast(msg, icon = '✓') {
+  function showToast(msg) {
     const toast = document.getElementById('quick-toast');
     document.getElementById('toast-msg').textContent = msg;
-    document.getElementById('toast-icon').textContent = icon;
     toast.classList.remove('translate-y-20', 'opacity-0');
     setTimeout(() => {
       toast.classList.add('translate-y-20', 'opacity-0');
@@ -497,7 +502,7 @@
     .then(data => {
       if (data.success) {
         updateRowStockUI(bookId, data.new_stock);
-        showToast(`Stock updated to ${data.new_stock}!`);
+        showToast(`Stock updated to ${data.new_stock}`);
       } else {
         alert(data.error || 'Failed to update stock');
       }
@@ -526,7 +531,7 @@
     .then(data => {
       if (data.success) {
         updateRowStockUI(bookId, data.new_stock);
-        showToast(`Stock set to ${data.new_stock}!`);
+        showToast(`Stock set to ${data.new_stock}`);
       } else {
         alert(data.error || 'Failed to update stock');
       }
@@ -587,9 +592,9 @@
     .then(data => {
       if (data.success && btn) {
         if (data.is_featured) {
-          btn.textContent = '★ Featured';
+          btn.textContent = 'Featured';
           btn.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:opacity-80';
-          showToast('Book added to Homepage Featured!', '★');
+          showToast('Added to Featured');
         } else {
           btn.textContent = '+ Feature';
           btn.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 hover:text-purple-500';

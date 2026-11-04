@@ -2,86 +2,235 @@
 {% block title %}Manage Publications{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl space-y-6">
+<div class="max-w-[1440px] mx-auto space-y-6 pb-12">
 
   <!-- Unified Navigation Tabs -->
-  <div class="flex border-b dark:border-white/5 border-black/10 gap-2">
-    <a href="{% url 'admin_books' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all">Books</a>
-    <a href="{% url 'admin_authors' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all">Authors</a>
-    <a href="{% url 'admin_publications' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-sky-500 text-sky-400 transition-all">Publications</a>
-    <a href="{% url 'admin_categories' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-all">Categories</a>
+  <div class="flex border-b dark:border-white/5 border-black/10 gap-2 overflow-x-auto pb-px">
+    <a href="{% url 'admin_books' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors shrink-0">
+      <span>Books</span>
+    </a>
+    <a href="{% url 'admin_authors' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors shrink-0">
+      <span>Authors</span>
+    </a>
+    <a href="{% url 'admin_publications' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-sky-500 text-sky-500 dark:text-sky-400 flex items-center gap-2 shrink-0">
+      <span>Publications</span>
+      <span class="bg-sky-500/10 dark:bg-sky-500/20 px-2 py-0.5 rounded-full text-xs font-mono font-bold">{{ total_publications }}</span>
+    </a>
+    <a href="{% url 'admin_categories' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors shrink-0">
+      <span>Categories</span>
+    </a>
   </div>
 
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h2 class="text-xl font-bold dark:text-white text-slate-900">Manage Publications</h2>
-      <p class="text-xs dark:text-gray-500 text-slate-500 mt-1">{{ publications.paginator.count }} publications total</p>
+      <div class="flex items-center gap-2.5">
+        <h2 class="text-2xl font-bold dark:text-white text-slate-900 tracking-tight">Publications Directory</h2>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-500 dark:text-sky-400 border border-sky-500/20">
+          Publishers
+        </span>
+      </div>
+      <p class="dark:text-gray-400 text-slate-500 text-xs mt-0.5">Manage publishers, default discount rules, official links, and published collections.</p>
     </div>
-    <a href="{% url 'admin_publication_add' %}" class="btn-primary flex items-center gap-2">
-      <span class="text-lg leading-none">+</span> Add New Publication
-    </a>
+    
+    <div class="flex items-center gap-2.5">
+      <a href="{% url 'admin_publication_add' %}" class="btn-primary flex items-center gap-1.5 px-4 py-2 text-xs font-bold shadow-md">
+        <span class="text-base leading-none font-bold">+</span>
+        <span>Add New Publication</span>
+      </a>
+    </div>
   </div>
 
-  <!-- Search -->
-  <form method="get" class="flex gap-3">
-    <input type="text" name="q" value="{{ q }}" placeholder="Search by publication name..."
-           class="form-input flex-1" />
-    <button type="submit" class="btn-primary px-5">Search</button>
-    {% if q %}<a href="?" class="btn-primary px-4" style="background:rgba(255,255,255,0.1);">Clear</a>{% endif %}
+  <!-- Metrics HUD -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+    <div class="p-4 rounded-2xl glass border border-black/5 dark:border-white/5">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <span class="font-bold uppercase tracking-wider text-[11px]">Total Publications</span>
+        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+      </div>
+      <div class="text-2xl font-black font-display text-slate-900 dark:text-white">{{ total_publications }}</div>
+      <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Publishers in system</div>
+    </div>
+
+    <div class="p-4 rounded-2xl glass border border-black/5 dark:border-white/5">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <span class="font-bold uppercase tracking-wider text-[11px]">Active Catalogs</span>
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+      </div>
+      <div class="text-2xl font-black font-display text-emerald-600 dark:text-emerald-400">{{ with_books }}</div>
+      <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">With cataloged titles</div>
+    </div>
+
+    <div class="p-4 rounded-2xl glass border border-black/5 dark:border-white/5">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <span class="font-bold uppercase tracking-wider text-[11px]">Default Discount Rules</span>
+        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+      </div>
+      <div class="text-2xl font-black font-display text-indigo-600 dark:text-indigo-400">{{ with_discount }}</div>
+      <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Automatic pricing enabled</div>
+    </div>
+  </div>
+
+  <!-- Multi-Filter Toolbar -->
+  <form method="get" id="pub-filter-form" class="stat-card rounded-2xl p-4 border dark:border-white/10 border-black/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <!-- Search Box -->
+    <div class="relative flex-1 max-w-lg">
+      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <input type="text" 
+             name="q" 
+             value="{{ q }}" 
+             placeholder="Search by publication name..." 
+             class="w-full pl-10 pr-10 py-2.5 rounded-xl text-xs bg-slate-100/80 dark:bg-slate-900/80 border border-transparent focus:border-sky-500 focus:bg-white dark:focus:bg-slate-950 dark:text-white text-slate-900 transition-all outline-none" />
+      {% if q %}
+      <a href="?sort={{ sort_by }}&per_page={{ per_page }}" 
+         class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white" title="Clear Search">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Dropdown Filters & Controls -->
+    <div class="flex flex-wrap items-center gap-2.5 text-xs">
+      <!-- Sort Filter -->
+      <select name="sort" onchange="document.getElementById('pub-filter-form').submit()" 
+              class="px-3 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-black/5 dark:border-white/10 text-slate-700 dark:text-slate-200 outline-none cursor-pointer">
+        <option value="books_desc" {% if sort_by == 'books_desc' %}selected{% endif %}>Sort: Most Books First</option>
+        <option value="books_asc" {% if sort_by == 'books_asc' %}selected{% endif %}>Sort: Fewest Books First</option>
+        <option value="discount_desc" {% if sort_by == 'discount_desc' %}selected{% endif %}>Highest Discount First</option>
+        <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
+        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Sort: Recently Added</option>
+      </select>
+
+      <!-- Per Page -->
+      <select name="per_page" onchange="document.getElementById('pub-filter-form').submit()" 
+              class="px-2.5 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-black/5 dark:border-white/10 text-slate-700 dark:text-slate-200 outline-none cursor-pointer">
+        <option value="15" {% if per_page == 15 %}selected{% endif %}>15 / page</option>
+        <option value="25" {% if per_page == 25 %}selected{% endif %}>25 / page</option>
+        <option value="50" {% if per_page == 50 %}selected{% endif %}>50 / page</option>
+        <option value="100" {% if per_page == 100 %}selected{% endif %}>100 / page</option>
+      </select>
+
+      <button type="submit" class="btn-primary px-4 py-2 font-semibold">Filter</button>
+    </div>
   </form>
 
-  <!-- Table -->
-  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
-    <table class="w-full text-sm min-w-[700px]">
-      <thead>
-        <tr class="border-b border-white/8">
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Logo</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Publication Name</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Website</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Books Count</th>
-          <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for pub in publications %}
-        <tr class="table-row">
-          <td class="px-4 py-3 text-xs">
-            {% if pub.logo %}
-              <img src="{{ pub.logo.url }}" alt="{{ pub.name }}" class="w-10 h-10 rounded object-contain border dark:border-white/10 border-black/10" />
-            {% else %}
-              <div class="w-10 h-10 rounded flex items-center justify-center bg-gray-800 border dark:border-white/5 border-black/10 text-[10px] dark:text-gray-500 text-slate-500">No Logo</div>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 font-semibold dark:text-white text-slate-900 text-sm">
-            {{ pub.name }}
-            {% if pub.description %}<p class="dark:text-gray-500 text-slate-500 text-xs font-normal mt-0.5 max-w-xs truncate">{{ pub.description }}</p>{% endif %}
-          </td>
-          <td class="px-4 py-3 dark:text-gray-400 text-slate-600 text-xs">
-            {% if pub.website %}
-              <a href="{{ pub.website }}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">{{ pub.website }}</a>
-            {% else %}
-              —
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs font-semibold">{{ pub.num_books }}</td>
-          <td class="px-4 py-3 text-right">
-            <div class="flex items-center justify-end gap-2">
-              <a href="{% url 'admin_publication_edit' pub.pk %}" class="btn-success text-xs py-1 px-3">Edit</a>
-              <a href="{% url 'admin_publication_delete' pub.pk %}" class="btn-danger text-xs py-1 px-3">Delete</a>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="5" class="text-center py-16 dark:text-gray-500 text-slate-500">No publications found.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <!-- Filter Context Line -->
+  <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
+    <div class="flex items-center gap-2">
+      <span>Found <strong>{{ publications.paginator.count }}</strong> publications</span>
+      {% if q or sort_by != 'books_desc' %}
+        <a href="{% url 'admin_publications' %}" class="text-rose-500 hover:underline font-semibold">
+          Clear Filters
+        </a>
+      {% endif %}
+    </div>
   </div>
 
-  <!-- Pagination -->
-  {% include "includes/pagination.html" with page_obj=publications %}
+  <!-- Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/10 border-black/10 shadow-lg overflow-hidden">
+    <div class="overflow-x-auto table-container">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-100/80 dark:bg-slate-900/80 border-b border-black/5 dark:border-white/5 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+            <th class="py-3.5 px-4 w-16 text-center">Logo</th>
+            <th class="py-3.5 px-4 min-w-[220px]">Publication Name</th>
+            <th class="py-3.5 px-4 min-w-[160px]">Default Discount</th>
+            <th class="py-3.5 px-4 min-w-[160px]">Website</th>
+            <th class="py-3.5 px-4 min-w-[140px]">Cataloged Books</th>
+            <th class="py-3.5 px-4 min-w-[140px] text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-black/5 dark:divide-white/5">
+          {% for pub in publications %}
+          <tr class="hover:bg-sky-500/[0.02] dark:hover:bg-white/[0.02] transition-colors group">
+            
+            <!-- Logo -->
+            <td class="py-3.5 px-4 text-center">
+              {% if pub.logo %}
+                <img src="{{ pub.logo.url }}" alt="{{ pub.name }}" class="w-10 h-10 rounded-xl object-contain border border-slate-300 dark:border-white/10 shadow-sm mx-auto p-0.5 bg-white dark:bg-slate-900" />
+              {% else %}
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs uppercase mx-auto border border-black/5 dark:border-white/5">
+                  {{ pub.name|slice:":1" }}
+                </div>
+              {% endif %}
+            </td>
+
+            <!-- Publication Name -->
+            <td class="py-3.5 px-4">
+              <div class="flex items-center gap-1.5">
+                <a href="{% url 'admin_publication_edit' pub.pk %}" class="font-bold text-sm text-slate-900 dark:text-white hover:text-sky-500 dark:hover:text-sky-400 transition-colors">
+                  {{ pub.name }}
+                </a>
+                <a href="{{ pub.get_absolute_url|default:'#' }}" target="_blank" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-sky-500 transition-opacity" title="View customer-facing page">
+                  <svg class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+              </div>
+              <span class="text-[11px] text-slate-400 font-mono">ID: #{{ pub.id }}</span>
+            </td>
+
+            <!-- Default Discount -->
+            <td class="py-3.5 px-4">
+              {% if pub.default_discount_percent > 0 %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  {{ pub.default_discount_percent|floatformat:0 }}% Off
+                </span>
+              {% else %}
+                <span class="text-slate-400 text-xs">Standard</span>
+              {% endif %}
+            </td>
+
+            <!-- Website -->
+            <td class="py-3.5 px-4 text-slate-600 dark:text-slate-300">
+              {% if pub.website %}
+                <a href="{{ pub.website }}" target="_blank" rel="noopener noreferrer" class="text-sky-500 hover:underline flex items-center gap-1 truncate max-w-[150px]">
+                  <span>{{ pub.website|cut:"https://"|cut:"http://" }}</span>
+                </a>
+              {% else %}
+                <span class="text-slate-400">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Books Count -->
+            <td class="py-3.5 px-4">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold font-mono {% if pub.num_books > 0 %}bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20{% else %}bg-slate-100 dark:bg-white/5 text-slate-400 border border-black/5 dark:border-white/5{% endif %}">
+                {{ pub.num_books }} books
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="py-3.5 px-4 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <a href="{% url 'admin_publication_edit' pub.pk %}" 
+                   class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors">
+                  Edit
+                </a>
+                <a href="{% url 'admin_publication_delete' pub.pk %}" 
+                   class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors" 
+                   title="Delete Publication">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </a>
+              </div>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-16 dark:text-gray-500 text-slate-500">
+              No publications found matching this query. <a href="{% url 'admin_publication_add' %}" class="text-sky-400 font-semibold">Add a new publication →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    {% include "includes/pagination.html" with page_obj=publications %}
+  </div>
+
 </div>
 {% endblock %}
