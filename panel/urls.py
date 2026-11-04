@@ -26,6 +26,7 @@ urlpatterns = [
     path('books/check-duplicate/',  views.admin_check_book_duplicate, name='admin_check_book_duplicate'),
     path('books/add/',              views.admin_book_add,          name='admin_book_add'),
     path('books/<int:pk>/edit/',    views.admin_book_edit,         name='admin_book_edit'),
+    path('books/<int:pk>/quick-update/', views.admin_book_quick_update, name='admin_book_quick_update'),
     path('books/<int:pk>/delete/',  views.admin_book_delete,       name='admin_book_delete'),
     # Plans CRUD
     path('plans/',                  views.admin_plans,             name='admin_plans'),

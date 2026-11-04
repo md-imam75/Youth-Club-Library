@@ -468,14 +468,66 @@ def admin_order_action(request, pk):
 
 @staff_required
 def admin_books(request):
-    """Books list with search and filters."""
-    q = request.GET.get('q', '')
-    qs = Book.objects.select_related('author', 'publication', 'category').order_by('-created_at')
+    """Books list with multi-faceted search, status pills, category/pub filters, and sorting."""
+    q = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', 'all')
+    category_id = request.GET.get('category', '').strip()
+    publication_id = request.GET.get('publication', '').strip()
+    sort_by = request.GET.get('sort', 'newest')
+    per_page = request.GET.get('per_page', '25')
+
+    qs = Book.objects.select_related('author', 'publication', 'category')
+
+    # Status pills filtering
+    if status_filter == 'in_stock':
+        qs = qs.filter(stock_quantity__gt=3)
+    elif status_filter == 'low_stock':
+        qs = qs.filter(stock_quantity__gt=0, stock_quantity__lte=3)
+    elif status_filter == 'out_of_stock':
+        qs = qs.filter(stock_quantity=0)
+    elif status_filter == 'featured':
+        qs = qs.filter(is_featured=True)
+
+    # Search query
     if q:
-        qs = qs.filter(Q(title__icontains=q) | Q(author__name__icontains=q))
+        qs = qs.filter(
+            Q(title__icontains=q) |
+            Q(author__name__icontains=q) |
+            Q(publication__name__icontains=q) |
+            Q(isbn__icontains=q) |
+            Q(barcode__icontains=q)
+        )
+
+    # Category & Publication dropdown filters
+    if category_id and category_id.isdigit():
+        qs = qs.filter(category_id=int(category_id))
+    if publication_id and publication_id.isdigit():
+        qs = qs.filter(publication_id=int(publication_id))
+
+    # Sorting
+    if sort_by == 'stock_asc':
+        qs = qs.order_by('stock_quantity', 'title')
+    elif sort_by == 'stock_desc':
+        qs = qs.order_by('-stock_quantity', 'title')
+    elif sort_by == 'price_desc':
+        qs = qs.order_by('-regular_price')
+    elif sort_by == 'price_asc':
+        qs = qs.order_by('regular_price')
+    elif sort_by == 'title_asc':
+        qs = qs.order_by('title')
+    else:  # 'newest' default
+        qs = qs.order_by('-created_at')
+
+    # Per-page pagination
+    try:
+        per_page_int = int(per_page)
+        if per_page_int not in [15, 25, 50, 100]:
+            per_page_int = 25
+    except ValueError:
+        per_page_int = 25
 
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(qs, 15)
+    paginator = Paginator(qs, per_page_int)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -486,21 +538,81 @@ def admin_books(request):
 
     stats = Book.objects.aggregate(
         total_books=Count('id'),
-        in_stock=Count('id', filter=Q(stock_quantity__gt=0)),
+        in_stock=Count('id', filter=Q(stock_quantity__gt=3)),
+        low_stock=Count('id', filter=Q(stock_quantity__gt=0, stock_quantity__lte=3)),
         out_of_stock=Count('id', filter=Q(stock_quantity=0)),
         featured=Count('id', filter=Q(is_featured=True)),
     )
+
+    categories = Category.objects.all().order_by('name')
+    publications = Publication.objects.all().order_by('name')
 
     context = {
         'page_title': 'Manage Books',
         'books': page_obj,
         'q': q,
+        'status_filter': status_filter,
+        'category_id': category_id,
+        'publication_id': publication_id,
+        'sort_by': sort_by,
+        'per_page': per_page_int,
         'total_books': stats['total_books'] or 0,
         'in_stock': stats['in_stock'] or 0,
+        'low_stock': stats['low_stock'] or 0,
         'out_of_stock': stats['out_of_stock'] or 0,
         'featured': stats['featured'] or 0,
+        'categories': categories,
+        'publications': publications,
     }
     return render(request, 'admin_panel/books.html', context)
+
+
+@staff_required
+@require_POST
+def admin_book_quick_update(request, pk):
+    """AJAX endpoint for quick stock edits and flag toggles directly from table."""
+    import json
+    book = get_object_or_404(Book, pk=pk)
+    try:
+        data = json.loads(request.body)
+        action = data.get('action')
+
+        if action == 'adjust_stock':
+            if 'delta' in data:
+                delta = int(data.get('delta', 0))
+                book.stock_quantity = max(0, book.stock_quantity + delta)
+            elif 'new_stock' in data:
+                new_stock = int(data.get('new_stock', 0))
+                book.stock_quantity = max(0, new_stock)
+            book.save(update_fields=['stock_quantity', 'updated_at'])
+            return JsonResponse({
+                'success': True,
+                'new_stock': book.stock_quantity,
+                'message': f'Stock updated to {book.stock_quantity}'
+            })
+
+        elif action == 'toggle_featured':
+            book.is_featured = not book.is_featured
+            book.save(update_fields=['is_featured', 'updated_at'])
+            return JsonResponse({
+                'success': True,
+                'is_featured': book.is_featured,
+                'message': 'Featured status updated'
+            })
+
+        elif action == 'toggle_borrow':
+            book.can_borrow = not book.can_borrow
+            book.save(update_fields=['can_borrow', 'updated_at'])
+            return JsonResponse({
+                'success': True,
+                'can_borrow': book.can_borrow,
+                'message': 'Borrowing permission updated'
+            })
+
+        return JsonResponse({'success': False, 'error': 'Invalid action'}, status=400)
+    except Exception as e:
+        logger.error('admin_book_quick_update error: %s', e, exc_info=True)
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 @staff_required

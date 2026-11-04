@@ -1,140 +1,663 @@
 {% extends "admin_panel/base.html" %}
-{% block title %}Books{% endblock %}
+{% block title %}Manage Books{% endblock %}
+
+{% block extra_head %}
+<style>
+  .table-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  }
+  .table-container::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  .table-container::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.3);
+    border-radius: 9999px;
+  }
+
+  .book-spine-thumb {
+    box-shadow: -2px 3px 6px rgba(0,0,0,0.15);
+    position: relative;
+  }
+  .book-spine-thumb::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 0; width: 3px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.4) 0%, rgba(0,0,0,0.1) 100%);
+    pointer-events-none;
+  }
+
+  .stock-updated {
+    animation: stockPulse 0.4s ease-out;
+  }
+  @keyframes stockPulse {
+    0% { transform: scale(1.15); background-color: rgba(16, 185, 129, 0.25); }
+    100% { transform: scale(1); }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl space-y-6">
+<div class="max-w-[1440px] mx-auto space-y-6 pb-12">
+  {% csrf_token %}
+
+  <!-- Floating Toast Notification -->
+  <div id="quick-toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xl border border-white/10 text-xs font-semibold">
+    <span id="toast-icon" class="text-emerald-400 dark:text-emerald-600 font-bold">✓</span>
+    <span id="toast-msg">Updated</span>
+  </div>
 
   <!-- Unified Navigation Tabs -->
-  <div class="flex border-b dark:border-white/5 border-black/10 gap-2">
-    <a href="{% url 'admin_books' %}" class="px-5 py-3 text-sm font-semibold border-b-2 {% if request.resolver_match.url_name == 'admin_books' %}border-sky-500 text-sky-400{% else %}border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %} transition-all">Books</a>
-    <a href="{% url 'admin_authors' %}" class="px-5 py-3 text-sm font-semibold border-b-2 {% if 'author' in request.resolver_match.url_name %}border-sky-500 text-sky-400{% else %}border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %} transition-all">Authors</a>
-    <a href="{% url 'admin_publications' %}" class="px-5 py-3 text-sm font-semibold border-b-2 {% if 'publication' in request.resolver_match.url_name %}border-sky-500 text-sky-400{% else %}border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %} transition-all">Publications</a>
-    <a href="{% url 'admin_categories' %}" class="px-5 py-3 text-sm font-semibold border-b-2 {% if 'category' in request.resolver_match.url_name %}border-sky-500 text-sky-400{% else %}border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900{% endif %} transition-all">Categories</a>
+  <div class="flex border-b dark:border-white/5 border-black/10 gap-2 overflow-x-auto pb-px">
+    <a href="{% url 'admin_books' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-sky-500 text-sky-500 dark:text-sky-400 flex items-center gap-2 shrink-0">
+      <span>📚 Books</span>
+      <span class="bg-sky-500/10 dark:bg-sky-500/20 px-2 py-0.5 rounded-full text-xs font-mono font-bold">{{ total_books }}</span>
+    </a>
+    <a href="{% url 'admin_authors' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors shrink-0">
+      ✍️ Authors
+    </a>
+    <a href="{% url 'admin_publications' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors shrink-0">
+      🏛️ Publications
+    </a>
+    <a href="{% url 'admin_categories' %}" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent dark:text-gray-400 text-slate-600 hover:dark:text-white hover:text-slate-900 transition-colors shrink-0">
+      🏷️ Categories
+    </a>
   </div>
 
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h2 class="text-xl font-bold dark:text-white text-slate-900">Manage Books</h2>
-      <div class="flex gap-4 text-xs dark:text-gray-500 text-slate-500 mt-1">
-        <span>{{ total_books }} total</span>
-        <span class="text-emerald-400">{{ in_stock }} in stock</span>
-        <span class="text-red-400">{{ out_of_stock }} out of stock</span>
-        <span class="text-yellow-400">{{ featured }} featured</span>
+      <div class="flex items-center gap-2.5">
+        <h2 class="text-2xl font-bold dark:text-white text-slate-900 tracking-tight">Catalog Operations Hub</h2>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-500 dark:text-sky-400 border border-sky-500/20">
+          Fast In-Line Edit
+        </span>
       </div>
+      <p class="dark:text-gray-400 text-slate-500 text-xs mt-0.5">Manage inventory, in-line stock adjustments, pricing margins & direct sticker generation.</p>
     </div>
-    <div class="flex items-center gap-3">
-      <a href="{% url 'admin_print_barcodes' %}" target="_blank" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
-        Print Barcodes
+    
+    <div class="flex items-center gap-2.5">
+      <a href="{% url 'admin_print_barcodes' %}" target="_blank" 
+         class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 dark:border-white/10 hover:border-slate-400 text-slate-700 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center gap-1.5 shadow-sm">
+        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        <span>Print Barcode Center</span>
       </a>
-      <a href="{% url 'admin_book_add' %}" class="btn-primary flex items-center gap-2">
-        <span class="text-lg leading-none">+</span> Add New Book
+      <a href="{% url 'admin_book_add' %}" class="btn-primary flex items-center gap-1.5 px-4 py-2 text-xs font-bold shadow-md">
+        <span class="text-base leading-none font-bold">+</span>
+        <span>Add New Book</span>
       </a>
     </div>
   </div>
 
-  <!-- Search -->
-  <form method="get" class="flex gap-3">
-    <input type="text" name="q" value="{{ q }}" placeholder="Search by title or author..."
-           class="form-input flex-1" />
-    <button type="submit" class="btn-primary px-5">Search</button>
-    {% if q %}<a href="?" class="btn-primary px-4" style="background:rgba(255,255,255,0.1);">Clear</a>{% endif %}
+  <!-- Interactive Metrics HUD / Quick Filter Cards -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+    
+    <!-- All Books -->
+    <a href="?status=all{% if q %}&q={{ q }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if publication_id %}&publication={{ publication_id }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}&per_page={{ per_page }}" 
+       class="p-4 rounded-2xl glass transition-all border-2 {% if status_filter == 'all' %}border-sky-500 bg-sky-500/5 dark:bg-sky-500/10 shadow-sm{% else %}border-black/5 dark:border-white/5 hover:border-sky-500/50 hover:bg-sky-500/5{% endif %} group">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <span class="font-bold uppercase tracking-wider text-[11px]">Total Books</span>
+        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+      </div>
+      <div class="text-2xl font-black font-display text-slate-900 dark:text-white">{{ total_books }}</div>
+      <div class="text-[11px] {% if status_filter == 'all' %}text-sky-600 dark:text-sky-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
+        {% if status_filter == 'all' %}● Viewing all catalog{% else %}Click to view all{% endif %}
+      </div>
+    </a>
+
+    <!-- In Stock -->
+    <a href="?status=in_stock{% if q %}&q={{ q }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if publication_id %}&publication={{ publication_id }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}&per_page={{ per_page }}" 
+       class="p-4 rounded-2xl glass transition-all border-2 {% if status_filter == 'in_stock' %}border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-sm{% else %}border-black/5 dark:border-white/5 hover:border-emerald-500/50 hover:bg-emerald-500/5{% endif %} group">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <span class="font-bold uppercase tracking-wider text-[11px]">In Stock</span>
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+      </div>
+      <div class="text-2xl font-black font-display text-emerald-600 dark:text-emerald-400">{{ in_stock }}</div>
+      <div class="text-[11px] {% if status_filter == 'in_stock' %}text-emerald-600 dark:text-emerald-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
+        {% if status_filter == 'in_stock' %}● Showing ready stock{% else %}Healthy inventory (&gt;3){% endif %}
+      </div>
+    </a>
+
+    <!-- Low Stock -->
+    <a href="?status=low_stock{% if q %}&q={{ q }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if publication_id %}&publication={{ publication_id }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}&per_page={{ per_page }}" 
+       class="p-4 rounded-2xl glass transition-all border-2 {% if status_filter == 'low_stock' %}border-amber-500 bg-amber-500/5 dark:bg-amber-500/10 shadow-sm{% else %}border-black/5 dark:border-white/5 hover:border-amber-500/50 hover:bg-amber-500/5{% endif %} group">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <span class="font-bold uppercase tracking-wider text-[11px]">Low Stock</span>
+        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+      </div>
+      <div class="text-2xl font-black font-display text-amber-600 dark:text-amber-400">{{ low_stock }}</div>
+      <div class="text-[11px] {% if status_filter == 'low_stock' %}text-amber-600 dark:text-amber-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
+        {% if status_filter == 'low_stock' %}● Showing low stock{% else %}1–3 copies remaining{% endif %}
+      </div>
+    </a>
+
+    <!-- Out of Stock -->
+    <a href="?status=out_of_stock{% if q %}&q={{ q }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if publication_id %}&publication={{ publication_id }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}&per_page={{ per_page }}" 
+       class="p-4 rounded-2xl glass transition-all border-2 {% if status_filter == 'out_of_stock' %}border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 shadow-sm{% else %}border-black/5 dark:border-white/5 hover:border-rose-500/50 hover:bg-rose-500/5{% endif %} group">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <span class="font-bold uppercase tracking-wider text-[11px]">Out of Stock</span>
+        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+      </div>
+      <div class="text-2xl font-black font-display text-rose-600 dark:text-rose-400">{{ out_of_stock }}</div>
+      <div class="text-[11px] {% if status_filter == 'out_of_stock' %}text-rose-600 dark:text-rose-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
+        {% if status_filter == 'out_of_stock' %}● Showing empty stock{% else %}Needs procurement (0){% endif %}
+      </div>
+    </a>
+
+    <!-- Featured -->
+    <a href="?status=featured{% if q %}&q={{ q }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if publication_id %}&publication={{ publication_id }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}&per_page={{ per_page }}" 
+       class="p-4 rounded-2xl glass transition-all border-2 {% if status_filter == 'featured' %}border-purple-500 bg-purple-500/5 dark:bg-purple-500/10 shadow-sm{% else %}border-black/5 dark:border-white/5 hover:border-purple-500/50 hover:bg-purple-500/5{% endif %} group">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <span class="font-bold uppercase tracking-wider text-[11px]">Featured</span>
+        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+      </div>
+      <div class="text-2xl font-black font-display text-purple-600 dark:text-purple-400">{{ featured }}</div>
+      <div class="text-[11px] {% if status_filter == 'featured' %}text-purple-600 dark:text-purple-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %} mt-1">
+        {% if status_filter == 'featured' %}● Showing featured{% else %}On homepage spotlight{% endif %}
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Multi-Filter Toolbar -->
+  <form method="get" id="filter-form" class="stat-card rounded-2xl p-4 border dark:border-white/10 border-black/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <!-- Keep active status filter -->
+    <input type="hidden" name="status" value="{{ status_filter }}" />
+
+    <!-- Search Box -->
+    <div class="relative flex-1 max-w-lg">
+      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <input type="text" 
+             name="q" 
+             value="{{ q }}" 
+             id="search-input" 
+             placeholder="Search by title, author, publication, ISBN, or barcode..." 
+             class="w-full pl-10 pr-10 py-2.5 rounded-xl text-xs bg-slate-100/80 dark:bg-slate-900/80 border border-transparent focus:border-sky-500 focus:bg-white dark:focus:bg-slate-950 dark:text-white text-slate-900 transition-all outline-none" />
+      {% if q %}
+      <a href="?status={{ status_filter }}{% if category_id %}&category={{ category_id }}{% endif %}{% if publication_id %}&publication={{ publication_id }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}&per_page={{ per_page }}" 
+         class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white" title="Clear Search">✕</a>
+      {% endif %}
+    </div>
+
+    <!-- Dropdown Filters & Controls -->
+    <div class="flex flex-wrap items-center gap-2.5 text-xs">
+      <!-- Category Filter -->
+      <select name="category" onchange="document.getElementById('filter-form').submit()" 
+              class="px-3 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-black/5 dark:border-white/10 text-slate-700 dark:text-slate-200 outline-none cursor-pointer">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Publication Filter -->
+      <select name="publication" onchange="document.getElementById('filter-form').submit()" 
+              class="px-3 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-black/5 dark:border-white/10 text-slate-700 dark:text-slate-200 outline-none cursor-pointer">
+        <option value="">All Publications</option>
+        {% for pub in publications %}
+          <option value="{{ pub.id }}" {% if publication_id == pub.id|stringformat:"s" %}selected{% endif %}>{{ pub.name }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Sort Filter -->
+      <select name="sort" onchange="document.getElementById('filter-form').submit()" 
+              class="px-3 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-black/5 dark:border-white/10 text-slate-700 dark:text-slate-200 outline-none cursor-pointer">
+        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Sort: Recently Added</option>
+        <option value="stock_asc" {% if sort_by == 'stock_asc' %}selected{% endif %}>Stock: Low to High</option>
+        <option value="stock_desc" {% if sort_by == 'stock_desc' %}selected{% endif %}>Stock: High to Low</option>
+        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+        <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+        <option value="title_asc" {% if sort_by == 'title_asc' %}selected{% endif %}>Title: A to Z</option>
+      </select>
+
+      <!-- Per Page -->
+      <select name="per_page" onchange="document.getElementById('filter-form').submit()" 
+              class="px-2.5 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-black/5 dark:border-white/10 text-slate-700 dark:text-slate-200 outline-none cursor-pointer">
+        <option value="15" {% if per_page == 15 %}selected{% endif %}>15 / page</option>
+        <option value="25" {% if per_page == 25 %}selected{% endif %}>25 / page</option>
+        <option value="50" {% if per_page == 50 %}selected{% endif %}>50 / page</option>
+        <option value="100" {% if per_page == 100 %}selected{% endif %}>100 / page</option>
+      </select>
+
+      <button type="submit" class="btn-primary px-4 py-2 font-semibold">Filter</button>
+    </div>
   </form>
 
-  <!-- Table -->
-  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
-    <table class="w-full text-sm min-w-[900px]">
-      <thead>
-        <tr class="border-b border-white/8">
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Book</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Author</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Category</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Price</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Buy Price</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Stock</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Flags</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for book in books %}
-        <tr class="table-row">
-          <td class="px-4 py-3">
-            <div class="flex items-center gap-3">
-              {% if book.cover_image %}
-              <img src="{{ book.cover_image.url }}" alt="" class="w-8 h-12 object-cover rounded flex-shrink-0" />
-              {% else %}
-              <div class="w-8 h-12 rounded flex items-center justify-center flex-shrink-0 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10">
-                <svg class="w-4 h-4 text-sky-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-              </div>
-              {% endif %}
-              <div>
-                <div class="dark:text-white text-slate-900 font-medium text-xs max-w-48 truncate">{{ book.title }}</div>
-                {% if book.isbn %}<div class="dark:text-gray-500 text-slate-500 text-xs font-mono">{{ book.isbn }}</div>{% endif %}
-              </div>
-            </div>
-          </td>
-          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs">{{ book.author.name|default:"—" }}</td>
-          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs">{{ book.category.name|default:"—" }}</td>
-          <td class="px-4 py-3">
-            <div class="dark:text-white text-slate-900 text-xs font-bold">৳{{ book.regular_price|floatformat:0 }}</div>
-            {% if book.offer_price %}
-            <div class="text-emerald-400 text-xs">Sale: ৳{{ book.offer_price|floatformat:0 }}</div>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 text-sky-400 text-xs font-mono">৳{{ book.buying_price|floatformat:0 }}</td>
-          <td class="px-4 py-3">
-            {% if book.stock_quantity > 0 %}
-            <span class="text-emerald-400 font-bold text-xs">{{ book.stock_quantity }}</span>
-            {% else %}
-            <span class="text-red-400 font-bold text-xs">0 — OUT</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3">
-            <div class="flex flex-wrap gap-1">
-              {% if book.is_featured %}<span class="px-1.5 py-0.5 rounded text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Featured</span>{% endif %}
-              {% if book.is_new %}<span class="px-1.5 py-0.5 rounded text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">New</span>{% endif %}
-              {% if book.is_upcoming %}<span class="px-1.5 py-0.5 rounded text-xs bg-purple-500/15 text-purple-400 border border-purple-500/20">Coming</span>{% endif %}
-              {% if book.can_borrow %}<span class="px-1.5 py-0.5 rounded text-xs bg-sky-500/15 text-sky-400 border border-sky-500/20">Borrow</span>{% endif %}
-            </div>
-          </td>
-          <td class="px-4 py-3">
-            <div class="flex gap-1.5 items-center">
-              <a href="{% url 'admin_book_edit' book.pk %}" class="btn-warn">Edit</a>
-              <button type="button" onclick="printBookBarcode({{ book.id }}, '{{ book.title|escapejs }}', {{ book.stock_quantity }})" class="px-2 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded text-xs font-semibold transition-colors" title="Print Barcode Stickers">
-                Barcode
-              </button>
-              <a href="{% url 'admin_book_delete' book.pk %}" class="btn-danger">Delete</a>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="8" class="text-center py-16 dark:text-gray-500 text-slate-500">
-            No books found. <a href="{% url 'admin_book_add' %}" class="text-sky-400">Add the first book →</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <!-- Filter Context Line -->
+  <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
+    <div class="flex items-center gap-2">
+      <span>Found <strong>{{ books.paginator.count }}</strong> books matching criteria</span>
+      {% if q or status_filter != 'all' or category_id or publication_id or sort_by != 'newest' %}
+        <a href="{% url 'admin_books' %}" class="text-rose-500 hover:underline font-semibold flex items-center gap-1">
+          <span>✕ Clear All Filters</span>
+        </a>
+      {% endif %}
+    </div>
+    <div class="hidden sm:block text-[11px] font-mono text-slate-400">
+      💡 Tip: Use <strong class="text-slate-600 dark:text-slate-300">+</strong> or <strong class="text-slate-600 dark:text-slate-300">-</strong> to adjust stock right in the row
+    </div>
   </div>
 
-  <!-- Pagination -->
-  {% include "includes/pagination.html" with page_obj=books %}
-</div>
+  <!-- Operational Table -->
+  <div class="stat-card rounded-2xl border dark:border-white/10 border-black/10 shadow-lg overflow-hidden">
+    <div class="overflow-x-auto table-container">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-100/80 dark:bg-slate-900/80 border-b border-black/5 dark:border-white/5 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+            <th class="py-3.5 px-4 w-12 text-center">
+              <input type="checkbox" id="select-all" class="rounded border-slate-300 dark:border-slate-700 text-sky-500 focus:ring-sky-500 cursor-pointer" />
+            </th>
+            <th class="py-3.5 px-3 min-w-[280px]">Book Title & Identity</th>
+            <th class="py-3.5 px-3 min-w-[140px]">Author</th>
+            <th class="py-3.5 px-3 min-w-[130px]">Publication</th>
+            <th class="py-3.5 px-3 min-w-[150px]">Pricing & Margin</th>
+            <th class="py-3.5 px-3 min-w-[150px]">Quick Stock Edit</th>
+            <th class="py-3.5 px-3 min-w-[130px]">Status & Flags</th>
+            <th class="py-3.5 px-4 min-w-[140px] text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-black/5 dark:divide-white/5">
+          {% for book in books %}
+          <tr class="hover:bg-sky-500/[0.02] dark:hover:bg-white/[0.02] transition-colors group" id="row-book-{{ book.id }}">
+            
+            <!-- Checkbox -->
+            <td class="py-3 px-4 text-center">
+              <input type="checkbox" value="{{ book.id }}" class="book-row-check rounded border-slate-300 dark:border-slate-700 text-sky-500 focus:ring-sky-500 cursor-pointer" />
+            </td>
 
+            <!-- Book Title & Cover -->
+            <td class="py-3 px-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-14 rounded-lg bg-slate-200 dark:bg-slate-800 flex-shrink-0 overflow-hidden book-spine-thumb {% if book.stock_quantity == 0 %}opacity-60 grayscale{% endif %}">
+                  {% if book.cover_image %}
+                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover" />
+                  {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-slate-400">
+                      <svg class="w-4 h-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5">
+                    <a href="{% url 'admin_book_edit' book.pk %}" class="font-bold text-sm text-slate-900 dark:text-white hover:text-sky-500 dark:hover:text-sky-400 line-clamp-1 transition-colors" title="{{ book.title }}">
+                      {{ book.title }}
+                    </a>
+                    {% if book.slug or book.id %}
+                    <a href="{{ book.get_absolute_url|default:'#' }}" target="_blank" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-sky-500 transition-opacity" title="View customer-facing page">
+                      ↗
+                    </a>
+                    {% endif %}
+                  </div>
+                  <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
+                    {% if book.isbn %}<span>ISBN: {{ book.isbn }}</span><span class="text-slate-300 dark:text-slate-700">•</span>{% endif %}
+                    <span class="bg-black/5 dark:bg-white/5 px-1.5 py-0.2 rounded text-[10px]">#{{ book.id }}</span>
+                    {% if book.category %}<span class="text-slate-300 dark:text-slate-700">•</span><span class="truncate max-w-[100px]">{{ book.category.name }}</span>{% endif %}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Author -->
+            <td class="py-3 px-3">
+              <div class="font-semibold text-slate-800 dark:text-slate-200">
+                {{ book.author.name|default:"—" }}
+              </div>
+              {% if book.author %}
+              <div class="text-[11px] text-slate-400">
+                {{ book.author.books.count }} in catalog
+              </div>
+              {% endif %}
+            </td>
+
+            <!-- Publication -->
+            <td class="py-3 px-3">
+              <div class="font-medium text-slate-700 dark:text-slate-300">
+                {{ book.publication.name|default:"—" }}
+              </div>
+              {% if book.publication and book.publication.default_discount_percent > 0 %}
+              <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                {{ book.publication.default_discount_percent|floatformat:0 }}% default
+              </div>
+              {% endif %}
+            </td>
+
+            <!-- Pricing & Margin -->
+            <td class="py-3 px-3">
+              <div class="flex items-baseline gap-1.5 font-mono">
+                {% if book.offer_price and book.offer_price < book.regular_price %}
+                  <span class="font-bold text-slate-900 dark:text-white text-sm">৳{{ book.offer_price|floatformat:0 }}</span>
+                  <span class="line-through text-slate-400 text-[11px]">৳{{ book.regular_price|floatformat:0 }}</span>
+                {% else %}
+                  <span class="font-bold text-slate-900 dark:text-white text-sm">৳{{ book.regular_price|floatformat:0 }}</span>
+                {% endif %}
+              </div>
+              <div class="text-[11px] text-sky-600 dark:text-sky-400 font-mono mt-0.5">
+                Cost: ৳{{ book.buying_price|floatformat:0 }}
+              </div>
+            </td>
+
+            <!-- Quick Stock Stepper -->
+            <td class="py-3 px-3">
+              <div class="flex items-center gap-1">
+                <button type="button" 
+                        onclick="quickAdjustStock({{ book.id }}, -1)" 
+                        class="w-6 h-6 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center transition-colors shadow-sm" 
+                        title="Decrease stock by 1">-</button>
+                
+                <input type="number" 
+                       id="stock-input-{{ book.id }}" 
+                       value="{{ book.stock_quantity }}" 
+                       onchange="quickManualStock({{ book.id }}, this.value)" 
+                       class="w-12 text-center font-bold font-mono py-1 rounded-lg border outline-none text-xs transition-all {% if book.stock_quantity == 0 %}bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30{% elif book.stock_quantity <= 3 %}bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30{% else %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30{% endif %}" />
+                
+                <button type="button" 
+                        onclick="quickAdjustStock({{ book.id }}, 1)" 
+                        class="w-6 h-6 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center transition-colors shadow-sm" 
+                        title="Increase stock by 1">+</button>
+                
+                <span id="stock-badge-{{ book.id }}" class="text-[10px] font-bold uppercase tracking-wider ml-1 {% if book.stock_quantity == 0 %}text-rose-500{% elif book.stock_quantity <= 3 %}text-amber-500{% else %}text-emerald-500{% endif %}">
+                  {% if book.stock_quantity == 0 %}OUT{% elif book.stock_quantity <= 3 %}Low{% else %}Good{% endif %}
+                </span>
+              </div>
+            </td>
+
+            <!-- Status & Flags -->
+            <td class="py-3 px-3">
+              <div class="flex flex-wrap gap-1 items-center">
+                <button type="button" 
+                        id="featured-btn-{{ book.id }}" 
+                        onclick="quickToggleFlag({{ book.id }}, 'toggle_featured')" 
+                        class="px-2 py-0.5 rounded-md text-[10px] font-bold transition-all {% if book.is_featured %}bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:opacity-80{% else %}text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 hover:text-purple-500{% endif %}">
+                  {% if book.is_featured %}★ Featured{% else %}+ Feature{% endif %}
+                </button>
+                {% if book.can_borrow %}
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                    Borrow
+                  </span>
+                {% endif %}
+                {% if book.is_new %}
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    New
+                  </span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Actions -->
+            <td class="py-3 px-4 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button type="button" 
+                        onclick="openBarcodeModal({{ book.id }}, '{{ book.title|escapejs }}', {{ book.stock_quantity }})" 
+                        class="p-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 dark:text-sky-400 transition-colors" 
+                        title="Print Barcode Stickers">
+                  🏷️
+                </button>
+                <a href="{% url 'admin_book_edit' book.pk %}" 
+                   class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors">
+                  Edit
+                </a>
+                <a href="{% url 'admin_book_delete' book.pk %}" 
+                   class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors" 
+                   title="Delete Book">
+                  🗑️
+                </a>
+              </div>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center py-16 dark:text-gray-500 text-slate-500">
+              No books found matching this filter. <a href="{% url 'admin_book_add' %}" class="text-sky-400 font-semibold">Add a new book →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Bulk Selection Floating Bar -->
+    <div id="bulk-bar" class="hidden bg-slate-900 text-white dark:bg-slate-800 px-6 py-3 flex items-center justify-between text-xs">
+      <div class="flex items-center gap-3">
+        <span class="font-bold"><span id="selected-count">0</span> books selected</span>
+        <span class="text-slate-500">|</span>
+        <button type="button" 
+                onclick="printSelectedBarcodes()" 
+                class="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold transition-colors flex items-center gap-1.5">
+          🏷️ Print Selected Barcodes
+        </button>
+      </div>
+      <button type="button" onclick="clearSelection()" class="text-slate-400 hover:text-white">
+        Deselect All
+      </button>
+    </div>
+
+    <!-- Pagination Footer -->
+    {% include "includes/pagination.html" with page_obj=books %}
+  </div>
+
+  <!-- Barcode Modal -->
+  <div id="barcode-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full border border-black/10 dark:border-white/10 shadow-2xl text-center space-y-4">
+      <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center mx-auto text-xl">
+        🏷️
+      </div>
+      <div>
+        <h4 class="font-bold text-base text-slate-900 dark:text-white" id="modal-book-title">Book Title</h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Specify how many barcode stickers to generate</p>
+      </div>
+      <div class="py-2">
+        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Sticker Quantity</label>
+        <input type="number" id="modal-barcode-qty" value="1" min="1" max="500" class="w-24 text-center font-bold text-base py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white mx-auto block font-mono" />
+      </div>
+      <div class="flex items-center gap-2 pt-2">
+        <button type="button" onclick="closeBarcodeModal()" class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">Cancel</button>
+        <button type="button" onclick="confirmBarcodePrint()" class="flex-1 py-2.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow-md transition-all">Print Stickers</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-  function printBookBarcode(bookId, bookTitle, currentStock) {
-    const defaultQty = currentStock > 0 ? currentStock : 1;
-    const qty = prompt(`How many barcode stickers do you want to print for:\n"${bookTitle}"?`, defaultQty);
-    if (qty !== null && qty.trim() !== '') {
-      const num = parseInt(qty.trim());
-      if (!isNaN(num) && num > 0) {
-        window.open(`{% url 'admin_print_barcodes' %}?book_id=${bookId}&qty=${num}`, '_blank');
+  let activeBarcodeBookId = null;
+
+  // Floating Toast
+  function showToast(msg, icon = '✓') {
+    const toast = document.getElementById('quick-toast');
+    document.getElementById('toast-msg').textContent = msg;
+    document.getElementById('toast-icon').textContent = icon;
+    toast.classList.remove('translate-y-20', 'opacity-0');
+    setTimeout(() => {
+      toast.classList.add('translate-y-20', 'opacity-0');
+    }, 2200);
+  }
+
+  // Quick In-Line Stock Adjust (via + / -)
+  function quickAdjustStock(bookId, delta) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch(`/admin-panel/books/${bookId}/quick-update/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ action: 'adjust_stock', delta: delta })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        updateRowStockUI(bookId, data.new_stock);
+        showToast(`Stock updated to ${data.new_stock}!`);
       } else {
-        alert('Please enter a valid positive number.');
+        alert(data.error || 'Failed to update stock');
       }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Network error while updating stock.');
+    });
+  }
+
+  // Quick In-Line Stock Direct Number Entry
+  function quickManualStock(bookId, newVal) {
+    const qty = parseInt(newVal, 10);
+    if (isNaN(qty) || qty < 0) return;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    fetch(`/admin-panel/books/${bookId}/quick-update/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ action: 'adjust_stock', new_stock: qty })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        updateRowStockUI(bookId, data.new_stock);
+        showToast(`Stock set to ${data.new_stock}!`);
+      } else {
+        alert(data.error || 'Failed to update stock');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Network error while updating stock.');
+    });
+  }
+
+  function updateRowStockUI(bookId, stock) {
+    const input = document.getElementById(`stock-input-${bookId}`);
+    const badge = document.getElementById(`stock-badge-${bookId}`);
+    if (input) {
+      input.value = stock;
+      input.classList.remove('bg-rose-500/10', 'text-rose-600', 'border-rose-500/30',
+                             'bg-amber-500/10', 'text-amber-600', 'border-amber-500/30',
+                             'bg-emerald-500/10', 'text-emerald-600', 'border-emerald-500/30');
+
+      if (stock === 0) {
+        input.classList.add('bg-rose-500/10', 'text-rose-600', 'border-rose-500/30');
+        if (badge) {
+          badge.textContent = 'OUT';
+          badge.className = 'text-[10px] font-bold uppercase tracking-wider ml-1 text-rose-500';
+        }
+      } else if (stock <= 3) {
+        input.classList.add('bg-amber-500/10', 'text-amber-600', 'border-amber-500/30');
+        if (badge) {
+          badge.textContent = 'Low';
+          badge.className = 'text-[10px] font-bold uppercase tracking-wider ml-1 text-amber-500';
+        }
+      } else {
+        input.classList.add('bg-emerald-500/10', 'text-emerald-600', 'border-emerald-500/30');
+        if (badge) {
+          badge.textContent = 'Good';
+          badge.className = 'text-[10px] font-bold uppercase tracking-wider ml-1 text-emerald-500';
+        }
+      }
+      input.classList.add('stock-updated');
+      setTimeout(() => input.classList.remove('stock-updated'), 400);
     }
+  }
+
+  // Quick In-Line Featured Toggle
+  function quickToggleFlag(bookId, action) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const btn = document.getElementById(`featured-btn-${bookId}`);
+
+    fetch(`/admin-panel/books/${bookId}/quick-update/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ action: action })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success && btn) {
+        if (data.is_featured) {
+          btn.textContent = '★ Featured';
+          btn.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:opacity-80';
+          showToast('Book added to Homepage Featured!', '★');
+        } else {
+          btn.textContent = '+ Feature';
+          btn.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 hover:text-purple-500';
+          showToast('Removed from Featured');
+        }
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Error toggling status.');
+    });
+  }
+
+  // Barcode Modal
+  function openBarcodeModal(bookId, title, currentStock) {
+    activeBarcodeBookId = bookId;
+    document.getElementById('modal-book-title').textContent = title;
+    document.getElementById('modal-barcode-qty').value = currentStock > 0 ? currentStock : 1;
+    document.getElementById('barcode-modal').classList.remove('hidden');
+  }
+
+  function closeBarcodeModal() {
+    activeBarcodeBookId = null;
+    document.getElementById('barcode-modal').classList.add('hidden');
+  }
+
+  function confirmBarcodePrint() {
+    if (!activeBarcodeBookId) return;
+    const qty = parseInt(document.getElementById('modal-barcode-qty').value, 10) || 1;
+    closeBarcodeModal();
+    window.open(`{% url 'admin_print_barcodes' %}?book_id=${activeBarcodeBookId}&qty=${qty}`, '_blank');
+  }
+
+  // Bulk Selection & Batch Barcode Print
+  const selectAll = document.getElementById('select-all');
+  const rowChecks = document.querySelectorAll('.book-row-check');
+  const bulkBar = document.getElementById('bulk-bar');
+  const selectedCount = document.getElementById('selected-count');
+
+  if (selectAll) {
+    selectAll.addEventListener('change', () => {
+      rowChecks.forEach(c => c.checked = selectAll.checked);
+      updateBulkBar();
+    });
+  }
+
+  rowChecks.forEach(c => {
+    c.addEventListener('change', updateBulkBar);
+  });
+
+  function updateBulkBar() {
+    const checked = document.querySelectorAll('.book-row-check:checked');
+    selectedCount.textContent = checked.length;
+    if (bulkBar) {
+      bulkBar.classList.toggle('hidden', checked.length === 0);
+    }
+  }
+
+  function clearSelection() {
+    if (selectAll) selectAll.checked = false;
+    rowChecks.forEach(c => c.checked = false);
+    updateBulkBar();
+  }
+
+  function printSelectedBarcodes() {
+    const checked = Array.from(document.querySelectorAll('.book-row-check:checked')).map(c => c.value);
+    if (checked.length === 0) return;
+    window.open(`{% url 'admin_print_barcodes' %}?ids=${checked.join(',')}`, '_blank');
   }
 </script>
 {% endblock %}
