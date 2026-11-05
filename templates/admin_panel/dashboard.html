@@ -27,7 +27,7 @@
     <!-- Quick Action Pills (Zero Emojis, Pure SVGs) -->
     <div class="flex flex-wrap items-center gap-2">
       <a href="{% url 'admin_book_add' %}"
-         class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-cyan-600/20 flex items-center gap-2">
+         class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition-colors shadow-sm flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Add Book
       </a>
@@ -129,7 +129,7 @@
             </div>
             <!-- Bar -->
             <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-t-md overflow-hidden flex flex-col justify-end transition-all group-hover:bg-cyan-500/30" style="height: 100%;">
-              <div class="w-full bg-gradient-to-t from-cyan-600 to-emerald-500 rounded-t-md transition-all duration-500" style="height: {{ pt.pct|default:4 }}%;"></div>
+              <div class="w-full bg-sky-500 hover:bg-sky-400 rounded-t-md transition-colors duration-200" style="height: {{ pt.pct|default:4 }}%;"></div>
             </div>
             <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400">{{ pt.day_name|slice:":1" }}</span>
           </div>
@@ -470,7 +470,7 @@
           {% for m in recent_memberships %}
           <div class="py-3 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+              <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-bold font-mono flex-shrink-0">
                 {{ m.user.first_name|first|default:"U"|upper }}
               </div>
               <div>

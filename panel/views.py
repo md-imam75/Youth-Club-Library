@@ -932,16 +932,38 @@ def admin_approve_borrow(request, pk):
 @staff_required
 def admin_users(request):
     """List all registered users for details and borrow stats."""
-    from accounts.models import CustomUser
-    q = request.GET.get('q', '')
+    from accounts.models import CustomUser, UserMembership
+    q = request.GET.get('q', '').strip()
+    role_filter = request.GET.get('role', '')
+    status_filter = request.GET.get('status', '')
+
+    all_users = CustomUser.objects.all()
+    total_users = all_users.count()
+    active_passholders = UserMembership.objects.filter(status=UserMembership.STATUS_ACTIVE, expires_at__gte=timezone.now()).count()
+    staff_count = all_users.filter(is_staff=True).count()
+    
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    new_this_month = all_users.filter(date_joined__gte=thirty_days_ago).count()
+
     users = CustomUser.objects.select_related('membership', 'membership__plan').order_by('-date_joined')
     if q:
         users = users.filter(
             Q(username__icontains=q) |
             Q(email__icontains=q) |
             Q(first_name__icontains=q) |
-            Q(last_name__icontains=q)
+            Q(last_name__icontains=q) |
+            Q(phone__icontains=q)
         )
+
+    if role_filter == 'staff':
+        users = users.filter(is_staff=True)
+    elif role_filter == 'user':
+        users = users.filter(is_staff=False)
+
+    if status_filter == 'active_member':
+        users = users.filter(membership__status=UserMembership.STATUS_ACTIVE, membership__expires_at__gte=timezone.now())
+    elif status_filter == 'no_pass':
+        users = users.exclude(membership__status=UserMembership.STATUS_ACTIVE, membership__expires_at__gte=timezone.now())
 
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(users, 20)  # 20 users per page
@@ -956,6 +978,12 @@ def admin_users(request):
     context = {
         'users': page_obj,
         'q': q,
+        'role_filter': role_filter,
+        'status_filter': status_filter,
+        'total_users': total_users,
+        'active_passholders': active_passholders,
+        'staff_count': staff_count,
+        'new_this_month': new_this_month,
         'page_title': 'User Management',
     }
     return render(request, 'admin_panel/users.html', context)

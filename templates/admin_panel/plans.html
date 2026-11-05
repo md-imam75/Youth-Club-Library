@@ -32,7 +32,7 @@
         View Requests
       </a>
       <a href="{% url 'admin_plan_add' %}"
-         class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-semibold text-xs transition-all shadow-md shadow-purple-600/20 flex items-center gap-2">
+         class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-colors shadow-sm flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Add Plan
       </a>
@@ -48,7 +48,7 @@
       
       <!-- Most Popular Badge -->
       {% if plan.is_popular %}
-        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full shadow-md">
+        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full shadow-sm">
           Most Popular
         </span>
       {% endif %}
@@ -122,7 +122,7 @@
         <p class="text-xs text-slate-400">
           Create subscription tiers for patrons to borrow books from Youth Club Library.
         </p>
-        <a href="{% url 'admin_plan_add' %}" class="inline-block mt-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold text-xs shadow">
+        <a href="{% url 'admin_plan_add' %}" class="inline-block mt-2 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-sm transition-colors">
           Create First Plan
         </a>
       </div>

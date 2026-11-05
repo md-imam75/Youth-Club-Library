@@ -1,91 +1,252 @@
 {% extends "admin_panel/base.html" %}
+{% load static %}
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-  <!-- Header -->
-  <div class="flex justify-between items-center">
+  <!-- ========================================================================= -->
+  <!-- 1. HEADER SECTION                                                         -->
+  <!-- ========================================================================= -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h2 class="text-2xl font-bold dark:text-white text-slate-900 mb-1">User Management</h2>
-      <p class="dark:text-gray-400 text-slate-600 text-sm">View user borrow statistics, returns, and profile summaries.</p>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+        <span>Patron Directory</span>
+        <span class="text-slate-400 dark:text-slate-600">•</span>
+        <span class="font-mono text-sky-600 dark:text-sky-400">Account Registry</span>
+      </div>
+      <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        User Management
+      </h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        Search registered patrons, inspect active membership passes, and audit borrowing history ledgers.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold">
+        {{ users.paginator.count }} Total Registered
+      </span>
     </div>
   </div>
 
-  <!-- Search Bar -->
-  <form method="get" class="flex gap-3">
-    <input type="text" name="q" value="{{ q }}" placeholder="Search by name, email, or username..."
-           class="form-input flex-1" />
-    <button type="submit" class="btn-primary px-5">Search</button>
-    {% if q %}
-    <a href="?" class="btn-primary px-4" style="background:rgba(255,255,255,0.1);">Clear</a>
-    {% endif %}
-  </form>
+  <!-- ========================================================================= -->
+  <!-- 2. HUD METRICS RIBBON (4 BENTO CARDS)                                     -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
-  <!-- Users Table -->
-  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
-    <table class="w-full text-sm min-w-[700px]">
-      <thead>
-        <tr class="border-b border-white/8 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">
-          <th class="text-left px-4 py-3">User</th>
-          <th class="text-left px-4 py-3">Email</th>
-          <th class="text-left px-4 py-3">Status</th>
-          <th class="text-left px-4 py-3">Role</th>
-          <th class="text-left px-4 py-3">Joined Date</th>
-          <th class="text-left px-4 py-3">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for u in users %}
-        <tr class="table-row">
-          <td class="px-4 py-3">
-            <div class="flex items-center gap-3">
-              {% if u.profile_image %}
-                <img src="{{ u.profile_image.url }}" class="w-8 h-8 rounded-full object-cover border dark:border-white/10 border-black/10" alt="avatar" />
-              {% else %}
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold dark:text-white text-slate-900"
-                     style="background:linear-gradient(135deg,#0ea5e9,#10b981);">
-                  {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
-                </div>
-              {% endif %}
-              <div>
-                <div class="dark:text-white text-slate-900 text-xs font-semibold">{{ u.get_full_name }}</div>
-                <div class="dark:text-gray-500 text-slate-500 text-[10px] font-mono">@{{ u.username }}</div>
-              </div>
-            </div>
-          </td>
-          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs">{{ u.email }}</td>
-          <td class="px-4 py-3">
-            {% if u.has_active_membership %}
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold badge-active">Active Member</span>
-            {% else %}
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold dark:text-gray-400 text-slate-600 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10">No Plan</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 text-xs">
-            {% if u.is_staff %}
-              <span class="text-emerald-400 font-semibold">Staff / Admin</span>
-            {% else %}
-              <span class="dark:text-gray-400 text-slate-600">Library User</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 dark:text-gray-500 text-slate-500 text-xs">{{ u.date_joined|date:"d M Y" }}</td>
-          <td class="px-4 py-3">
-            <a href="{% url 'admin_user_detail' u.pk %}" class="btn-primary text-xs py-1.5 px-3">
-              View Statistics
-            </a>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="6" class="text-center py-16 dark:text-gray-500 text-slate-500">No users found.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <!-- Total Patrons -->
+    <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Patrons</span>
+        <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-black font-mono text-slate-900 dark:text-white">{{ total_users }}</div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">All registered accounts</p>
+    </div>
+
+    <!-- Active Passholders -->
+    <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-emerald-500 mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Passholders</span>
+        <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">{{ active_passholders }}</div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Active library members</p>
+    </div>
+
+    <!-- Staff & Admins -->
+    <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-indigo-500 mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Staff Team</span>
+        <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-black font-mono text-indigo-600 dark:text-indigo-400">{{ staff_count }}</div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Admin & desk staff</p>
+    </div>
+
+    <!-- Joined This Month -->
+    <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-sky-500 mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent Growth</span>
+        <div class="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-black font-mono text-sky-600 dark:text-sky-400">+{{ new_this_month }}</div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Joined past 30 days</p>
+    </div>
+
   </div>
 
-  <!-- Pagination -->
-  {% include "includes/pagination.html" with page_obj=users %}
+  <!-- ========================================================================= -->
+  <!-- 3. SEARCH & MULTI-FILTER TOOLBAR                                          -->
+  <!-- ========================================================================= -->
+  <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 shadow-sm space-y-3">
+    <form method="get" class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      
+      <!-- Text Search Box -->
+      <div class="relative flex-1">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <input type="text" name="q" value="{{ q }}"
+               placeholder="Search by name, email, @username, or phone number..."
+               class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all outline-none">
+      </div>
+
+      <!-- Role Select Filter -->
+      <select name="role"
+              class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-medium outline-none">
+        <option value="">All Roles</option>
+        <option value="user" {% if role_filter == 'user' %}selected{% endif %}>Library Users Only</option>
+        <option value="staff" {% if role_filter == 'staff' %}selected{% endif %}>Staff / Admins Only</option>
+      </select>
+
+      <!-- Membership Pass Filter -->
+      <select name="status"
+              class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-medium outline-none">
+        <option value="">All Pass Statuses</option>
+        <option value="active_member" {% if status_filter == 'active_member' %}selected{% endif %}>Active Passholders</option>
+        <option value="no_pass" {% if status_filter == 'no_pass' %}selected{% endif %}>No Active Pass</option>
+      </select>
+
+      <!-- Submit & Reset Buttons (SOLID modern colors, NO gradient) -->
+      <div class="flex items-center gap-2">
+        <button type="submit"
+                class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-colors shadow-sm flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          Search
+        </button>
+        {% if q or role_filter or status_filter %}
+          <a href="{% url 'admin_users' %}"
+             class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors">
+            Clear
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. USERS DIRECTORY TABLE                                                  -->
+  <!-- ========================================================================= -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-slate-200 overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs min-w-[800px]">
+        <thead>
+          <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px] bg-slate-50/50 dark:bg-slate-900/30">
+            <th class="px-5 py-3.5">Patron Account</th>
+            <th class="px-4 py-3.5">Contact Details</th>
+            <th class="px-4 py-3.5">Library Pass Status</th>
+            <th class="px-4 py-3.5">Role</th>
+            <th class="px-4 py-3.5">Member Since</th>
+            <th class="px-5 py-3.5 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
+          {% for u in users %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+            
+            <!-- User Identity (SOLID Modern Avatar - NO gradient) -->
+            <td class="px-5 py-3.5">
+              <div class="flex items-center gap-3">
+                {% if u.profile_image %}
+                  <img src="{{ u.profile_image.url }}" class="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-sm shrink-0" alt="{{ u.get_full_name }}">
+                {% else %}
+                  <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-bold font-mono shrink-0 shadow-sm">
+                    {{ u.first_name|first|default:"U"|upper }}{{ u.last_name|first|default:""|upper }}
+                  </div>
+                {% endif %}
+                <div>
+                  <a href="{% url 'admin_user_detail' u.pk %}" class="font-bold text-slate-900 dark:text-white text-sm hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+                    {{ u.get_full_name|default:u.username }}
+                  </a>
+                  <div class="font-mono text-[11px] text-slate-400 mt-0.5">@{{ u.username }}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Contact -->
+            <td class="px-4 py-3.5">
+              <div class="text-xs text-slate-800 dark:text-slate-200 font-medium">{{ u.email }}</div>
+              {% if u.phone %}
+                <div class="text-[11px] font-mono text-slate-400 mt-0.5">{{ u.phone }}</div>
+              {% else %}
+                <div class="text-[11px] text-slate-400 mt-0.5 italic">No phone attached</div>
+              {% endif %}
+            </td>
+
+            <!-- Membership Pass -->
+            <td class="px-4 py-3.5">
+              {% if u.has_active_membership %}
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>{{ u.active_membership.plan.name|default:"Active Passholder" }}</span>
+                </span>
+              {% else %}
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                  <span>No Active Pass</span>
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Role -->
+            <td class="px-4 py-3.5">
+              {% if u.is_staff %}
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  Staff / Admin
+                </span>
+              {% else %}
+                <span class="text-slate-500 dark:text-slate-400 text-xs">
+                  Reader
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Joined Date -->
+            <td class="px-4 py-3.5 font-mono text-xs text-slate-500 dark:text-slate-400">
+              {{ u.date_joined|date:"d M Y" }}
+            </td>
+
+            <!-- Actions (SOLID Modern Button - NO gradient) -->
+            <td class="px-5 py-3.5 text-right">
+              <a href="{% url 'admin_user_detail' u.pk %}"
+                 class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-500 text-xs font-semibold transition-colors inline-flex items-center gap-1.5 shadow-sm">
+                <span>View Details</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+              <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              </div>
+              <p class="font-semibold text-slate-700 dark:text-slate-300 text-sm">No patrons found</p>
+              <p class="text-xs text-slate-400 mt-1">Try adjusting your search criteria or clearing filters.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+      {% include "includes/pagination.html" with page_obj=users %}
+    </div>
+  </div>
+
 </div>
 {% endblock %}

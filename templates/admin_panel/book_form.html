@@ -436,7 +436,7 @@
                     name="_addanother" 
                     value="1" 
                     id="btn-save-add-another"
-                    class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group">
+                    class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-sm transition-colors flex items-center justify-center gap-2 group">
               <svg class="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -482,7 +482,7 @@
           <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 p-4 shadow-sm overflow-hidden transition-all">
             
             <!-- Book Cover Preview -->
-            <div class="relative w-full aspect-[3/4] bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-xl overflow-hidden flex items-center justify-center mb-3.5 border border-black/5 dark:border-white/5">
+            <div class="relative w-full aspect-[3/4] bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden flex items-center justify-center mb-3.5 border border-slate-200 dark:border-slate-700">
               <img id="card-preview-cover" 
                    src="{% if book and book.cover_image %}{{ book.cover_image.url }}{% endif %}" 
                    alt="Preview" 

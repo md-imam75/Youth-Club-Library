@@ -76,7 +76,7 @@
       background-color: rgba(255, 255, 255, 0.04);
     }
     .sidebar-link.active {
-      background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(16, 185, 129, 0.04));
+      background: rgba(14, 165, 233, 0.08);
       color: #0ea5e9;
       border-left: 3px solid #0ea5e9;
       border-top-left-radius: 0;
@@ -105,19 +105,17 @@
       box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.4);
     }
     .btn-primary {
-      background: linear-gradient(135deg, #0ea5e9, #10b981);
-      color: #fff;
+      background-color: #0284c7;
+      color: #ffffff;
       font-weight: 600;
       padding: 0.5rem 1.25rem;
       border-radius: 0.75rem;
-      transition: all 0.25s ease;
+      transition: background-color 0.15s ease;
       font-size: 0.875rem;
-      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
     .btn-primary:hover {
-      opacity: 0.95;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(14, 165, 233, 0.25);
+      background-color: #0369a1;
     }
     .btn-danger {
       background: rgba(239, 68, 68, 0.08);
@@ -397,7 +395,7 @@
             <svg x-show="!isDark" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
           </button>
 
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white">
+          <div class="w-8 h-8 rounded-full bg-slate-900 text-white dark:bg-slate-700 dark:text-slate-100 flex items-center justify-center text-xs font-bold font-mono border border-slate-700/50 shadow-sm">
             {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
           </div>
           <div class="hidden sm:block">
