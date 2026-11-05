@@ -431,8 +431,13 @@ def admin_orders(request):
             Q(user__email__icontains=q) |
             Q(user__first_name__icontains=q) |
             Q(user__last_name__icontains=q) |
+            Q(user__phone__icontains=q) |
             Q(customer_name__icontains=q) |
-            Q(bill_number__icontains=q)
+            Q(customer_mobile__icontains=q) |
+            Q(bill_number__icontains=q) |
+            Q(order_number__icontains=q) |
+            Q(group_number__icontains=q) |
+            Q(transaction_id__icontains=q)
         )
 
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -893,9 +898,9 @@ def admin_approve_borrow(request, pk):
     if order.order_status != Order.STATUS_PENDING:
         messages.warning(request, "This order is already processed.")
         referer = request.META.get('HTTP_REFERER')
-    if referer and 'accounts/login' not in referer:
-        return redirect(referer)
-    return redirect('admin_orders')
+        if referer and 'accounts/login' not in referer:
+            return redirect(referer)
+        return redirect('admin_orders')
 
     if request.method == 'POST':
         try:
@@ -913,9 +918,9 @@ def admin_approve_borrow(request, pk):
             f"Borrow request {order.order_number} approved! Due date: {order.due_date.strftime('%d %b %Y')} ({days_limit} days)."
         )
         referer = request.META.get('HTTP_REFERER')
-    if referer and 'accounts/login' not in referer:
-        return redirect(referer)
-    return redirect('admin_orders')
+        if referer and 'accounts/login' not in referer:
+            return redirect(referer)
+        return redirect('admin_orders')
 
     context = {
         'order': order,

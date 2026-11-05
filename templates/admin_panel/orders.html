@@ -1,208 +1,506 @@
 {% extends "admin_panel/base.html" %}
-{% block title %}All Orders{% endblock %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl space-y-6 relative">
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-  <!-- Header + Stats -->
-  <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-2">
-    <div class="stat-card rounded-xl p-4 col-span-2 sm:col-span-1">
-      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Revenue</div>
-      <div class="dark:text-white text-slate-900 font-bold text-lg">৳{{ total_revenue|floatformat:0 }}</div>
+  <!-- ========================================================================= -->
+  <!-- 1. HEADER SECTION                                                         -->
+  <!-- ========================================================================= -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        {% if order_type == 'Borrow' %}
+          <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+          <span>Circulation Desk</span>
+          <span class="text-slate-400 dark:text-slate-600">•</span>
+          <span class="font-mono text-purple-600 dark:text-purple-400">Patron Borrow Requests</span>
+        {% else %}
+          <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+          <span>Fulfillment & Sales</span>
+          <span class="text-slate-400 dark:text-slate-600">•</span>
+          <span class="font-mono text-cyan-600 dark:text-cyan-400">All Order Streams</span>
+        {% endif %}
+      </div>
+      <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        {{ page_title }}
+      </h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        {% if order_type == 'Borrow' %}
+          Review active reader loans, manage return dates, and verify book circulation.
+        {% else %}
+          Monitor purchases, lending requests, payment confirmations, and delivery dispatches.
+        {% endif %}
+      </p>
     </div>
-    <a href="?type=Buy" class="stat-card rounded-xl p-4 hover:border-sky-500/40 border border-transparent transition-all {% if order_type == 'Buy' %}border-sky-500/40{% endif %}">
-      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Buy Orders</div>
-      <div class="dark:text-white text-slate-900 font-bold text-lg">{{ buy_count }}</div>
-    </a>
-    <a href="?type=Borrow" class="stat-card rounded-xl p-4 hover:border-emerald-500/40 border border-transparent transition-all {% if order_type == 'Borrow' %}border-emerald-500/40{% endif %}">
-      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Borrows</div>
-      <div class="dark:text-white text-slate-900 font-bold text-lg">{{ borrow_count }}</div>
-    </a>
-    <a href="?status=Pending" class="stat-card rounded-xl p-4 hover:border-yellow-500/40 border border-transparent transition-all {% if pay_status == 'Pending' %}border-yellow-500/40{% endif %}">
-      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Pending</div>
-      <div class="dark:text-white text-slate-900 font-bold text-lg">{{ pending_count }}</div>
-    </a>
-    <a href="?status=Paid" class="stat-card rounded-xl p-4 hover:border-emerald-500/40 border border-transparent transition-all {% if pay_status == 'Paid' %}border-emerald-500/40{% endif %}">
-      <div class="dark:text-gray-400 text-slate-600 text-xs uppercase tracking-wider mb-1">Paid</div>
-      <div class="dark:text-white text-slate-900 font-bold text-lg">{{ paid_count }}</div>
-    </a>
+
+    <!-- Quick Action Pills -->
+    <div class="flex items-center gap-2.5">
+      <a href="{% url 'admin_make_bill' %}"
+         class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center gap-2 shadow-sm">
+        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        POS Quick Bill
+      </a>
+      <a href="{% url 'admin_sales_report' %}"
+         class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-cyan-500/50 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm">
+        <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Sales Report
+      </a>
+    </div>
   </div>
 
-  <!-- Search bar -->
-  <form method="get" class="flex gap-3">
-    {% if order_type %}<input type="hidden" name="type" value="{{ order_type }}" />{% endif %}
-    {% if pay_status %}<input type="hidden" name="status" value="{{ pay_status }}" />{% endif %}
-    <input type="text" name="q" value="{{ q }}" placeholder="Search by book title or user name..."
-           class="form-input flex-1" />
-    <button type="submit" class="btn-primary px-5">Search</button>
-    {% if q or order_type or pay_status %}
-    <a href="?" class="btn-primary px-4" style="background:rgba(255,255,255,0.1);">Clear</a>
-    {% endif %}
-  </form>
+  <!-- ========================================================================= -->
+  <!-- 2. METRICS HUD CARDS                                                      -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+    
+    <!-- Revenue Card -->
+    <div class="stat-card rounded-2xl p-4 flex flex-col justify-between border dark:border-white/5 border-slate-200 col-span-2 sm:col-span-1">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Book Sales</span>
+        <div class="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-xl font-extrabold text-slate-900 dark:text-white font-mono">
+        ৳ {{ total_revenue|floatformat:0 }}
+      </div>
+      <div class="text-[10px] text-slate-400 mt-0.5">Paid purchases</div>
+    </div>
 
-  <!-- Table -->
-  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
-    <table class="w-full text-sm min-w-[800px]">
-      <thead>
-        <tr class="border-b border-white/8">
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">#ID</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Customer</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Book</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Type</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Amount</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Payment</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Status</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Date</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% regroup orders by group_number as order_groups %}
-        {% for group in order_groups %}
-        {% with order=group.list.0 %}
-        <tr class="table-row {% if order.is_overdue %}bg-red-500/5{% endif %}">
-          <td class="px-4 py-3 text-sky-400 font-mono text-xs font-semibold">{{ group.grouper }}</td>
-          <td class="px-4 py-3">
-            <div class="dark:text-white text-slate-900 text-xs font-semibold hover:text-sky-400 transition-colors">
-              {% if order.user %}
-                <a href="{% url 'admin_user_detail' order.user.pk %}">{{ order.user.get_full_name }}</a>
-              {% else %}
-                <span class="dark:text-gray-400 text-slate-600">Walk-in: {{ order.customer_name }}</span>
-              {% endif %}
-            </div>
-            <div class="dark:text-gray-500 text-slate-500 text-[10px] font-mono mt-0.5">
-              {% if order.user %}{{ order.user.email }}{% else %}{{ order.customer_email|default:"No Email" }}{% endif %}
-            </div>
-          </td>
-          <td class="px-4 py-3">
-            <div class="flex flex-col gap-1.5">
-              {% for item in group.list %}
-              <div>
-                <div class="dark:text-white text-slate-900 text-xs font-semibold max-w-xs truncate">{{ item.book.title }}</div>
-                <div class="dark:text-gray-500 text-slate-500 text-[10px]">
-                  by {{ item.book.author.name|default:"Unknown" }}
+    <!-- Purchases (Buy) -->
+    <a href="?type=Buy"
+       class="stat-card rounded-2xl p-4 flex flex-col justify-between border {% if order_type == 'Buy' %}border-cyan-500 ring-1 ring-cyan-500/30{% else %}dark:border-white/5 border-slate-200{% endif %} hover:-translate-y-0.5 transition-all">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Purchases</span>
+        <div class="w-6 h-6 rounded-lg bg-cyan-500/10 text-cyan-500 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        </div>
+      </div>
+      <div class="text-xl font-extrabold text-slate-900 dark:text-white font-mono">{{ buy_count }}</div>
+      <div class="text-[10px] text-cyan-600 dark:text-cyan-400 mt-0.5 font-medium">Buy orders</div>
+    </a>
+
+    <!-- Borrows (Loans) -->
+    <a href="?type=Borrow"
+       class="stat-card rounded-2xl p-4 flex flex-col justify-between border {% if order_type == 'Borrow' %}border-purple-500 ring-1 ring-purple-500/30{% else %}dark:border-white/5 border-slate-200{% endif %} hover:-translate-y-0.5 transition-all">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Borrows</span>
+        <div class="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+      </div>
+      <div class="text-xl font-extrabold text-slate-900 dark:text-white font-mono">{{ borrow_count }}</div>
+      <div class="text-[10px] text-purple-600 dark:text-purple-400 mt-0.5 font-medium">Lending loans</div>
+    </a>
+
+    <!-- Pending Payment -->
+    <a href="?status=Pending"
+       class="stat-card rounded-2xl p-4 flex flex-col justify-between border {% if pay_status == 'Pending' %}border-amber-500 ring-1 ring-amber-500/30{% elif pending_count > 0 %}border-amber-500/30 dark:border-amber-500/20{% else %}dark:border-white/5 border-slate-200{% endif %} hover:-translate-y-0.5 transition-all">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pending Pay</span>
+        <div class="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-xl font-extrabold text-slate-900 dark:text-white font-mono">{{ pending_count }}</div>
+      <div class="text-[10px] text-amber-500 mt-0.5 font-medium">Needs verification</div>
+    </a>
+
+    <!-- Paid Orders -->
+    <a href="?status=Paid"
+       class="stat-card rounded-2xl p-4 flex flex-col justify-between border {% if pay_status == 'Paid' %}border-emerald-500 ring-1 ring-emerald-500/30{% else %}dark:border-white/5 border-slate-200{% endif %} hover:-translate-y-0.5 transition-all">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Paid Orders</span>
+        <div class="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-xl font-extrabold text-slate-900 dark:text-white font-mono">{{ paid_count }}</div>
+      <div class="text-[10px] text-emerald-500 mt-0.5 font-medium">Completed payments</div>
+    </a>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. SEARCH & FILTER TOOLBAR                                                -->
+  <!-- ========================================================================= -->
+  <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200">
+    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      
+      <!-- Filter Chips -->
+      <div class="flex flex-wrap items-center gap-1.5">
+        <a href="?{% if q %}q={{ q }}{% endif %}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all {% if not order_type and not pay_status %}bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-transparent{% endif %}">
+          All Orders
+        </a>
+        <a href="?type=Buy{% if pay_status %}&status={{ pay_status }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all {% if order_type == 'Buy' %}bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-transparent{% endif %}">
+          Purchases ({{ buy_count }})
+        </a>
+        <a href="?type=Borrow{% if pay_status %}&status={{ pay_status }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all {% if order_type == 'Borrow' %}bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-transparent{% endif %}">
+          Borrow Requests ({{ borrow_count }})
+        </a>
+        <a href="?status=Pending{% if order_type %}&type={{ order_type }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 {% if pay_status == 'Pending' %}bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-transparent{% endif %}">
+          <span class="w-1.5 h-1.5 rounded-full {% if pending_count > 0 %}bg-amber-500 animate-pulse{% else %}bg-slate-400{% endif %}"></span>
+          Unpaid ({{ pending_count }})
+        </a>
+        <a href="?status=Paid{% if order_type %}&type={{ order_type }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 {% if pay_status == 'Paid' %}bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-transparent{% endif %}">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          Paid ({{ paid_count }})
+        </a>
+      </div>
+
+      <!-- Search Form -->
+      <form method="get" class="relative flex items-center min-w-[280px]">
+        {% if order_type %}<input type="hidden" name="type" value="{{ order_type }}" />{% endif %}
+        {% if pay_status %}<input type="hidden" name="status" value="{{ pay_status }}" />{% endif %}
+        <input type="text"
+               name="q"
+               value="{{ q }}"
+               placeholder="Search book title, customer, phone, order #..."
+               class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-1.5 pl-9 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors" />
+        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        {% if q %}
+          <a href="?{% if order_type %}type={{ order_type }}{% endif %}{% if pay_status %}&status={{ pay_status }}{% endif %}" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. ORDERS STREAM TABLE                                                    -->
+  <!-- ========================================================================= -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-slate-200 overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs min-w-[900px]">
+        <thead>
+          <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px] bg-slate-50/50 dark:bg-slate-900/30">
+            <th class="px-5 py-3.5">Order / Group #</th>
+            <th class="px-4 py-3.5">Customer / Member</th>
+            <th class="px-4 py-3.5">Book & Quantity</th>
+            <th class="px-4 py-3.5">Channel / Type</th>
+            <th class="px-4 py-3.5">Total Amount</th>
+            <th class="px-4 py-3.5">Payment</th>
+            <th class="px-4 py-3.5">Status</th>
+            <th class="px-4 py-3.5">Timeline</th>
+            <th class="px-5 py-3.5 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
+          {% regroup orders by group_number as order_groups %}
+          {% for group in order_groups %}
+          {% with order=group.list.0 %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors {% if order.is_overdue %}bg-rose-500/5{% endif %}">
+            
+            <!-- Order / Group # -->
+            <td class="px-5 py-3.5">
+              <div class="flex items-center gap-1.5">
+                <span class="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                  {{ group.grouper }}
+                </span>
+                <button type="button"
+                        onclick="copyText('{{ group.grouper }}')"
+                        title="Copy Order #"
+                        class="text-slate-400 hover:text-cyan-500 transition-colors">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+              </div>
+            </td>
+
+            <!-- Customer Details -->
+            <td class="px-4 py-3.5">
+              <div class="font-bold text-slate-900 dark:text-white">
+                {% if order.user %}
+                  <a href="{% url 'admin_user_detail' order.user.pk %}" class="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
+                    {{ order.user.get_full_name|default:order.user.username }}
+                  </a>
+                {% else %}
+                  <span class="text-slate-700 dark:text-slate-300">Walk-in: {{ order.customer_name|default:"Anonymous" }}</span>
+                {% endif %}
+              </div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                {% if order.customer_mobile %}{{ order.customer_mobile }}{% elif order.user.phone %}{{ order.user.phone }}{% else %}{{ order.user.email|default:"No Contact" }}{% endif %}
+              </div>
+            </td>
+
+            <!-- Book Items -->
+            <td class="px-4 py-3.5">
+              <div class="space-y-1">
+                {% for item in group.list %}
+                <div class="flex items-center gap-1.5">
+                  <a href="{% url 'admin_book_edit' item.book.pk %}" class="text-xs font-semibold text-slate-900 dark:text-white hover:text-cyan-500 truncate max-w-[200px]" title="{{ item.book.title }}">
+                    {{ item.book.title }}
+                  </a>
                   {% if item.quantity > 1 %}
-                  <span class="dark:text-sky-400 text-sky-600 font-bold ml-1">(Qty: {{ item.quantity }})</span>
+                    <span class="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                      ×{{ item.quantity }}
+                    </span>
                   {% endif %}
                 </div>
+                {% endfor %}
               </div>
-              {% endfor %}
-            </div>
-          </td>
-          <td class="px-4 py-3">
-            <div class="flex flex-col gap-1.5 items-start">
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider
-                {% if order.order_type == 'Buy' %}bg-sky-500/10 text-sky-400 border border-sky-500/20
-                {% else %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% endif %}">
-                {{ order.order_type }}
-              </span>
-              {% if order.is_overdue %}
-              <span class="text-red-400 font-bold text-[9px] uppercase tracking-wider bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded">OVERDUE</span>
-              {% elif order.order_type == 'Borrow' and order.due_date and not order.returned_at %}
-              <div class="text-yellow-400 text-[10px] font-medium">Due: {{ order.due_date|date:"d M" }}</div>
-              {% elif order.returned_at %}
-              <div class="text-emerald-400 text-[10px] font-medium">Returned</div>
-              {% endif %}
-            </div>
-          </td>
-          <td class="px-4 py-3 dark:text-white text-slate-900 font-bold text-xs">
-            ৳{{ order.group_total_cost|floatformat:0 }}
-          </td>
-          <td class="px-4 py-3">
-            <div class="text-xs font-medium">
-              {% if order.payment_method == 'bKash' %}
-                <span class="text-[#E2136E] font-bold">bKash</span>
-              {% elif order.payment_method == 'Nagad' %}
-                <span class="text-[#F6921E] font-bold">Nagad</span>
-              {% else %}
-                <span class="dark:text-gray-300 text-slate-700">{{ order.payment_method }}</span>
-              {% endif %}
-            </div>
-            {% if order.transaction_id %}
-            <div class="dark:text-gray-500 text-slate-500 text-[9px] font-mono truncate max-w-24 mt-0.5" title="{{ order.transaction_id }}">{{ order.transaction_id }}</div>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3">
-            <div class="flex flex-col gap-1">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold text-center badge-{{ order.payment_status|lower }} w-max">
-                {{ order.payment_status }}
-              </span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold text-center w-max
-                {% if order.order_status == 'Delivered' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
-                {% elif order.order_status == 'Cancelled' %}bg-red-500/10 text-red-400 border border-red-500/20
-                {% else %}bg-yellow-500/10 text-yellow-400 border border-yellow-500/20{% endif %}">
-                {{ order.order_status }}
-              </span>
-            </div>
-          </td>
-          <td class="px-4 py-3 dark:text-gray-500 text-slate-500 text-xs font-medium">{{ order.created_at|date:"d M Y" }}</td>
-          <td class="px-4 py-3">
-            <div class="flex gap-1.5 flex-wrap items-center">
-              {% if order.payment_status == 'Pending' %}
-                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
-                  {% csrf_token %}<input type="hidden" name="action" value="mark_paid" />
-                  <button type="submit" class="btn-success text-[10px] py-1 px-2.5">Mark Paid</button>
-                </form>
-                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
-                  {% csrf_token %}<input type="hidden" name="action" value="mark_failed" />
-                  <button type="submit" class="btn-danger text-[10px] py-1 px-2.5">Fail Pay</button>
-                </form>
-              {% endif %}
+            </td>
 
-              {% if order.order_type == 'Borrow' and order.order_status == 'Delivered' and not order.returned_at %}
-              <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
-                {% csrf_token %}<input type="hidden" name="action" value="mark_returned" />
-                <button type="submit" class="btn-success text-[10px] py-1 px-2.5">Returned</button>
-              </form>
-              {% endif %}
-
-              {% if order.order_status == 'Pending' %}
-                {% if order.order_type == 'Borrow' %}
-                <a href="{% url 'admin_approve_borrow' order.pk %}" class="btn-success text-[10px] py-1 px-2.5 inline-block">Approve Borrow</a>
+            <!-- Channel / Order Type -->
+            <td class="px-4 py-3.5">
+              <div class="flex flex-col gap-1 items-start">
+                {% if order.order_type == 'Buy' %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                    Purchase
+                  </span>
                 {% else %}
-                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
-                  {% csrf_token %}<input type="hidden" name="action" value="mark_approved" />
-                  <button type="submit" class="btn-success text-[10px] py-1 px-2.5">Approve</button>
-                </form>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                    Borrow Loan
+                  </span>
                 {% endif %}
-                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
-                  {% csrf_token %}<input type="hidden" name="action" value="mark_cancelled" />
-                  <button type="submit" class="btn-danger text-[10px] py-1 px-2.5">Cancel</button>
-                </form>
-              {% elif order.order_status == 'Approved' %}
-                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
-                  {% csrf_token %}<input type="hidden" name="action" value="mark_delivered" />
-                  <button type="submit" class="btn-success text-[10px] py-1 px-2.5 flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    Mark Delivered
+
+                <!-- Overdue / Due Date Badges -->
+                {% if order.is_overdue %}
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 animate-pulse">
+                    Overdue
+                  </span>
+                {% elif order.order_type == 'Borrow' and order.due_date and not order.returned_at %}
+                  <span class="text-[10px] font-mono text-amber-500 font-semibold">
+                    Due: {{ order.due_date|date:"d M" }}
+                  </span>
+                {% elif order.returned_at %}
+                  <span class="text-[10px] font-mono text-emerald-500 font-semibold">
+                    Returned
+                  </span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Total Amount -->
+            <td class="px-4 py-3.5 font-mono font-bold text-slate-900 dark:text-white text-xs">
+              ৳ {{ order.group_total_cost|floatformat:0 }}
+            </td>
+
+            <!-- Payment Method & Txn ID -->
+            <td class="px-4 py-3.5">
+              <div class="flex items-center gap-1.5 mb-0.5">
+                {% if order.payment_method == 'bKash' %}
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20">bKash</span>
+                {% elif order.payment_method == 'Nagad' %}
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Nagad</span>
+                {% else %}
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">{{ order.payment_method|default:"Cash" }}</span>
+                {% endif %}
+              </div>
+              {% if order.transaction_id %}
+                <div class="flex items-center gap-1 text-[10px] font-mono text-slate-400 mt-0.5">
+                  <span class="truncate max-w-[100px]" title="{{ order.transaction_id }}">{{ order.transaction_id }}</span>
+                  <button type="button" onclick="copyText('{{ order.transaction_id }}')" title="Copy TrxID" class="hover:text-cyan-500">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                  </button>
+                </div>
+              {% endif %}
+            </td>
+
+            <!-- Fulfillment & Pay Status -->
+            <td class="px-4 py-3.5">
+              <div class="flex flex-col gap-1 items-start">
+                <!-- Payment Status Badge -->
+                {% if order.payment_status == 'Paid' %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Paid
+                  </span>
+                {% elif order.payment_status == 'Failed' %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                    Failed
+                  </span>
+                {% else %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    Unpaid
+                  </span>
+                {% endif %}
+
+                <!-- Order Status Badge -->
+                {% if order.order_status == 'Delivered' %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Delivered
+                  </span>
+                {% elif order.order_status == 'Cancelled' %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                    Cancelled
+                  </span>
+                {% elif order.order_status == 'Approved' %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                    Approved
+                  </span>
+                {% else %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    Pending
+                  </span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Date -->
+            <td class="px-4 py-3.5 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+              {{ order.created_at|date:"d M Y" }}
+              <div class="text-[10px] text-slate-400">{{ order.created_at|date:"H:i" }}</div>
+            </td>
+
+            <!-- Quick Actions -->
+            <td class="px-5 py-3.5 text-right">
+              <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                
+                <!-- Mark Paid -->
+                {% if order.payment_status == 'Pending' %}
+                  <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_paid" />
+                    <button type="submit" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold transition-colors shadow-sm">
+                      Mark Paid
+                    </button>
+                  </form>
+                  <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_failed" />
+                    <button type="submit" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 hover:text-rose-600 text-slate-600 dark:text-slate-400 text-[11px] font-medium transition-colors">
+                      Fail
+                    </button>
+                  </form>
+                {% endif %}
+
+                <!-- Return Borrow -->
+                {% if order.order_type == 'Borrow' and order.order_status == 'Delivered' and not order.returned_at %}
+                  <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_returned" />
+                    <button type="submit" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold transition-colors shadow-sm">
+                      Returned
+                    </button>
+                  </form>
+                {% endif %}
+
+                <!-- Approve / Deliver Actions -->
+                {% if order.order_status == 'Pending' %}
+                  {% if order.order_type == 'Borrow' %}
+                    <a href="{% url 'admin_approve_borrow' order.pk %}" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold transition-colors shadow-sm inline-block">
+                      Approve Loan
+                    </a>
+                  {% else %}
+                    <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="mark_approved" />
+                      <button type="submit" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold transition-colors shadow-sm">
+                        Approve
+                      </button>
+                    </form>
+                  {% endif %}
+                  <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_cancelled" />
+                    <button type="submit" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 hover:text-rose-600 text-slate-600 dark:text-slate-400 text-[11px] font-medium transition-colors">
+                      Cancel
+                    </button>
+                  </form>
+                {% elif order.order_status == 'Approved' %}
+                  <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_delivered" />
+                    <button type="submit" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold transition-colors shadow-sm flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                      Dispatch
+                    </button>
+                  </form>
+                  <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_cancelled" />
+                    <button type="submit" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 hover:text-rose-600 text-slate-600 dark:text-slate-400 text-[11px] font-medium transition-colors">
+                      Cancel
+                    </button>
+                  </form>
+                {% endif %}
+
+                <!-- Delete Trash Button -->
+                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline" onsubmit="return confirm('Delete this order completely?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete" />
+                  <button type="submit" class="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors" title="Delete Order">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                   </button>
                 </form>
-                <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline">
-                  {% csrf_token %}<input type="hidden" name="action" value="mark_cancelled" />
-                  <button type="submit" class="btn-danger text-[10px] py-1 px-2.5">Cancel</button>
-                </form>
-              {% endif %}
-              
-              <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline" onsubmit="return confirm('Delete this order completely? This action cannot be undone.');">
-                {% csrf_token %}<input type="hidden" name="action" value="delete" />
-                <button type="submit" class="text-red-400 hover:text-red-500 font-medium text-[10px] px-1 ml-1 transition-colors" title="Delete">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                </button>
-              </form>
-            </div>
-          </td>
-        </tr>
-        {% endwith %}
-        {% empty %}
-        <tr>
-          <td colspan="9" class="text-center py-16 dark:text-gray-500 text-slate-500">No orders found.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+
+              </div>
+            </td>
+          </tr>
+          {% endwith %}
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center py-16 text-slate-500">
+              <div class="max-w-xs mx-auto space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 mx-auto">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                </div>
+                <div class="font-bold text-slate-700 dark:text-slate-300 text-sm">No orders found</div>
+                <p class="text-xs text-slate-400">Try adjusting your filters or search terms.</p>
+                {% if q or order_type or pay_status %}
+                  <a href="?" class="inline-block mt-2 px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+                    Clear Filters
+                  </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if orders.has_other_pages %}
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div class="text-xs text-slate-500 dark:text-slate-400">
+        Showing page <span class="font-bold text-slate-800 dark:text-slate-200 font-mono">{{ orders.number }}</span> of <span class="font-bold text-slate-800 dark:text-slate-200 font-mono">{{ orders.paginator.num_pages }}</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        {% if orders.has_previous %}
+          <a href="?page={{ orders.previous_page_number }}{% if order_type %}&type={{ order_type }}{% endif %}{% if pay_status %}&status={{ pay_status }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
+             class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-medium hover:border-cyan-500 transition-colors">
+            Previous
+          </a>
+        {% endif %}
+        {% if orders.has_next %}
+          <a href="?page={{ orders.next_page_number }}{% if order_type %}&type={{ order_type }}{% endif %}{% if pay_status %}&status={{ pay_status }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
+             class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-medium hover:border-cyan-500 transition-colors">
+            Next
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
 
-  <!-- Pagination -->
-  {% include "includes/pagination.html" with page_obj=orders %}
 </div>
+
+<!-- Copy notification toast -->
+<div id="copy-toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-xs font-mono px-3.5 py-2 rounded-xl border border-cyan-500/30 shadow-xl opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2">
+  <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+  <span>Copied to clipboard</span>
+</div>
+
+<script>
+  function copyText(text) {
+    if (!text || text === '—') return;
+    navigator.clipboard.writeText(text).then(() => {
+      const toast = document.getElementById('copy-toast');
+      toast.classList.remove('opacity-0', 'translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-2');
+      }, 2000);
+    });
+  }
+</script>
 {% endblock %}
