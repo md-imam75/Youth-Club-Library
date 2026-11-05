@@ -1,107 +1,334 @@
 {% extends "admin_panel/base.html" %}
+{% load static %}
 {% block title %}Book Requests{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-  <!-- Header -->
+  <!-- ========================================================================= -->
+  <!-- 1. HEADER SECTION                                                         -->
+  <!-- ========================================================================= -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h2 class="text-xl font-bold dark:text-white text-slate-900">Book Requests</h2>
-      <p class="text-xs dark:text-gray-500 text-slate-500 mt-1">Review and manage book purchase/sourcing requests from readers.</p>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+        <span>Patron Wishlist & Sourcing</span>
+        <span class="text-slate-400 dark:text-slate-600">•</span>
+        <span class="font-mono text-cyan-600 dark:text-cyan-400">Inventory Procurement</span>
+      </div>
+      <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        Book Requests
+      </h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        Review reader title suggestions, track procurement status, and notify readers upon arrival.
+      </p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="flex items-center gap-2.5">
+      <a href="{% url 'admin_book_add' %}"
+         class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-cyan-600/20 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Book to Catalog
+      </a>
     </div>
   </div>
 
-  <!-- Filters -->
-  <form method="get" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-    <input type="text" name="q" value="{{ q }}" placeholder="Search by name, contact, or book title..."
-           class="form-input sm:col-span-2" />
-    
-    <div class="flex gap-2">
-      <select name="status" class="form-input flex-1">
-        <option value="">— All Statuses —</option>
-        {% for code, label in status_choices %}
-          <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-      <button type="submit" class="btn-primary px-5">Filter</button>
-      {% if q or selected_status %}
-        <a href="?" class="btn-primary px-4 flex items-center justify-center" style="background:rgba(255,255,255,0.1);">Clear</a>
-      {% endif %}
-    </div>
-  </form>
+  <!-- ========================================================================= -->
+  <!-- 2. METRICS HUD CARDS                                                      -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Pending -->
+    <a href="?status=Pending"
+       class="stat-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border {% if selected_status == 'Pending' %}border-amber-500 ring-1 ring-amber-500/30{% elif pending_count > 0 %}border-amber-500/30 dark:border-amber-500/20{% else %}dark:border-white/5 border-slate-200{% endif %} hover:-translate-y-0.5 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pending Review</span>
+        <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-extrabold text-slate-900 dark:text-white font-mono">{{ pending_count }}</span>
+        {% if pending_count > 0 %}
+          <span class="text-[11px] font-semibold text-amber-500 animate-pulse">Needs triage</span>
+        {% else %}
+          <span class="text-[11px] text-slate-400">All reviewed</span>
+        {% endif %}
+      </div>
+      <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Awaiting procurement decision</div>
+    </a>
 
-  <!-- Table -->
-  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
-    <table class="w-full text-sm min-w-[850px]">
-      <thead>
-        <tr class="border-b border-white/8">
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Date / ID</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Customer</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Requested Items</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Status</th>
-          <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for req in requests %}
-        <tr class="table-row">
-          <td class="px-4 py-3 text-xs">
-            <div class="font-mono dark:text-gray-400 text-slate-600">REQ#{{ req.id }}</div>
-            <div class="dark:text-gray-500 text-slate-500 mt-0.5">{{ req.created_at|date:"d M Y, h:i A" }}</div>
-          </td>
-          <td class="px-4 py-3 text-xs">
-            <div class="font-semibold dark:text-white text-slate-900 text-sm">{{ req.name }}</div>
-            <div class="dark:text-gray-400 text-slate-600 mt-1">📞 {{ req.phone }}</div>
-            {% if req.email %}<div class="dark:text-gray-500 text-slate-500">✉️ {{ req.email }}</div>{% endif %}
-            {% if req.address %}<div class="text-gray-600 mt-1 max-w-xs truncate" title="{{ req.address }}">📍 {{ req.address }}</div>{% endif %}
-          </td>
-          <td class="px-4 py-3 text-xs">
-            <ul class="space-y-1">
-              {% for item in req.items.all %}
-              <li class="dark:text-gray-300 text-slate-700">
-                <span class="font-bold dark:text-white text-slate-900">"{{ item.book_title }}"</span>
-                {% if item.author %}by {{ item.author }}{% endif %}
-                {% if item.publication %}({{ item.publication }}){% endif %}
-                <span class="text-sky-400 font-bold ml-1">x{{ item.quantity }}</span>
-              </li>
-              {% endfor %}
-            </ul>
-          </td>
-          <td class="px-4 py-3 text-xs">
-            {% if req.status == 'Pending' %}
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">Pending Review</span>
-            {% elif req.status == 'Reviewed' %}
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Reviewed</span>
-            {% else %}
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Completed</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 text-right text-xs">
-            <div class="flex items-center justify-end gap-3">
-              <!-- Action status dropdown Form -->
-              <form method="post" action="{% url 'admin_book_request_action' req.pk %}" class="flex items-center gap-1.5">
-                {% csrf_token %}
-                <select name="status" onchange="this.form.submit()" class="form-input py-1 px-2.5 text-xs rounded-lg" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
-                  {% for val, name in status_choices %}
-                    <option value="{{ val }}" {% if req.status == val %}selected{% endif %}>Set: {{ name }}</option>
-                  {% endfor %}
-                </select>
-              </form>
-              <a href="{% url 'admin_book_request_delete' req.pk %}" class="btn-danger text-xs py-1 px-3">Delete</a>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="5" class="text-center py-16 dark:text-gray-500 text-slate-500">No book requests found.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <!-- Reviewed -->
+    <a href="?status=Reviewed"
+       class="stat-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border {% if selected_status == 'Reviewed' %}border-sky-500 ring-1 ring-sky-500/30{% else %}dark:border-white/5 border-slate-200{% endif %} hover:-translate-y-0.5 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Under Sourcing</span>
+        <div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        </div>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-extrabold text-slate-900 dark:text-white font-mono">{{ reviewed_count }}</span>
+        <span class="text-[11px] font-semibold text-sky-500">In progress</span>
+      </div>
+      <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Publisher / supplier contacted</div>
+    </a>
+
+    <!-- Completed -->
+    <a href="?status=Completed"
+       class="stat-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border {% if selected_status == 'Completed' %}border-emerald-500 ring-1 ring-emerald-500/30{% else %}dark:border-white/5 border-slate-200{% endif %} hover:-translate-y-0.5 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Fulfilled / Added</span>
+        <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-extrabold text-slate-900 dark:text-white font-mono">{{ completed_count }}</span>
+        <span class="text-[11px] font-semibold text-emerald-500">Shelved</span>
+      </div>
+      <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Available in library</div>
+    </a>
+
+    <!-- Total -->
+    <a href="?"
+       class="stat-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border {% if not selected_status %}border-cyan-500 ring-1 ring-cyan-500/30{% else %}dark:border-white/5 border-slate-200{% endif %} hover:-translate-y-0.5 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Requests</span>
+        <div class="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-500 flex items-center justify-center border border-cyan-500/20">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        </div>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-extrabold text-slate-900 dark:text-white font-mono">{{ total_count }}</span>
+        <span class="text-[11px] text-cyan-600 dark:text-cyan-400">All submissions</span>
+      </div>
+      <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Reader wish requests</div>
+    </a>
   </div>
 
-  <!-- Pagination -->
-  {% include "includes/pagination.html" with page_obj=requests %}
+  <!-- ========================================================================= -->
+  <!-- 3. SEARCH & STATUS FILTER TOOLBAR                                         -->
+  <!-- ========================================================================= -->
+  <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200">
+    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      
+      <!-- Filter Chips -->
+      <div class="flex flex-wrap items-center gap-1.5">
+        <a href="?{% if q %}q={{ q }}{% endif %}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all {% if not selected_status %}bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-transparent{% endif %}">
+          All ({{ total_count }})
+        </a>
+        <a href="?status=Pending{% if q %}&q={{ q }}{% endif %}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 {% if selected_status == 'Pending' %}bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-transparent{% endif %}">
+          <span class="w-1.5 h-1.5 rounded-full {% if pending_count > 0 %}bg-amber-500 animate-pulse{% else %}bg-slate-400{% endif %}"></span>
+          Pending ({{ pending_count }})
+        </a>
+        <a href="?status=Reviewed{% if q %}&q={{ q }}{% endif %}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 {% if selected_status == 'Reviewed' %}bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-transparent{% endif %}">
+          <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+          Reviewed ({{ reviewed_count }})
+        </a>
+        <a href="?status=Completed{% if q %}&q={{ q }}{% endif %}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 {% if selected_status == 'Completed' %}bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-transparent{% endif %}">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          Completed ({{ completed_count }})
+        </a>
+      </div>
+
+      <!-- Search Form -->
+      <form method="get" class="relative flex items-center min-w-[280px]">
+        {% if selected_status %}<input type="hidden" name="status" value="{{ selected_status }}" />{% endif %}
+        <input type="text"
+               name="q"
+               value="{{ q }}"
+               placeholder="Search by book title, author, patron name, phone..."
+               class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-1.5 pl-9 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors" />
+        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        {% if q %}
+          <a href="?{% if selected_status %}status={{ selected_status }}{% endif %}" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. BOOK REQUESTS TABLE                                                    -->
+  <!-- ========================================================================= -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-slate-200 overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs min-w-[850px]">
+        <thead>
+          <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px] bg-slate-50/50 dark:bg-slate-900/30">
+            <th class="px-5 py-3.5">ID / Submission Date</th>
+            <th class="px-4 py-3.5">Patron Contact</th>
+            <th class="px-4 py-3.5">Requested Book(s)</th>
+            <th class="px-4 py-3.5">Status</th>
+            <th class="px-5 py-3.5 text-right">Workflow Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
+          {% for req in requests %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+            
+            <!-- Date / ID -->
+            <td class="px-5 py-3.5">
+              <span class="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                #REQ-{{ req.id }}
+              </span>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-1">
+                {{ req.created_at|date:"d M Y" }}
+              </div>
+              <div class="text-[10px] text-slate-400 font-mono">
+                {{ req.created_at|date:"h:i A" }}
+              </div>
+            </td>
+
+            <!-- Patron Contact (Zero Emojis, Pure SVGs) -->
+            <td class="px-4 py-3.5">
+              <div class="font-bold text-slate-900 dark:text-white text-sm">
+                {{ req.name }}
+              </div>
+              <div class="space-y-1 mt-1 text-[11px]">
+                <div class="flex items-center gap-1.5 font-mono text-slate-700 dark:text-slate-300">
+                  <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                  <a href="tel:{{ req.phone }}" class="hover:text-cyan-500">{{ req.phone }}</a>
+                </div>
+                {% if req.email %}
+                  <div class="flex items-center gap-1.5 font-mono text-slate-500 dark:text-slate-400">
+                    <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <a href="mailto:{{ req.email }}" class="hover:text-cyan-500">{{ req.email }}</a>
+                  </div>
+                {% endif %}
+                {% if req.address %}
+                  <div class="flex items-start gap-1.5 text-slate-500 dark:text-slate-400 max-w-xs truncate" title="{{ req.address }}">
+                    <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span>{{ req.address }}</span>
+                  </div>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Requested Items -->
+            <td class="px-4 py-3.5">
+              <div class="space-y-1.5">
+                {% for item in req.items.all %}
+                <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                  <div class="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+                    <span>"{{ item.book_title }}"</span>
+                    <span class="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[10px] text-cyan-600 dark:text-cyan-400">
+                      ×{{ item.quantity }}
+                    </span>
+                  </div>
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    {% if item.author %}Author: {{ item.author }}{% endif %}
+                    {% if item.publication %} · Publisher: {{ item.publication }}{% endif %}
+                  </div>
+                </div>
+                {% empty %}
+                <span class="text-slate-400 italic">No specific items listed</span>
+                {% endfor %}
+              </div>
+            </td>
+
+            <!-- Status Badge -->
+            <td class="px-4 py-3.5">
+              {% if req.status == 'Pending' %}
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 inline-flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                  Pending Review
+                </span>
+              {% elif req.status == 'Reviewed' %}
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 inline-flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                  Under Sourcing
+                </span>
+              {% else %}
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Completed
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Workflow Actions -->
+            <td class="px-5 py-3.5 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <!-- Status Select Form -->
+                <form method="post" action="{% url 'admin_book_request_action' req.pk %}" class="inline-block">
+                  {% csrf_token %}
+                  <select name="status"
+                          onchange="this.form.submit()"
+                          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500 cursor-pointer shadow-sm">
+                    {% for val, name in status_choices %}
+                      <option value="{{ val }}" {% if req.status == val %}selected{% endif %}>Status: {{ name }}</option>
+                    {% endfor %}
+                  </select>
+                </form>
+
+                <!-- Delete Action -->
+                <a href="{% url 'admin_book_request_delete' req.pk %}"
+                   onclick="return confirm('Delete this book request?');"
+                   class="p-1.5 rounded-xl border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors"
+                   title="Delete Request">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center py-16 text-slate-500">
+              <div class="max-w-xs mx-auto space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 mx-auto">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                </div>
+                <div class="font-bold text-slate-700 dark:text-slate-300 text-sm">No book requests found</div>
+                <p class="text-xs text-slate-400">
+                  {% if q or selected_status %}
+                    Try clearing your search query or status filter.
+                  {% else %}
+                    Reader sourcing requests will appear here.
+                  {% endif %}
+                </p>
+                {% if q or selected_status %}
+                  <a href="?" class="inline-block mt-2 px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+                    Clear Filters
+                  </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if requests.has_other_pages %}
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div class="text-xs text-slate-500 dark:text-slate-400">
+        Showing page <span class="font-bold text-slate-800 dark:text-slate-200 font-mono">{{ requests.number }}</span> of <span class="font-bold text-slate-800 dark:text-slate-200 font-mono">{{ requests.paginator.num_pages }}</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        {% if requests.has_previous %}
+          <a href="?page={{ requests.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
+             class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-medium hover:border-cyan-500 transition-colors">
+            Previous
+          </a>
+        {% endif %}
+        {% if requests.has_next %}
+          <a href="?page={{ requests.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
+             class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-medium hover:border-cyan-500 transition-colors">
+            Next
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
 </div>
 {% endblock %}

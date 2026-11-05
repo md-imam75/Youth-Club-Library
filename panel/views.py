@@ -2077,12 +2077,23 @@ def admin_book_requests(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    counts = BookRequest.objects.aggregate(
+        pending=Count('id', filter=Q(status='Pending')),
+        reviewed=Count('id', filter=Q(status='Reviewed')),
+        completed=Count('id', filter=Q(status='Completed')),
+        total=Count('id'),
+    )
+
     context = {
         'page_title': 'Book Requests',
         'requests': page_obj,
         'q': q,
         'selected_status': status,
         'status_choices': BookRequest.STATUS_CHOICES,
+        'pending_count': counts['pending'] or 0,
+        'reviewed_count': counts['reviewed'] or 0,
+        'completed_count': counts['completed'] or 0,
+        'total_count': counts['total'] or 0,
     }
     return render(request, 'admin_panel/requests.html', context)
 
