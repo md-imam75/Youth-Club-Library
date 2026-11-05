@@ -3,431 +3,266 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="space-y-6 max-w-7xl mx-auto pb-10">
+<div class="space-y-8 max-w-7xl mx-auto pb-12">
 
   <!-- ========================================================================= -->
-  <!-- HEADER & QUICK ACTION BAR                                                -->
+  <!-- 1. HEADER & QUIET ACTION BAR                                              -->
   <!-- ========================================================================= -->
-  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800/80">
     <div>
       <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-        <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-        <span>Administration Console</span>
+        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+        <span>Operations Console</span>
         <span class="text-slate-400 dark:text-slate-600">•</span>
-        <span class="font-mono text-cyan-600 dark:text-cyan-400">Youth Club Library</span>
+        <span class="font-mono text-sky-600 dark:text-sky-400">Live Workspace</span>
       </div>
       <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-        Dashboard & Operations
+        Library Overview
       </h1>
       <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-        Live circulation, financial summary, and inventory triage.
+        Key circulation figures, pending workflows, and financial health for today.
       </p>
     </div>
 
-    <!-- Quick Action Pills (Zero Emojis, Pure SVGs) -->
-    <div class="flex flex-wrap items-center gap-2">
-      <a href="{% url 'admin_book_add' %}"
-         class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition-colors shadow-sm flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Add Book
+    <!-- Solid Modern Action Buttons (NO Gradients, NO Emojis) -->
+    <div class="flex items-center gap-2.5">
+      <a href="{% url 'admin_sales_report' %}"
+         class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span>Sales Report</span>
       </a>
 
       <a href="{% url 'admin_make_bill' %}"
-         class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 text-slate-700 dark:text-slate-200 font-medium text-xs transition-colors flex items-center gap-2 shadow-sm">
-        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-        POS Quick Bill
+         class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        <span>POS Quick Bill</span>
       </a>
 
-      <a href="{% url 'admin_orders' %}?payment_status=Pending"
-         class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 text-slate-700 dark:text-slate-200 font-medium text-xs transition-colors flex items-center gap-2 shadow-sm">
-        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-        <span>Orders</span>
-        {% if pending_orders > 0 %}
-          <span class="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-mono font-bold">{{ pending_orders }}</span>
-        {% endif %}
-      </a>
-
-      <a href="{% url 'admin_memberships' %}?status=Pending"
-         class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-purple-500/50 text-slate-700 dark:text-slate-200 font-medium text-xs transition-colors flex items-center gap-2 shadow-sm">
-        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        <span>Memberships</span>
-        {% if pending_memberships > 0 %}
-          <span class="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 text-[10px] font-mono font-bold">{{ pending_memberships }}</span>
-        {% endif %}
-      </a>
-
-      <a href="{% url 'admin_sales_report' %}"
-         class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-cyan-500/50 text-slate-700 dark:text-slate-200 font-medium text-xs transition-colors flex items-center gap-2 shadow-sm">
-        <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        Sales Report
+      <a href="{% url 'admin_book_add' %}"
+         class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-500 text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Add Book</span>
       </a>
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- BENTO GRID (ROW 1: REVENUE ANALYTICS + CASH DRAWER + NEEDS ATTENTION)     -->
+  <!-- 2. HIGH-WHITESPACE KPI TILES (4 METRICS)                                  -->
   <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-
-    <!-- BENTO 1 (2 Columns Wide): REVENUE & 7-DAY PERFORMANCE CURVE -->
-    <div class="md:col-span-2 lg:col-span-2 stat-card rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden border dark:border-white/5 border-slate-200">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    
+    <!-- KPI 1: Today's Revenue with Time Switcher -->
+    <div class="stat-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between">
       <div>
-        <div class="flex items-center justify-between mb-3">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Revenue Analytics</span>
-              <span id="revenue-period-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">All Time</span>
-            </div>
-            <div class="flex items-baseline gap-2 mt-1">
-              <span id="revenue-headline-val" class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-mono">
-                ৳ {{ total_revenue|floatformat:0 }}
-              </span>
-              <span id="revenue-subtext" class="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                ৳ {{ month_revenue|floatformat:0 }} this month
-              </span>
-            </div>
-          </div>
-
-          <!-- Time Switcher Tabs -->
-          <div class="flex items-center bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl p-0.5 text-xs font-medium">
-            <button type="button" onclick="setRevenueFilter('today')" id="rev-btn-today" class="rev-tab px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">Today</button>
-            <button type="button" onclick="setRevenueFilter('week')" id="rev-btn-week" class="rev-tab px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">7 Days</button>
-            <button type="button" onclick="setRevenueFilter('month')" id="rev-btn-month" class="rev-tab px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">Month</button>
-            <button type="button" onclick="setRevenueFilter('all')" id="rev-btn-all" class="rev-tab px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-semibold border border-cyan-500/30 transition-all">All</button>
+        <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider">Revenue</span>
+          <div class="flex items-center gap-1 text-[10px] font-mono">
+            <button type="button" onclick="switchRev('today')" id="tab-rev-today" class="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 font-bold">Today</button>
+            <button type="button" onclick="switchRev('month')" id="tab-rev-month" class="px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Month</button>
+            <button type="button" onclick="switchRev('all')" id="tab-rev-all" class="px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">All</button>
           </div>
         </div>
-
-        <!-- Channel Breakdown Chips -->
-        <div class="grid grid-cols-3 gap-2 py-3 border-y border-slate-200 dark:border-slate-800/80">
-          <div>
-            <div class="text-[11px] text-slate-500 dark:text-slate-400">Offline Counter</div>
-            <div id="breakdown-offline" class="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono mt-0.5">৳ {{ offline_revenue|floatformat:0 }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] text-slate-500 dark:text-slate-400">Online Store</div>
-            <div id="breakdown-online" class="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono mt-0.5">৳ {{ online_revenue|floatformat:0 }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] text-slate-500 dark:text-slate-400">Borrow Circulation</div>
-            <div class="text-sm font-bold text-cyan-600 dark:text-cyan-400 font-mono mt-0.5">{{ total_borrow_orders }} orders</div>
-          </div>
+        <div id="rev-display-val" class="text-2xl lg:text-3xl font-black font-mono text-slate-900 dark:text-white tracking-tight">
+          ৳ {{ today_revenue|floatformat:0 }}
         </div>
       </div>
+      <p id="rev-display-sub" class="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
+        <span class="font-mono font-semibold text-slate-700 dark:text-slate-300">৳ {{ month_revenue|floatformat:0 }}</span> recorded this month
+      </p>
+    </div>
 
-      <!-- 7-Day Interactive Daily Bars -->
-      <div class="pt-3">
-        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-          <span>7-Day Daily Sales Activity</span>
-          <span class="text-slate-400 dark:text-slate-500 font-normal">Past 7 days</span>
+    <!-- KPI 2: Active Borrows -->
+    <div class="stat-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider">Active Borrows</span>
+          <a href="{% url 'admin_orders' %}?type=borrow" class="text-[10px] font-mono font-bold text-sky-600 dark:text-sky-400 hover:underline">
+            View Queue →
+          </a>
         </div>
-        <div class="grid grid-cols-7 gap-1.5 items-end h-16 pt-1">
+        <div class="text-2xl lg:text-3xl font-black font-mono text-slate-900 dark:text-white tracking-tight">
+          {{ currently_borrowed }}
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5">
+        {% if overdue_borrows > 0 %}
+          <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+          <span class="text-rose-600 dark:text-rose-400 font-semibold font-mono">{{ overdue_borrows }} overdue loan{{ overdue_borrows|pluralize }}</span>
+        {% else %}
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>All returns on-time</span>
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- KPI 3: Active Passholders -->
+    <div class="stat-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider">Passholders</span>
+          <a href="{% url 'admin_memberships' %}" class="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+            Directory →
+          </a>
+        </div>
+        <div class="text-2xl lg:text-3xl font-black font-mono text-slate-900 dark:text-white tracking-tight">
+          {{ active_memberships }}
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
+        Active library member subscribers
+      </p>
+    </div>
+
+    <!-- KPI 4: Pending Action Queue -->
+    <div class="stat-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider">Action Queue</span>
+          {% if attention_tasks_count > 0 %}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              Needs Attention
+            </span>
+          {% else %}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              All Clear
+            </span>
+          {% endif %}
+        </div>
+        <div class="text-2xl lg:text-3xl font-black font-mono {% if attention_tasks_count > 0 %}text-amber-600 dark:text-amber-400{% else %}text-slate-900 dark:text-white{% endif %} tracking-tight">
+          {{ attention_tasks_count }}
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
+        Pending approvals, verifications & alerts
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. TWO-COLUMN WORKSTATION (8 COLS TIMELINE/TABLE + 4 COLS TRIAGE/REGISTER)-->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    
+    <!-- ── LEFT COLUMN (8 Cols): 7-Day Timeline & Recent Activity Table ──────── -->
+    <div class="lg:col-span-8 space-y-6">
+
+      <!-- 7-Day Circulation & Sales Sparkline Card -->
+      <div class="stat-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
+              Past 7 Days Circulation & Income
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Daily revenue volume processed across counters
+            </p>
+          </div>
+          <div class="flex items-center gap-3 text-xs font-mono text-slate-500 dark:text-slate-400">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-sky-500"></span> Total Volume</span>
+          </div>
+        </div>
+
+        <!-- Sleek Minimalist Bars -->
+        <div class="grid grid-cols-7 gap-3 items-end h-32 pt-3 border-b border-slate-100 dark:border-slate-800 pb-2">
           {% for pt in seven_day_points %}
-          <div class="flex flex-col items-center gap-1 group relative h-full justify-end">
-            <!-- Tooltip -->
-            <div class="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-slate-900 text-white text-[10px] font-mono px-1.5 py-0.5 rounded shadow pointer-events-none whitespace-nowrap z-20">
-              ৳ {{ pt.total|floatformat:0 }}
+          <div class="flex flex-col items-center gap-1.5 h-full justify-end group">
+            <div class="w-full max-w-[36px] {% if forloop.last %}bg-sky-600 dark:bg-sky-500{% else %}bg-sky-500/25 dark:bg-sky-500/30 group-hover:bg-sky-500/50{% endif %} rounded-t transition-all relative"
+                 style="height: {{ pt.pct|default:4 }}%;"
+                 title="{{ pt.date_str }}: ৳{{ pt.total|floatformat:0 }}">
             </div>
-            <!-- Bar -->
-            <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-t-md overflow-hidden flex flex-col justify-end transition-all group-hover:bg-cyan-500/30" style="height: 100%;">
-              <div class="w-full bg-sky-500 hover:bg-sky-400 rounded-t-md transition-colors duration-200" style="height: {{ pt.pct|default:4 }}%;"></div>
-            </div>
-            <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400">{{ pt.day_name|slice:":1" }}</span>
+            <span class="text-[10px] font-mono {% if forloop.last %}font-bold text-sky-600 dark:text-sky-400{% else %}text-slate-400{% endif %}">
+              {{ pt.day_name }}
+            </span>
           </div>
           {% endfor %}
         </div>
-      </div>
-    </div>
 
-    <!-- BENTO 2 (1 Column): PHYSICAL CASH DRAWER -->
-    <div class="stat-card rounded-2xl p-5 flex flex-col justify-between border dark:border-white/5 border-slate-200">
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cash Drawer</span>
-          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-          </div>
-        </div>
-        <div class="text-2xl font-extrabold text-slate-900 dark:text-white font-mono">
-          ৳ {{ offline_cash|floatformat:0 }}
-        </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Physical cash balance at library front counter
-        </p>
-
-        <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
-          <div class="flex justify-between">
-            <span class="text-slate-500 dark:text-slate-400">Cash In (Manual)</span>
-            <span class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">+৳ {{ cash_in|floatformat:0 }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500 dark:text-slate-400">Cash Out (Expense)</span>
-            <span class="font-mono text-rose-500 font-semibold">-৳ {{ cash_out|floatformat:0 }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <a href="{% url 'admin_cash_drawer' %}" class="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 transition-colors">
-          <span>Drawer History</span>
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </a>
-        <a href="{% url 'admin_adjust_cash' %}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium transition-colors">
-          Adjust
-        </a>
-      </div>
-    </div>
-
-    <!-- BENTO 3 (1 Column): NEEDS ATTENTION (TRIAGE QUEUE) -->
-    <div class="stat-card rounded-2xl p-5 flex flex-col justify-between border {% if attention_tasks_count > 0 %}border-amber-500/30 dark:border-amber-500/20{% else %}dark:border-white/5 border-slate-200{% endif %}">
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-            Needs Attention
-          </span>
-          <span class="text-xs font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">
-            {{ attention_tasks_count }} Tasks
-          </span>
-        </div>
-
-        <div class="space-y-2 mt-2">
-          <!-- Pending Memberships -->
-          <a href="{% url 'admin_memberships' %}?status=Pending"
-             class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full {% if pending_memberships > 0 %}bg-amber-400{% else %}bg-slate-400{% endif %}"></span>
-              <span class="text-xs text-slate-700 dark:text-slate-300">Pending Memberships</span>
-            </div>
-            <span class="text-xs font-mono font-bold {% if pending_memberships > 0 %}text-amber-500{% else %}text-slate-400{% endif %}">{{ pending_memberships }}</span>
-          </a>
-
-          <!-- Overdue Borrows -->
-          <a href="{% url 'admin_orders' %}?order_type=Borrow"
-             class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full {% if overdue_borrows > 0 %}bg-rose-500{% else %}bg-slate-400{% endif %}"></span>
-              <span class="text-xs text-slate-700 dark:text-slate-300">Overdue Returns</span>
-            </div>
-            <span class="text-xs font-mono font-bold {% if overdue_borrows > 0 %}text-rose-500{% else %}text-slate-400{% endif %}">{{ overdue_borrows }}</span>
-          </a>
-
-          <!-- Unpaid Orders -->
-          <a href="{% url 'admin_orders' %}?payment_status=Pending"
-             class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full {% if pending_orders > 0 %}bg-sky-400{% else %}bg-slate-400{% endif %}"></span>
-              <span class="text-xs text-slate-700 dark:text-slate-300">Unpaid Orders</span>
-            </div>
-            <span class="text-xs font-mono font-bold {% if pending_orders > 0 %}text-sky-500{% else %}text-slate-400{% endif %}">{{ pending_orders }}</span>
-          </a>
-
-          <!-- Low Stock Items -->
-          <a href="{% url 'admin_books' %}?stock=low"
-             class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full {% if low_stock_count > 0 %}bg-rose-400{% else %}bg-slate-400{% endif %}"></span>
-              <span class="text-xs text-slate-700 dark:text-slate-300">Low Stock (≤ 3)</span>
-            </div>
-            <span class="text-xs font-mono font-bold {% if low_stock_count > 0 %}text-rose-400{% else %}text-slate-400{% endif %}">{{ low_stock_count }}</span>
-          </a>
-
-          <!-- Book Requests -->
-          <a href="{% url 'admin_book_requests' %}"
-             class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full {% if pending_book_requests > 0 %}bg-purple-400{% else %}bg-slate-400{% endif %}"></span>
-              <span class="text-xs text-slate-700 dark:text-slate-300">Patron Requests</span>
-            </div>
-            <span class="text-xs font-mono font-bold {% if pending_book_requests > 0 %}text-purple-400{% else %}text-slate-400{% endif %}">{{ pending_book_requests }}</span>
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
+          <span>7-Day Sum: <strong class="text-slate-900 dark:text-white font-mono">৳ {{ seven_day_revenue|floatformat:0 }}</strong></span>
+          <a href="{% url 'admin_sales_report' %}" class="text-sky-600 dark:text-sky-400 hover:underline font-semibold flex items-center gap-1">
+            <span>View Detailed Sales Ledger</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
           </a>
         </div>
       </div>
 
-      <div class="mt-4 pt-2 border-t border-slate-200 dark:border-slate-800 text-center">
-        <a href="{% url 'admin_orders' %}" class="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
-          View All Action Workflows &rarr;
-        </a>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- BENTO GRID (ROW 2: CATALOG STATUS & RECENT ORDERS STREAM)                  -->
-  <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-
-    <!-- BENTO 4 (1 Column): CATALOG & CIRCULATION HEALTH -->
-    <div class="stat-card rounded-2xl p-5 flex flex-col justify-between border dark:border-white/5 border-slate-200">
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Catalog & Stock</span>
-          <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-          </div>
-        </div>
-
-        <div class="text-2xl font-extrabold text-slate-900 dark:text-white font-mono">
-          {{ total_inventory_count }} <span class="text-xs font-normal text-slate-500 font-sans">copies</span>
-        </div>
-        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          {{ total_books }} titles in {{ total_categories }} categories
-        </div>
-
-        <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-          <div class="flex justify-between items-center">
-            <span class="text-slate-500 dark:text-slate-400">Inventory Valuation</span>
-            <span class="font-mono font-bold text-slate-800 dark:text-slate-200">৳ {{ total_inventory_value|floatformat:0 }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-500 dark:text-slate-400">Currently Borrowed</span>
-            <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400">{{ currently_borrowed }} copies</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-500 dark:text-slate-400">Active Members</span>
-            <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">{{ active_memberships }} / {{ total_users }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <a href="{% url 'admin_books' %}" class="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 transition-colors">
-          <span>Catalog Hub</span>
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </a>
-        <a href="{% url 'admin_print_barcodes' %}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium transition-colors">
-          Barcodes
-        </a>
-      </div>
-    </div>
-
-    <!-- BENTO 5 (3 Columns Wide): LIVE ORDERS & BORROWS STREAM -->
-    <div class="lg:col-span-3 stat-card rounded-2xl p-5 border dark:border-white/5 border-slate-200 flex flex-col justify-between">
-      <div>
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div class="flex items-center gap-3">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-              Recent Orders & Circulation
+      <!-- Sleek Compact Activity Table -->
+      <div class="stat-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
+              Recent Transactions & Loans
             </h3>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-              Last 12 Transactions
-            </span>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Live orders and borrow dispatches across library channels
+            </p>
           </div>
-
-          <!-- Table Filters -->
-          <div class="flex items-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-0.5 text-xs">
-            <button type="button" onclick="filterOrderTable('all')" id="ord-tab-all" class="ord-filter-btn px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-semibold border border-cyan-500/30">All</button>
-            <button type="button" onclick="filterOrderTable('unpaid')" id="ord-tab-unpaid" class="ord-filter-btn px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Unpaid</button>
-            <button type="button" onclick="filterOrderTable('borrow')" id="ord-tab-borrow" class="ord-filter-btn px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Borrows</button>
-            <button type="button" onclick="filterOrderTable('buy')" id="ord-tab-buy" class="ord-filter-btn px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Purchases</button>
-          </div>
+          <a href="{% url 'admin_orders' %}" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+            All Orders →
+          </a>
         </div>
 
-        <!-- Orders Table -->
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs" id="dashboard-orders-table">
+          <table class="w-full text-left text-xs min-w-[500px]">
             <thead>
-              <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
-                <th class="pb-2.5">Order #</th>
-                <th class="pb-2.5">Customer / Member</th>
-                <th class="pb-2.5">Type & Book</th>
-                <th class="pb-2.5">Total</th>
-                <th class="pb-2.5">Status</th>
-                <th class="pb-2.5 text-right">Quick Action</th>
+              <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                <th class="py-2.5">Order / Loan</th>
+                <th class="py-2.5">Patron</th>
+                <th class="py-2.5">Type</th>
+                <th class="py-2.5">Amount</th>
+                <th class="py-2.5 text-right">Status</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
-              {% for order in recent_orders %}
-              <tr class="order-row hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
-                  data-payment="{{ order.payment_status }}"
-                  data-type="{{ order.order_type }}">
-                <!-- Order # -->
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-300">
+              {% for ord in recent_orders %}
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                 <td class="py-3 font-mono font-bold text-slate-900 dark:text-white">
-                  {{ order.order_number }}
+                  #{{ ord.group_number|default:ord.id }}
                 </td>
-
-                <!-- Customer -->
                 <td class="py-3">
-                  <div class="font-semibold text-slate-900 dark:text-slate-200">
-                    {% if order.user %}{{ order.user.get_full_name|default:order.user.username }}{% else %}{{ order.customer_name|default:"Walk-in Customer" }}{% endif %}
+                  <div class="font-semibold text-slate-900 dark:text-white">
+                    {% if ord.user %}{{ ord.user.get_full_name|default:ord.user.username }}{% else %}{{ ord.customer_name|default:"Walk-in Customer" }}{% endif %}
                   </div>
-                  <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                    {% if order.customer_mobile %}{{ order.customer_mobile }}{% elif order.user.mobile %}{{ order.user.mobile }}{% else %}{{ order.created_at|date:"d M, H:i" }}{% endif %}
-                  </div>
+                  <div class="text-[10px] text-slate-400 font-mono">{{ ord.created_at|date:"d M, H:i" }}</div>
                 </td>
-
-                <!-- Book & Channel -->
                 <td class="py-3">
-                  <div class="flex items-center gap-1.5 mb-0.5">
-                    {% if order.order_type == 'Borrow' %}
-                      <span class="px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 text-[10px] font-mono font-semibold">Borrow</span>
-                    {% else %}
-                      <span class="px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 text-[10px] font-mono font-semibold">Buy</span>
-                    {% endif %}
-                    <span class="text-slate-900 dark:text-white font-semibold truncate max-w-[200px]" title="{{ order.book.title }}">
-                      {{ order.book.title|truncatechars:28 }}
-                    </span>
-                  </div>
-                  <div class="text-[10px] text-slate-400">
-                    Qty: {{ order.quantity }} · {{ order.book.author.name|default:"Unknown" }}
-                  </div>
-                </td>
-
-                <!-- Total -->
-                <td class="py-3 font-mono font-bold text-slate-900 dark:text-white">
-                  ৳ {{ order.total_cost|floatformat:0 }}
-                </td>
-
-                <!-- Status -->
-                <td class="py-3">
-                  {% if order.order_type == 'Borrow' and order.returned_at %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      Returned
-                    </span>
-                  {% elif order.payment_status == 'Paid' %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      Paid
-                    </span>
-                  {% elif order.payment_status == 'Failed' %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                      Failed
-                    </span>
+                  {% if ord.order_type == 'Buy' %}
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">Sale</span>
                   {% else %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                      Pending
-                    </span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Borrow</span>
                   {% endif %}
                 </td>
-
-                <!-- Quick Action -->
+                <td class="py-3 font-mono font-bold text-slate-900 dark:text-white">
+                  {% if ord.order_type == 'Buy' %}
+                    ৳{{ ord.total_cost|floatformat:0 }}
+                  {% else %}
+                    <span class="text-slate-400 font-normal">—</span>
+                  {% endif %}
+                </td>
                 <td class="py-3 text-right">
-                  <div class="flex items-center justify-end gap-1.5">
-                    {% if order.payment_status == 'Pending' %}
-                      <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline-block">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="mark_paid" />
-                        <button type="submit" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold transition-colors shadow-sm">
-                          Mark Paid
-                        </button>
-                      </form>
-                    {% elif order.order_type == 'Borrow' and not order.returned_at %}
-                      <form method="post" action="{% url 'admin_order_action' order.pk %}" class="inline-block">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="mark_returned" />
-                        <button type="submit" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold transition-colors">
-                          Return
-                        </button>
-                      </form>
+                  {% if ord.order_type == 'Borrow' %}
+                    {% if ord.returned_at %}
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">Returned</span>
+                    {% elif ord.is_overdue %}
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">Overdue</span>
+                    {% else %}
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">On Loan</span>
                     {% endif %}
-                    <a href="{% url 'admin_orders' %}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] transition-colors">
-                      View
-                    </a>
-                  </div>
+                  {% else %}
+                    {% if ord.payment_status == 'Paid' %}
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Paid</span>
+                    {% else %}
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Pending</span>
+                    {% endif %}
+                  {% endif %}
                 </td>
               </tr>
               {% empty %}
               <tr>
-                <td colspan="6" class="p-8 text-center text-slate-500 text-xs">No orders recorded yet.</td>
+                <td colspan="5" class="py-8 text-center text-slate-400 text-xs">
+                  No recent transactions recorded yet.
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -435,256 +270,211 @@
         </div>
       </div>
 
-      <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
-        <span class="text-slate-500 dark:text-slate-400">Total orders in system: {{ total_buy_orders }} purchases + {{ total_borrow_orders }} borrows</span>
-        <a href="{% url 'admin_orders' %}" class="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1">
-          <span>Manage All Orders & Loans</span>
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </a>
-      </div>
     </div>
 
-  </div>
+    <!-- ── RIGHT COLUMN (4 Cols): Triage Queue, Cash Register & Low Stock ────── -->
+    <div class="lg:col-span-4 space-y-6">
 
-  <!-- ========================================================================= -->
-  <!-- BENTO GRID (ROW 3: PENDING MEMBERSHIPS & LOW STOCK WATCHLIST)              -->
-  <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-    <!-- PENDING MEMBERSHIP REQUESTS (With Instant Approve / Decline) -->
-    <div class="stat-card rounded-2xl p-5 border dark:border-white/5 border-slate-200 flex flex-col justify-between">
-      <div>
-        <div class="flex items-center justify-between mb-3">
+      <!-- Priority Triage Queue Card -->
+      <div class="stat-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-              Membership Approvals ({{ pending_memberships }} Pending)
-            </h3>
+            <span class="w-2 h-2 rounded-full {% if attention_tasks_count > 0 %}bg-amber-500 animate-pulse{% else %}bg-emerald-500{% endif %}"></span>
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white">Action Required</h3>
           </div>
-          <a href="{% url 'admin_memberships' %}" class="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline">
-            View All &rarr;
-          </a>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full {% if attention_tasks_count > 0 %}bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20{% else %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20{% endif %} font-bold">
+            {{ attention_tasks_count }} Task{{ attention_tasks_count|pluralize }}
+          </span>
         </div>
 
-        <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
-          {% for m in recent_memberships %}
-          <div class="py-3 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-bold font-mono flex-shrink-0">
-                {{ m.user.first_name|first|default:"U"|upper }}
+        <div class="space-y-2.5">
+          
+          <!-- Pending Orders -->
+          {% if pending_orders > 0 %}
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
               </div>
               <div>
-                <div class="text-xs font-bold text-slate-900 dark:text-white">{{ m.user.get_full_name|default:m.user.username }}</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">
-                  {{ m.plan.name|default:"General Plan" }} · <span class="font-mono text-emerald-600 dark:text-emerald-400">{{ m.payment_method|default:"Online" }}</span>
-                </div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white">{{ pending_orders }} Pending Order{{ pending_orders|pluralize }}</div>
+                <div class="text-[10px] text-slate-400">Awaiting payment / dispatch</div>
               </div>
             </div>
+            <a href="{% url 'admin_orders' %}?payment_status=Pending" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-[10px] transition-colors">
+              Review
+            </a>
+          </div>
+          {% endif %}
 
-            <div class="flex items-center gap-1.5 flex-shrink-0">
-              <form method="post" action="{% url 'admin_membership_action' m.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="approve" />
-                <button type="submit" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors shadow-sm">
-                  Approve
-                </button>
-              </form>
-              <form method="post" action="{% url 'admin_membership_action' m.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="decline" />
-                <button type="submit" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 hover:text-rose-600 text-slate-600 dark:text-slate-400 text-xs font-medium transition-colors">
-                  Decline
-                </button>
-              </form>
+          <!-- Pending Memberships -->
+          {% if pending_memberships > 0 %}
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white">{{ pending_memberships }} Membership Req{{ pending_memberships|pluralize }}</div>
+                <div class="text-[10px] text-slate-400">bKash trx verifications</div>
+              </div>
             </div>
+            <a href="{% url 'admin_memberships' %}?status=Pending" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] transition-colors">
+              Verify
+            </a>
           </div>
-          {% empty %}
-          <div class="py-8 text-center text-slate-500 text-xs">
-            No pending membership approvals at this time.
+          {% endif %}
+
+          <!-- Overdue Borrows -->
+          {% if overdue_borrows > 0 %}
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white">{{ overdue_borrows }} Overdue Book{{ overdue_borrows|pluralize }}</div>
+                <div class="text-[10px] text-rose-500 font-semibold">Exceeded return date</div>
+              </div>
+            </div>
+            <a href="{% url 'admin_orders' %}?type=borrow&status=overdue" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] transition-colors">
+              Inspect
+            </a>
           </div>
-          {% endfor %}
+          {% endif %}
+
+          <!-- Book Requests -->
+          {% if pending_book_requests > 0 %}
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white">{{ pending_book_requests }} Book Request{{ pending_book_requests|pluralize }}</div>
+                <div class="text-[10px] text-slate-400">Reader requests</div>
+              </div>
+            </div>
+            <a href="{% url 'admin_book_requests' %}" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-[10px] transition-colors">
+              Review
+            </a>
+          </div>
+          {% endif %}
+
+          <!-- Low Stock Alert -->
+          {% if low_stock_count > 0 %}
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white">{{ low_stock_count }} Low Stock Title{{ low_stock_count|pluralize }}</div>
+                <div class="text-[10px] text-slate-400">&le; 3 copies in inventory</div>
+              </div>
+            </div>
+            <a href="{% url 'admin_books' %}?stock=low" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-[10px] transition-colors">
+              Restock
+            </a>
+          </div>
+          {% endif %}
+
+          {% if attention_tasks_count == 0 %}
+          <div class="py-6 text-center text-slate-400 text-xs">
+            <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="font-semibold text-slate-700 dark:text-slate-300">All caught up!</span>
+            <p class="text-[11px] text-slate-400 mt-0.5">No pending borrows, orders, or urgent alerts.</p>
+          </div>
+          {% endif %}
+
         </div>
       </div>
-    </div>
 
-    <!-- CRITICAL LOW STOCK WATCHLIST (With Instant AJAX +1 Restock) -->
-    <div class="stat-card rounded-2xl p-5 border dark:border-white/5 border-slate-200 flex flex-col justify-between">
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-              Critical Low Stock Watchlist (≤ 3 Copies)
-            </h3>
-          </div>
-          <a href="{% url 'admin_books' %}?stock=low" class="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline">
-            Manage Stock &rarr;
+      <!-- Quick Counter Register Status Card -->
+      <div class="stat-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Counter Register</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Open</span>
+        </div>
+        <div class="flex items-baseline justify-between pt-1">
+          <span class="text-xs text-slate-400">Physical Cash on Hand:</span>
+          <span class="text-lg font-black font-mono text-slate-900 dark:text-white">৳ {{ offline_cash|floatformat:2 }}</span>
+        </div>
+        <div class="flex items-baseline justify-between text-xs">
+          <span class="text-slate-400">Digital / Online Today:</span>
+          <span class="font-mono font-bold text-slate-700 dark:text-slate-300">৳ {{ today_revenue_online|floatformat:2 }}</span>
+        </div>
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
+          <a href="{% url 'admin_make_bill' %}" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+            <span>Open POS Terminal</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </a>
         </div>
+      </div>
 
-        <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
-          {% for book in low_stock_books %}
-          <div class="py-2.5 flex items-center justify-between gap-3" id="low-stock-row-{{ book.id }}">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div class="w-8 h-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] text-slate-500 font-mono flex-shrink-0 border border-slate-200 dark:border-slate-700">
-                {% if book.cover_image %}
-                  <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover rounded" />
-                {% else %}
-                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                {% endif %}
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs font-bold text-slate-900 dark:text-white truncate" title="{{ book.title }}">{{ book.title }}</div>
-                <div class="text-[11px] text-rose-500 font-mono font-semibold">
-                  Only <span id="stock-val-{{ book.id }}">{{ book.stock_quantity }}</span> left in shelf
-                </div>
-              </div>
+      <!-- Fast Restock Shortlist (if low stock books exist) -->
+      {% if low_stock_books %}
+      <div class="stat-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Urgent Restock Titles</span>
+          <a href="{% url 'admin_books' %}?stock=low" class="text-[11px] font-semibold text-sky-600 dark:text-sky-400 hover:underline">All Low Stock →</a>
+        </div>
+        <div class="space-y-2">
+          {% for b in low_stock_books|slice:":3" %}
+          <div class="flex items-center justify-between text-xs p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+            <div class="truncate max-w-[170px]">
+              <div class="font-bold text-slate-900 dark:text-white truncate">{{ b.title }}</div>
+              <div class="text-[10px] text-slate-400 truncate">{{ b.author.name|default:"Unknown" }}</div>
             </div>
-
-            <div class="flex items-center gap-1.5 flex-shrink-0">
-              <button type="button"
-                      onclick="quickRestockBook({{ book.id }}, 1)"
-                      class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-500 text-slate-700 dark:text-slate-300 font-mono text-xs font-bold transition-colors">
-                +1 Restock
-              </button>
-              <button type="button"
-                      onclick="quickRestockBook({{ book.id }}, 5)"
-                      class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-500 text-slate-700 dark:text-slate-300 font-mono text-xs font-bold transition-colors">
-                +5
-              </button>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="font-mono font-bold text-xs {% if b.stock_quantity == 0 %}text-rose-600 dark:text-rose-400{% else %}text-amber-600 dark:text-amber-400{% endif %}">
+                {{ b.stock_quantity }} left
+              </span>
+              <a href="{% url 'admin_book_edit' b.id %}" class="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[10px]">
+                Edit
+              </a>
             </div>
-          </div>
-          {% empty %}
-          <div class="py-8 text-center text-slate-500 text-xs">
-            All inventory levels are healthy (no titles below 3 copies).
           </div>
           {% endfor %}
         </div>
       </div>
+      {% endif %}
+
     </div>
 
   </div>
 
 </div>
 
-<!-- ========================================================================= -->
-<!-- JAVASCRIPT: REVENUE SWITCHER, ORDER TABLE FILTER, AND QUICK RESTOCK       -->
-<!-- ========================================================================= -->
+<!-- Realtime Metric Switcher Script -->
 <script>
-  // Revenue Metrics Data Cache
-  const revenueData = {
+  const revData = {
     today: {
-      total: '{{ today_revenue|floatformat:0 }}',
-      subtext: 'Today\'s sales count',
-      badge: 'Today',
-      offline: '{{ today_revenue_offline|floatformat:0 }}',
-      online: '{{ today_revenue_online|floatformat:0 }}'
-    },
-    week: {
-      total: '{{ seven_day_revenue|floatformat:0 }}',
-      subtext: 'Last 7 days revenue',
-      badge: '7 Days',
-      offline: '{{ week_revenue_offline|floatformat:0 }}',
-      online: '{{ week_revenue_online|floatformat:0 }}'
+      val: "৳ {{ today_revenue|floatformat:0 }}",
+      sub: "<span class='font-mono font-semibold text-slate-700 dark:text-slate-300'>৳ {{ month_revenue|floatformat:0 }}</span> recorded this month"
     },
     month: {
-      total: '{{ month_revenue|floatformat:0 }}',
-      subtext: 'This month\'s revenue',
-      badge: 'This Month',
-      offline: '{{ month_revenue_offline|floatformat:0 }}',
-      online: '{{ month_revenue_online|floatformat:0 }}'
+      val: "৳ {{ month_revenue|floatformat:0 }}",
+      sub: "Month-to-date total across counters & online checkout"
     },
     all: {
-      total: '{{ total_revenue|floatformat:0 }}',
-      subtext: '৳ {{ month_revenue|floatformat:0 }} this month',
-      badge: 'All Time',
-      offline: '{{ offline_revenue|floatformat:0 }}',
-      online: '{{ online_revenue|floatformat:0 }}'
+      val: "৳ {{ total_revenue|floatformat:0 }}",
+      sub: "All-time accumulated library turnover"
     }
   };
 
-  function setRevenueFilter(period) {
-    const data = revenueData[period];
-    if (!data) return;
-
-    document.getElementById('revenue-headline-val').innerText = '৳ ' + data.total;
-    document.getElementById('revenue-subtext').innerText = data.subtext;
-    document.getElementById('revenue-period-badge').innerText = data.badge;
-    document.getElementById('breakdown-offline').innerText = '৳ ' + data.offline;
-    document.getElementById('breakdown-online').innerText = '৳ ' + data.online;
-
-    // Update active tab styles
-    document.querySelectorAll('.rev-tab').forEach(btn => {
-      btn.classList.remove('bg-cyan-500/20', 'text-cyan-600', 'dark:text-cyan-300', 'font-semibold', 'border', 'border-cyan-500/30');
-      btn.classList.add('text-slate-500', 'dark:text-slate-400');
-    });
-
-    const activeBtn = document.getElementById('rev-btn-' + period);
-    if (activeBtn) {
-      activeBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
-      activeBtn.classList.add('bg-cyan-500/20', 'text-cyan-600', 'dark:text-cyan-300', 'font-semibold', 'border', 'border-cyan-500/30');
-    }
-  }
-
-  // Order Table Filter
-  function filterOrderTable(filterType) {
-    const rows = document.querySelectorAll('.order-row');
-    rows.forEach(row => {
-      const payment = row.getAttribute('data-payment');
-      const orderType = row.getAttribute('data-type');
-
-      if (filterType === 'all') {
-        row.style.display = '';
-      } else if (filterType === 'unpaid') {
-        row.style.display = (payment === 'Pending') ? '' : 'none';
-      } else if (filterType === 'borrow') {
-        row.style.display = (orderType === 'Borrow') ? '' : 'none';
-      } else if (filterType === 'buy') {
-        row.style.display = (orderType === 'Buy') ? '' : 'none';
-      }
-    });
-
-    // Update filter button styling
-    document.querySelectorAll('.ord-filter-btn').forEach(btn => {
-      btn.classList.remove('bg-cyan-500/20', 'text-cyan-600', 'dark:text-cyan-300', 'font-semibold', 'border', 'border-cyan-500/30');
-      btn.classList.add('text-slate-500', 'dark:text-slate-400');
-    });
-
-    const activeBtn = document.getElementById('ord-tab-' + filterType);
-    if (activeBtn) {
-      activeBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
-      activeBtn.classList.add('bg-cyan-500/20', 'text-cyan-600', 'dark:text-cyan-300', 'font-semibold', 'border', 'border-cyan-500/30');
-    }
-  }
-
-  // Quick Restock AJAX
-  function quickRestockBook(bookId, delta) {
-    fetch('/admin-panel/books/' + bookId + '/quick-update/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': '{{ csrf_token }}'
-      },
-      body: JSON.stringify({
-        action: 'adjust_stock',
-        delta: delta
-      })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        const span = document.getElementById('stock-val-' + bookId);
-        if (span) {
-          span.innerText = data.new_stock;
-          span.classList.add('text-emerald-500');
-        }
+  function switchRev(period) {
+    document.getElementById('rev-display-val').innerText = revData[period].val;
+    document.getElementById('rev-display-sub').innerHTML = revData[period].sub;
+    ['today', 'month', 'all'].forEach(p => {
+      const btn = document.getElementById('tab-rev-' + p);
+      if (p === period) {
+        btn.className = "px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 font-bold";
       } else {
-        alert(data.error || 'Failed to update stock');
+        btn.className = "px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
       }
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Network error while updating stock');
     });
   }
 </script>
