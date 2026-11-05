@@ -418,7 +418,9 @@
         {% elif msg.tags == 'warning' %}border-yellow-500/30 bg-yellow-500/10 text-yellow-400
         {% else %}border-sky-500/30 bg-sky-500/10 text-sky-400{% endif %}">
         <span class="flex-1">{{ msg }}</span>
-        <button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100">✕</button>
+        <button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100 p-1 transition-opacity" title="Dismiss">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
       </div>
       {% endfor %}
     </div>

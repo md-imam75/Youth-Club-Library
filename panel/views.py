@@ -2395,9 +2395,17 @@ def admin_testimonial_delete(request, pk):
 def admin_delivery_options(request):
     """List all delivery options."""
     options = DeliveryOption.objects.all().order_by('cost', 'label')
+    total_count = options.count()
+    free_count = options.filter(cost=0).count()
+    paid_count = options.filter(cost__gt=0).count()
+    active_count = options.filter(is_active=True).count()
     context = {
         'options': options,
         'page_title': 'Manage Delivery Options',
+        'total_count': total_count,
+        'free_count': free_count,
+        'paid_count': paid_count,
+        'active_count': active_count,
     }
     return render(request, 'admin_panel/delivery_options.html', context)
 

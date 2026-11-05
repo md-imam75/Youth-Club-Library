@@ -1,77 +1,183 @@
 {% extends "admin_panel/base.html" %}
+{% load static %}
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-  <!-- Top Actions -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <!-- ========================================================================= -->
+  <!-- 1. HEADER SECTION                                                         -->
+  <!-- ========================================================================= -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <p class="text-xs dark:text-gray-400 text-slate-500 uppercase tracking-widest font-bold">Settings</p>
-      <h2 class="text-2xl font-bold dark:text-white text-slate-900 mt-1">Delivery Options</h2>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+        <span>Logistics & Fulfillment</span>
+        <span class="text-slate-400 dark:text-slate-600">•</span>
+        <span class="font-mono text-cyan-600 dark:text-cyan-400">Shipping Methods</span>
+      </div>
+      <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        Delivery & Fulfillment Options
+      </h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        Configure pickup spots, free local hubs, city courier rates, and active checkout shipping choices.
+      </p>
     </div>
-    <div>
-      <a href="{% url 'admin_delivery_option_add' %}" class="btn-primary flex items-center gap-2">
-        <span>+</span> Add Delivery Option
-      </a>
-    </div>
+
+    <a href="{% url 'admin_delivery_option_add' %}"
+       class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-sky-600 hover:from-cyan-500 hover:to-sky-500 text-white font-semibold text-xs transition-all shadow-md shadow-cyan-600/20 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Add Delivery Option
+    </a>
   </div>
 
-  <!-- Table Card -->
-  <div class="stat-card rounded-2xl overflow-hidden border dark:border-white/5 border-black/10">
+  <!-- ========================================================================= -->
+  <!-- 2. HUD METRICS RIBBON (4 BENTO CARDS)                                     -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    
+    <!-- Total Methods -->
+    <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Methods</span>
+        <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-black font-mono text-slate-900 dark:text-white">{{ total_count }}</div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Configured shipping tiers</p>
+    </div>
+
+    <!-- Free Delivery Hubs -->
+    <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-emerald-500 mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Free Hubs</span>
+        <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">{{ free_count }}</div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Free pick-up points</p>
+    </div>
+
+    <!-- Paid Couriers -->
+    <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-sky-500 mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Paid Delivery</span>
+        <div class="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-black font-mono text-sky-600 dark:text-sky-400">{{ paid_count }}</div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Paid courier options</p>
+    </div>
+
+    <!-- Active In Checkout -->
+    <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between text-cyan-500 mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Choices</span>
+        <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+      </div>
+      <div class="text-2xl font-black font-mono text-cyan-600 dark:text-cyan-400">{{ active_count }}</div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Live in user checkout</p>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. DELIVERY OPTIONS TABLE                                                 -->
+  <!-- ========================================================================= -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-slate-200 overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
+      <table class="w-full text-left text-xs min-w-[700px]">
         <thead>
-          <tr class="border-b dark:border-white/5 border-black/10 text-[10px] dark:text-gray-400 text-slate-500 uppercase tracking-wider font-bold">
-            <th class="px-6 py-4">Option Label</th>
-            <th class="px-6 py-4">Unique Code</th>
-            <th class="px-6 py-4">Type</th>
-            <th class="px-6 py-4">Cost</th>
-            <th class="px-6 py-4">Status</th>
-            <th class="px-6 py-4 text-right">Actions</th>
+          <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px] bg-slate-50/50 dark:bg-slate-900/30">
+            <th class="px-5 py-3.5">Option Label & Code</th>
+            <th class="px-4 py-3.5">Fulfillment Type</th>
+            <th class="px-4 py-3.5">Delivery Fee</th>
+            <th class="px-4 py-3.5">Checkout Status</th>
+            <th class="px-5 py-3.5 text-right">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y dark:divide-white/5 divide-black/5 text-sm">
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
           {% for option in options %}
-          <tr class="table-row">
-            <td class="px-6 py-4 font-semibold dark:text-white text-slate-900">
-              {{ option.label }}
-            </td>
-            <td class="px-6 py-4 font-mono text-xs dark:text-gray-400 text-slate-600">
-              {{ option.code }}
-            </td>
-            <td class="px-6 py-4">
-              {% if option.cost == 0 %}
-              <span class="badge-active">Free</span>
-              {% else %}
-              <span class="badge-pending">Paid</span>
-              {% endif %}
-            </td>
-            <td class="px-6 py-4 font-semibold dark:text-white text-slate-900">
-              {% if option.cost == 0 %}
-              ৳0.00
-              {% else %}
-              ৳{{ option.cost }}
-              {% endif %}
-            </td>
-            <td class="px-6 py-4">
-              {% if option.is_active %}
-              <span class="badge-active">Active</span>
-              {% else %}
-              <span class="badge-expired">Inactive</span>
-              {% endif %}
-            </td>
-            <td class="px-6 py-4 text-right">
-              <div class="flex items-center justify-end gap-3">
-                <a href="{% url 'admin_delivery_option_edit' option.pk %}" class="btn-success text-xs px-2.5 py-1">Edit</a>
-                <a href="{% url 'admin_delivery_option_delete' option.pk %}" class="btn-danger text-xs px-2.5 py-1">Delete</a>
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+            
+            <!-- Label & Code -->
+            <td class="px-5 py-3.5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-900 dark:text-white text-sm">{{ option.label }}</div>
+                  <div class="font-mono text-[11px] text-slate-400 mt-0.5">code: {{ option.code }}</div>
+                </div>
               </div>
             </td>
+
+            <!-- Type -->
+            <td class="px-4 py-3.5">
+              {% if option.cost == 0 %}
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Free Delivery Hub
+                </span>
+              {% else %}
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span> Standard Paid Courier
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Delivery Cost -->
+            <td class="px-4 py-3.5">
+              <span class="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                {% if option.cost == 0 %}
+                  ৳0.00
+                {% else %}
+                  ৳{{ option.cost }}
+                {% endif %}
+              </span>
+            </td>
+
+            <!-- Active Status -->
+            <td class="px-4 py-3.5">
+              {% if option.is_active %}
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                </span>
+              {% else %}
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Disabled
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Actions -->
+            <td class="px-5 py-3.5 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <a href="{% url 'admin_delivery_option_edit' option.pk %}"
+                   class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors">
+                  Edit
+                </a>
+                <a href="{% url 'admin_delivery_option_delete' option.pk %}"
+                   class="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-colors">
+                  Delete
+                </a>
+              </div>
+            </td>
+
           </tr>
           {% empty %}
           <tr>
-            <td colspan="6" class="px-6 py-12 text-center dark:text-gray-400 text-slate-500">
-              No delivery options found. Click "Add Delivery Option" to create one.
+            <td colspan="5" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+              <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+              </div>
+              <p class="font-semibold text-slate-700 dark:text-slate-300 text-sm">No delivery options found</p>
+              <p class="text-xs text-slate-400 mt-1">Click "Add Delivery Option" above to configure your first shipping method.</p>
             </td>
           </tr>
           {% endfor %}
