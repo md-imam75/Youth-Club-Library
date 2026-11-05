@@ -1,61 +1,145 @@
 {% extends "admin_panel/base.html" %}
+{% load static %}
 {% block title %}Manage Social Media Links{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-  <!-- Header -->
+  <!-- ========================================================================= -->
+  <!-- 1. HEADER SECTION                                                         -->
+  <!-- ========================================================================= -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h2 class="text-xl font-bold dark:text-white text-slate-900">Manage Social Media Links</h2>
-      <p class="text-xs dark:text-gray-500 text-slate-500 mt-1">Configure active social channels showing in your website footer and home page.</p>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+        <span>Online Presence</span>
+        <span class="text-slate-400 dark:text-slate-600">•</span>
+        <span class="font-mono text-cyan-600 dark:text-cyan-400">Social Channels</span>
+      </div>
+      <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        Social Media Links
+      </h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        Configure external community links and official social channels displayed across your library website footer and header.
+      </p>
     </div>
-    <a href="{% url 'admin_social_link_add' %}" class="btn-primary flex items-center gap-2">
-      <span class="text-lg leading-none">+</span> Add Social Link
+
+    <a href="{% url 'admin_social_link_add' %}"
+       class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-cyan-600/20 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Add Social Link
     </a>
   </div>
 
-  <!-- Table -->
-  <div class="stat-card rounded-2xl border dark:border-white/5 border-black/10 overflow-x-auto">
-    <table class="w-full text-sm min-w-[600px]">
-      <thead>
-        <tr class="border-b border-white/8">
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Platform Name</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Destination URL</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Icon Type</th>
-          <th class="text-left px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Status</th>
-          <th class="text-right px-4 py-3 dark:text-gray-500 text-slate-500 text-xs uppercase tracking-wider">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for link in links %}
-        <tr class="table-row">
-          <td class="px-4 py-3 font-semibold dark:text-white text-slate-900 text-sm">{{ link.name }}</td>
-          <td class="px-4 py-3 dark:text-gray-400 text-slate-600 text-xs font-mono">
-            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">{{ link.url }}</a>
-          </td>
-          <td class="px-4 py-3 dark:text-gray-300 text-slate-700 text-xs capitalize">{{ link.icon_type }}</td>
-          <td class="px-4 py-3 text-xs">
-            {% if link.is_active %}
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
-            {% else %}
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-500/10 dark:text-gray-400 text-slate-600 border dark:border-white/5 border-black/10">Disabled</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 text-right">
-            <div class="flex items-center justify-end gap-2">
-              <a href="{% url 'admin_social_link_edit' link.pk %}" class="btn-success text-xs py-1 px-3">Edit</a>
-              <a href="{% url 'admin_social_link_delete' link.pk %}" class="btn-danger text-xs py-1 px-3">Delete</a>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="5" class="text-center py-16 dark:text-gray-500 text-slate-500">No social media links configured. Add some above!</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <!-- ========================================================================= -->
+  <!-- 2. SOCIAL LINKS TABLE                                                     -->
+  <!-- ========================================================================= -->
+  <div class="stat-card rounded-2xl border dark:border-white/5 border-slate-200 overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs min-w-[650px]">
+        <thead>
+          <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px] bg-slate-50/50 dark:bg-slate-900/30">
+            <th class="px-5 py-3.5">Platform & Brand</th>
+            <th class="px-4 py-3.5">Destination URL</th>
+            <th class="px-4 py-3.5">Icon Style</th>
+            <th class="px-4 py-3.5">Status</th>
+            <th class="px-5 py-3.5 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
+          {% for link in links %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+            
+            <!-- Platform Name -->
+            <td class="px-5 py-3.5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  {% if link.icon_type == 'facebook' %}
+                    <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                  {% elif link.icon_type == 'telegram' %}
+                    <svg class="w-4 h-4 text-sky-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.34-.635.34l.213-3.053 5.56-5.023c.24-.213-.054-.334-.373-.121l-6.87 4.326-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.46c.536-.196 1.006.128.832.946z"/></svg>
+                  {% elif link.icon_type == 'whatsapp' %}
+                    <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                  {% elif link.icon_type == 'linkedin' %}
+                    <svg class="w-4 h-4 text-sky-700" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                  {% else %}
+                    <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                  {% endif %}
+                </div>
+                <div>
+                  <div class="font-bold text-slate-900 dark:text-white text-sm">{{ link.name }}</div>
+                  <div class="text-[10px] text-slate-400 capitalize">{{ link.icon_type }} platform</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- URL -->
+            <td class="px-4 py-3.5">
+              <a href="{{ link.url }}"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1.5 max-w-xs truncate"
+                 title="{{ link.url }}">
+                <span class="truncate">{{ link.url }}</span>
+                <svg class="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </a>
+            </td>
+
+            <!-- Icon Type -->
+            <td class="px-4 py-3.5">
+              <span class="font-mono text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded capitalize border border-slate-200 dark:border-slate-700">
+                {{ link.icon_type }}
+              </span>
+            </td>
+
+            <!-- Status -->
+            <td class="px-4 py-3.5">
+              {% if link.is_active %}
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                </span>
+              {% else %}
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Disabled
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Actions -->
+            <td class="px-5 py-3.5 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <a href="{% url 'admin_social_link_edit' link.pk %}"
+                   class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors">
+                  Edit
+                </a>
+                <a href="{% url 'admin_social_link_delete' link.pk %}"
+                   onclick="return confirm('Delete this social link?');"
+                   class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors"
+                   title="Delete Link">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center py-16 text-slate-500">
+              <div class="max-w-xs mx-auto space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 mx-auto">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                </div>
+                <div class="font-bold text-slate-700 dark:text-slate-300 text-sm">No social media links yet</div>
+                <p class="text-xs text-slate-400">Add your community Telegram, Facebook page, WhatsApp, or LinkedIn above.</p>
+                <a href="{% url 'admin_social_link_add' %}" class="inline-block mt-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 text-white font-semibold text-xs shadow">
+                  Add First Link
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
 </div>

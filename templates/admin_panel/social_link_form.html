@@ -1,51 +1,190 @@
 {% extends "admin_panel/base.html" %}
+{% load static %}
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl">
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-  <div class="flex items-center gap-4 mb-8">
-    <a href="{% url 'admin_social_links' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
-    <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+  <!-- ========================================================================= -->
+  <!-- 1. BREADCRUMB & HEADER                                                    -->
+  <!-- ========================================================================= -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'admin_social_links' %}"
+       class="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center shadow-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    </a>
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span>Online Community</span>
+        <span class="text-slate-400 dark:text-slate-600">•</span>
+        <span class="font-mono text-cyan-600 dark:text-cyan-400">Social Channel Editor</span>
+      </div>
+      <h1 class="text-xl lg:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5">
+        {{ page_title }}
+      </h1>
+    </div>
   </div>
 
-  <form method="post" class="space-y-6">
-    {% csrf_token %}
+  <!-- ========================================================================= -->
+  <!-- 2. TWO-COLUMN WORKSTATION (FORM + LIVE PREVIEW)                           -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Platform / Link Name <span class="text-red-400">*</span></label>
-        {{ form.name }}
-        <p class="text-gray-600 text-[10px] mt-1">For example: Facebook, Telegram Channel, WhatsApp Group, LinkedIn.</p>
-        {% if form.name.errors %}<p class="text-red-400 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+    <!-- ── FORM COLUMN (7 Cols) ───────────────────────────────────────────── -->
+    <div class="lg:col-span-7">
+      <form method="post" class="space-y-5" id="social-link-form">
+        {% csrf_token %}
+
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-slate-200 shadow-sm space-y-4">
+          
+          <!-- Name -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Platform / Display Name <span class="text-rose-500">*</span>
+            </label>
+            {{ form.name }}
+            <p class="text-[11px] text-slate-400 mt-1">For example: Facebook Page, Telegram Community, WhatsApp Hotline, LinkedIn.</p>
+            {% if form.name.errors %}
+              <p class="text-rose-500 text-xs mt-1">{{ form.name.errors|join:", " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- URL -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Destination URL <span class="text-rose-500">*</span>
+            </label>
+            {{ form.url }}
+            <p class="text-[11px] text-slate-400 mt-1">Must include https:// or http://</p>
+            {% if form.url.errors %}
+              <p class="text-rose-500 text-xs mt-1">{{ form.url.errors|join:", " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Icon Type -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Brand Icon Style <span class="text-rose-500">*</span>
+            </label>
+            {{ form.icon_type }}
+            <p class="text-[11px] text-slate-400 mt-1">Determines the official brand emblem and accent styling.</p>
+            {% if form.icon_type.errors %}
+              <p class="text-rose-500 text-xs mt-1">{{ form.icon_type.errors|join:", " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Is Active Toggle -->
+          <div class="pt-2 border-t border-slate-200 dark:border-slate-800">
+            <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-cyan-500/40 transition-colors">
+              {{ form.is_active }}
+              <div>
+                <span class="text-xs font-bold text-slate-900 dark:text-white block">Active & Publicly Visible</span>
+                <span class="text-[11px] text-slate-500">Render in website header, footer, and community directory</span>
+              </div>
+            </label>
+          </div>
+
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-3 pt-2">
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md shadow-cyan-600/20 transition-all">
+            {{ action|default:"Save Social Link" }}
+          </button>
+          <a href="{% url 'admin_social_links' %}" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition-colors">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- ── PREVIEW COLUMN (5 Cols): LIVE FOOTER PILL PREVIEW ──────────────── -->
+    <div class="lg:col-span-5 space-y-4 sticky top-6">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Live Website Footer Preview
+        </span>
+        <span class="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
+          Real-time
+        </span>
       </div>
 
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Destination URL <span class="text-red-400">*</span></label>
-        {{ form.url }}
-        {% if form.url.errors %}<p class="text-red-400 text-xs mt-1">{{ form.url.errors|join:", " }}</p>{% endif %}
-      </div>
+      <!-- Preview Mockup Card -->
+      <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-slate-200 shadow-lg space-y-4">
+        <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+          How patrons will see this channel:
+        </div>
 
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Icon Style / Brand <span class="text-red-400">*</span></label>
-        {{ form.icon_type }}
-        <p class="text-gray-600 text-[10px] mt-1">Select the brand style to display custom brand icons and colors.</p>
-        {% if form.icon_type.errors %}<p class="text-red-400 text-xs mt-1">{{ form.icon_type.errors|join:", " }}</p>{% endif %}
-      </div>
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div id="preview-icon-wrapper" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-white border border-slate-700">
+              <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            </div>
+            <div>
+              <div id="preview-name" class="font-bold text-white text-sm">Platform Name</div>
+              <div id="preview-url" class="font-mono text-slate-400 text-[11px] truncate max-w-[200px]">https://...</div>
+            </div>
+          </div>
+          <span id="preview-status" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Active
+          </span>
+        </div>
 
-      <div class="pt-2">
-        <label class="flex items-center gap-2.5 cursor-pointer">
-          {{ form.is_active }}
-          <span class="text-sm dark:text-gray-300 text-slate-700">Active (visible on website footer and home page)</span>
-        </label>
-        {% if form.is_active.errors %}<p class="text-red-400 text-xs mt-1">{{ form.is_active.errors|join:", " }}</p>{% endif %}
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          This channel button is automatically responsive and adapts seamlessly to both dark and light reader themes across the public portal.
+        </p>
       </div>
     </div>
 
-    <div class="flex items-center gap-4">
-      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
-      <a href="{% url 'admin_social_links' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
-    </div>
-  </form>
+  </div>
+
 </div>
+
+<!-- Interactive Sync Script -->
+<script>
+  function updateSocialPreview() {
+    const nameInput = document.querySelector('input[name="name"]');
+    const urlInput = document.querySelector('input[name="url"]');
+    const iconSelect = document.querySelector('select[name="icon_type"]');
+    const activeCheck = document.querySelector('input[name="is_active"]');
+
+    const nameVal = nameInput ? nameInput.value.trim() : '';
+    const urlVal = urlInput ? urlInput.value.trim() : '';
+    const iconVal = iconSelect ? iconSelect.value : 'other';
+    const isActive = activeCheck ? activeCheck.checked : true;
+
+    document.getElementById('preview-name').innerText = nameVal || 'Platform Name';
+    document.getElementById('preview-url').innerText = urlVal || 'https://...';
+
+    // Status
+    const statusEl = document.getElementById('preview-status');
+    if (isActive) {
+      statusEl.innerText = 'Active';
+      statusEl.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+    } else {
+      statusEl.innerText = 'Disabled';
+      statusEl.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-400 border border-slate-600';
+    }
+
+    // Icon
+    const iconWrapper = document.getElementById('preview-icon-wrapper');
+    if (iconVal === 'facebook') {
+      iconWrapper.innerHTML = '<svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>';
+    } else if (iconVal === 'telegram') {
+      iconWrapper.innerHTML = '<svg class="w-5 h-5 text-sky-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.34-.635.34l.213-3.053 5.56-5.023c.24-.213-.054-.334-.373-.121l-6.87 4.326-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.46c.536-.196 1.006.128.832.946z"/></svg>';
+    } else if (iconVal === 'whatsapp') {
+      iconWrapper.innerHTML = '<svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>';
+    } else if (iconVal === 'linkedin') {
+      iconWrapper.innerHTML = '<svg class="w-5 h-5 text-sky-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>';
+    } else {
+      iconWrapper.innerHTML = '<svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>';
+    }
+  }
+
+  document.querySelectorAll('#social-link-form input, #social-link-form select').forEach(el => {
+    el.addEventListener('input', updateSocialPreview);
+    el.addEventListener('change', updateSocialPreview);
+  });
+  document.addEventListener('DOMContentLoaded', updateSocialPreview);
+</script>
 {% endblock %}
