@@ -1,56 +1,241 @@
 {% extends "admin_panel/base.html" %}
+{% load static %}
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl">
+<div class="space-y-6 max-w-7xl mx-auto pb-12" x-data="{
+  name: '{{ form.name.value|default_if_none:""|escapejs }}',
+  role: '{{ form.role.value|default_if_none:""|escapejs }}',
+  rating: {{ form.rating.value|default_if_none:5 }},
+  reviewText: `{{ form.review_text.value|default_if_none:""|escapejs }}`,
+  isActive: {% if form.is_active.value or form.is_active.value is None and not form.errors %}true{% else %}false{% endif %}
+}">
 
-  <div class="flex items-center gap-4 mb-8">
-    <a href="{% url 'admin_testimonials' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
-    <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+  <!-- ========================================================================= -->
+  <!-- 1. BREADCRUMB & HEADER                                                    -->
+  <!-- ========================================================================= -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'admin_testimonials' %}"
+       class="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center shadow-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    </a>
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+        <span>Social Proof</span>
+        <span class="text-slate-400 dark:text-slate-600">•</span>
+        <span class="font-mono text-amber-600 dark:text-amber-400">Feedback Editor</span>
+      </div>
+      <h1 class="text-xl lg:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5">
+        {{ page_title }}
+      </h1>
+    </div>
   </div>
 
-  <form method="post" class="space-y-6">
-    {% csrf_token %}
+  <!-- ========================================================================= -->
+  <!-- 2. TWO-COLUMN WORKSTATION (FORM + LIVE PREVIEW)                           -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Reviewer Name <span class="text-red-400">*</span></label>
-        {{ form.name }}
-        {% if form.name.errors %}<p class="text-red-400 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
-      </div>
+    <!-- ── FORM COLUMN (7 Cols) ───────────────────────────────────────────── -->
+    <div class="lg:col-span-7">
+      <form method="post" class="space-y-5" id="testimonial-form">
+        {% csrf_token %}
 
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Role / Designation <span class="text-red-400">*</span></label>
-        {{ form.role }}
-        <p class="text-gray-600 text-[10px] mt-1">For example: University Student, Software Engineer, Educator.</p>
-        {% if form.role.errors %}<p class="text-red-400 text-xs mt-1">{{ form.role.errors|join:", " }}</p>{% endif %}
-      </div>
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-slate-200 shadow-sm space-y-4">
 
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Star Rating <span class="text-red-400">*</span></label>
-        {{ form.rating }}
-        {% if form.rating.errors %}<p class="text-red-400 text-xs mt-1">{{ form.rating.errors|join:", " }}</p>{% endif %}
-      </div>
+          <!-- Reviewer Name -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Reviewer Name <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="text" name="name" id="id_name"
+                     x-model="name"
+                     required
+                     value="{{ form.name.value|default_if_none:'' }}"
+                     placeholder="e.g. Nafisa Rahman"
+                     class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all outline-none">
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">Full name of the reader or patron giving this testimonial.</p>
+            {% if form.name.errors %}
+              <p class="text-rose-500 text-xs mt-1">{{ form.name.errors|join:", " }}</p>
+            {% endif %}
+          </div>
 
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Review Content <span class="text-red-400">*</span></label>
-        {{ form.review_text }}
-        {% if form.review_text.errors %}<p class="text-red-400 text-xs mt-1">{{ form.review_text.errors|join:", " }}</p>{% endif %}
-      </div>
+          <!-- Role / Title -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Role or Profession <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="text" name="role" id="id_role"
+                     x-model="role"
+                     required
+                     value="{{ form.role.value|default_if_none:'' }}"
+                     placeholder="e.g. University Student, Software Engineer, Educator"
+                     class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all outline-none">
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">Short subtitle shown below the reviewer's name.</p>
+            {% if form.role.errors %}
+              <p class="text-rose-500 text-xs mt-1">{{ form.role.errors|join:", " }}</p>
+            {% endif %}
+          </div>
 
-      <div class="pt-2">
-        <label class="flex items-center gap-2.5 cursor-pointer">
-          {{ form.is_active }}
-          <span class="text-sm dark:text-gray-300 text-slate-700">Active (visible on home page testimonials)</span>
-        </label>
-        {% if form.is_active.errors %}<p class="text-red-400 text-xs mt-1">{{ form.is_active.errors|join:", " }}</p>{% endif %}
-      </div>
+          <!-- Star Rating -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Rating Score <span class="text-rose-500">*</span>
+            </label>
+            <div class="flex items-center gap-2">
+              <select name="rating" id="id_rating"
+                      x-model.number="rating"
+                      class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all outline-none">
+                <option value="5" {% if form.rating.value == 5 or not form.rating.value %}selected{% endif %}>5 Stars (Highest Recommendation)</option>
+                <option value="4" {% if form.rating.value == 4 %}selected{% endif %}>4 Stars (Very Good)</option>
+                <option value="3" {% if form.rating.value == 3 %}selected{% endif %}>3 Stars (Average)</option>
+                <option value="2" {% if form.rating.value == 2 %}selected{% endif %}>2 Stars (Fair)</option>
+                <option value="1" {% if form.rating.value == 1 %}selected{% endif %}>1 Star (Poor)</option>
+              </select>
+
+              <!-- Quick rating buttons -->
+              <div class="flex items-center gap-1">
+                <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
+                  <button type="button" @click="rating = star; document.getElementById('id_rating').value = star"
+                          class="p-2 rounded-lg border transition-all text-xs font-bold"
+                          :class="rating >= star ? 'border-amber-500/30 bg-amber-500/10 text-amber-500' : 'border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'">
+                    <svg class="w-4 h-4" :class="rating >= star ? 'fill-current' : 'fill-none stroke-current'" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  </button>
+                </template>
+              </div>
+            </div>
+            {% if form.rating.errors %}
+              <p class="text-rose-500 text-xs mt-1">{{ form.rating.errors|join:", " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Review Content -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Review Text <span class="text-rose-500">*</span>
+              </label>
+              <span class="text-[10px] font-mono text-slate-400" x-text="reviewText.length + ' chars'"></span>
+            </div>
+            <textarea name="review_text" id="id_review_text" rows="4" required
+                      x-model="reviewText"
+                      placeholder="Write the reader's authentic quote or endorsement..."
+                      class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all outline-none">{{ form.review_text.value|default_if_none:'' }}</textarea>
+            {% if form.review_text.errors %}
+              <p class="text-rose-500 text-xs mt-1">{{ form.review_text.errors|join:", " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Active Toggle -->
+          <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <label class="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" name="is_active" id="id_is_active"
+                     x-model="isActive"
+                     {% if form.is_active.value or form.is_active.value is None and not form.errors %}checked{% endif %}
+                     class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-700 dark:bg-slate-900">
+              <div>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Live on Public Website</span>
+                <p class="text-[11px] text-slate-400">When enabled, this review appears in the home page testimonial rotation.</p>
+              </div>
+            </label>
+            {% if form.is_active.errors %}
+              <p class="text-rose-500 text-xs mt-1">{{ form.is_active.errors|join:", " }}</p>
+            {% endif %}
+          </div>
+
+        </div>
+
+        <!-- Submit & Actions -->
+        <div class="flex items-center gap-3">
+          <button type="submit"
+                  class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-cyan-600 hover:from-amber-500 hover:to-cyan-500 text-white font-bold text-xs transition-all shadow-md shadow-amber-600/20 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            {{ action }}
+          </button>
+          <a href="{% url 'admin_testimonials' %}"
+             class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors">
+            Cancel
+          </a>
+        </div>
+      </form>
     </div>
 
-    <div class="flex items-center gap-4">
-      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
-      <a href="{% url 'admin_testimonials' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
+    <!-- ── PREVIEW COLUMN (5 Cols) ─────────────────────────────────────────── -->
+    <div class="lg:col-span-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Live Homepage Card Preview
+        </span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+          Realtime
+        </span>
+      </div>
+
+      <!-- Preview Testimonial Card -->
+      <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-slate-200 shadow-sm relative overflow-hidden space-y-4">
+        
+        <!-- Subtle Quote Graphic Background -->
+        <div class="absolute -top-2 right-4 text-slate-100 dark:text-slate-800/50 pointer-events-none select-none">
+          <svg class="w-20 h-20 fill-current opacity-30" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+        </div>
+
+        <!-- Rating Stars -->
+        <div class="flex items-center gap-1 text-amber-500 relative z-10">
+          <template x-for="i in 5" :key="i">
+            <svg class="w-4 h-4" :class="i <= rating ? 'fill-current text-amber-500' : 'fill-slate-200 dark:fill-slate-800 text-slate-300 dark:text-slate-700'" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+          </template>
+          <span class="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 ml-2" x-text="rating + '.0'"></span>
+        </div>
+
+        <!-- Quote Body -->
+        <p class="text-sm text-slate-700 dark:text-slate-300 italic relative z-10 leading-relaxed font-sans"
+           x-text="reviewText ? '“' + reviewText + '”' : '“Youth Club Library has transformed my reading habit with their smooth doorstep delivery and expansive catalog!”'">
+        </p>
+
+        <!-- Reviewer Info -->
+        <div class="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/60 relative z-10">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 to-cyan-500 flex items-center justify-center text-sm font-bold text-white shadow-sm"
+               x-text="(name || 'R').charAt(0).toUpperCase()">
+          </div>
+          <div>
+            <div class="font-bold text-slate-900 dark:text-white text-sm" x-text="name || 'Reviewer Name'"></div>
+            <div class="text-xs text-slate-500 dark:text-slate-400" x-text="role || 'Library Patron'"></div>
+          </div>
+        </div>
+
+        <!-- Status Badge in Preview -->
+        <div class="pt-2 flex items-center justify-between text-[11px]">
+          <span class="text-slate-400">Card Display State:</span>
+          <span class="px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1"
+                :class="isActive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'">
+            <span class="w-1.5 h-1.5 rounded-full" :class="isActive ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+            <span x-text="isActive ? 'Public & Visible' : 'Draft / Inactive'"></span>
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Quick Guidance Notes -->
+      <div class="stat-card rounded-2xl p-4 border dark:border-white/5 border-slate-200 text-xs text-slate-500 dark:text-slate-400 space-y-2">
+        <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+          <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Formatting Advice
+        </div>
+        <p class="leading-relaxed">Keep quotes concise (20 to 60 words). Specific mentions of delivery speed, book condition, or membership value resonate most with new visitors.</p>
+      </div>
+
     </div>
-  </form>
+
+  </div>
+
 </div>
 {% endblock %}
