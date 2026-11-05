@@ -53,6 +53,7 @@ def admin_dashboard(request):
 
     today = timezone.now().date()
     month_start = today.replace(day=1)
+    week_start = today - timedelta(days=6)
 
     # --- Book & Inventory Stats (1 query instead of 3) ---
     book_stats = Book.objects.annotate(
@@ -65,6 +66,10 @@ def admin_dashboard(request):
     total_books = book_stats['total_books'] or 0
     total_inventory_count = book_stats['total_inventory_count'] or 0
     total_inventory_value = book_stats['total_inventory_value'] or 0
+
+    total_categories = Category.objects.count()
+    low_stock_count = Book.objects.filter(stock_quantity__lte=3).count()
+    low_stock_books = Book.objects.filter(stock_quantity__lte=3).select_related('author').order_by('stock_quantity')[:5]
 
     total_users = CustomUser.objects.filter(is_staff=False).count()
 
@@ -91,24 +96,43 @@ def admin_dashboard(request):
             'total_cost',
             filter=Q(order_type='Buy', payment_status='Paid', created_at__date__gte=month_start),
         ),
+        today_online_rev=Sum(
+            'total_cost',
+            filter=Q(order_type='Buy', payment_status='Paid', created_at__date=today),
+        ),
+        week_online_rev=Sum(
+            'total_cost',
+            filter=Q(order_type='Buy', payment_status='Paid', created_at__date__gte=week_start),
+        ),
         overdue_borrows=Count(
             'id',
             filter=Q(order_type='Borrow', due_date__lt=today, returned_at__isnull=True),
         ),
+        currently_borrowed=Count(
+            'id',
+            filter=Q(order_type='Borrow', returned_at__isnull=True),
+        ),
     )
     online_revenue = order_agg['online_rev'] or 0
     month_revenue_online = order_agg['month_online_rev'] or 0
+    today_revenue_online = order_agg['today_online_rev'] or 0
+    week_revenue_online = order_agg['week_online_rev'] or 0
     overdue_borrows = order_agg['overdue_borrows'] or 0
+    currently_borrowed = order_agg['currently_borrowed'] or 0
 
     # --- Offline Bill Stats (1 query instead of 3) ---
     bill_agg = OfflineBill.objects.aggregate(
         offline_rev=Sum('total_amount'),
         offline_cash=Sum('total_amount', filter=Q(payment_method='cash')),
         month_offline_rev=Sum('total_amount', filter=Q(created_at__date__gte=month_start)),
+        today_offline_rev=Sum('total_amount', filter=Q(created_at__date=today)),
+        week_offline_rev=Sum('total_amount', filter=Q(created_at__date__gte=week_start)),
     )
     offline_revenue = bill_agg['offline_rev'] or 0
     offline_cash = bill_agg['offline_cash'] or 0
     month_revenue_offline = bill_agg['month_offline_rev'] or 0
+    today_revenue_offline = bill_agg['today_offline_rev'] or 0
+    week_revenue_offline = bill_agg['week_offline_rev'] or 0
 
     # --- Cash Drawer Adjustments (1 query instead of 2) ---
     drawer_agg = CashDrawerAdjustment.objects.aggregate(
@@ -121,6 +145,8 @@ def admin_dashboard(request):
 
     total_revenue = float(online_revenue) + float(offline_revenue)
     month_revenue = float(month_revenue_online) + float(month_revenue_offline)
+    today_revenue = float(today_revenue_online) + float(today_revenue_offline)
+    seven_day_revenue = float(week_revenue_online) + float(week_revenue_offline)
 
     # --- Memberships (1 query instead of 2) ---
     mem_agg = UserMembership.objects.aggregate(
@@ -130,8 +156,44 @@ def admin_dashboard(request):
     pending_memberships = mem_agg['pending'] or 0
     active_memberships = mem_agg['active'] or 0
 
-    # Recent orders (last 10)
-    recent_orders = Order.objects.select_related('user', 'book', 'book__author').order_by('-created_at')[:10]
+    # --- Book Requests Pending ---
+    pending_book_requests = BookRequest.objects.filter(status='Pending').count()
+
+    # --- Total Attention Tasks ---
+    attention_tasks_count = pending_orders + pending_memberships + overdue_borrows + pending_book_requests + (1 if low_stock_count > 0 else 0)
+
+    # --- 7-Day Daily Breakdown (2 grouped queries) ---
+    from django.db.models.functions import TruncDate
+    daily_off = dict(OfflineBill.objects.filter(created_at__date__gte=week_start).annotate(
+        d=TruncDate('created_at')
+    ).values('d').annotate(tot=Sum('total_amount')).values_list('d', 'tot'))
+
+    daily_on = dict(Order.objects.filter(order_type='Buy', payment_status='Paid', created_at__date__gte=week_start).annotate(
+        d=TruncDate('created_at')
+    ).values('d').annotate(tot=Sum('total_cost')).values_list('d', 'tot'))
+
+    seven_day_points = []
+    max_day_val = 1
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        off_val = float(daily_off.get(d) or 0)
+        on_val = float(daily_on.get(d) or 0)
+        tot_val = off_val + on_val
+        if tot_val > max_day_val:
+            max_day_val = tot_val
+        seven_day_points.append({
+            'date_str': d.strftime('%d %b'),
+            'day_name': d.strftime('%a'),
+            'total': tot_val,
+            'offline': off_val,
+            'online': on_val,
+        })
+
+    for pt in seven_day_points:
+        pt['pct'] = int(round((pt['total'] / max_day_val) * 100)) if max_day_val else 0
+
+    # Recent orders (last 12)
+    recent_orders = Order.objects.select_related('user', 'book', 'book__author').order_by('-created_at')[:12]
 
     # Recent membership requests (last 5 pending)
     recent_memberships = UserMembership.objects.filter(
@@ -142,17 +204,36 @@ def admin_dashboard(request):
         'page_title': 'Admin Dashboard',
         'total_books': total_books,
         'total_users': total_users,
+        'total_categories': total_categories,
         'total_buy_orders': total_buy_orders,
         'total_borrow_orders': total_borrow_orders,
         'pending_orders': pending_orders,
         'total_revenue': total_revenue,
         'month_revenue': month_revenue,
+        'today_revenue': today_revenue,
+        'today_revenue_offline': today_revenue_offline,
+        'today_revenue_online': today_revenue_online,
+        'seven_day_revenue': seven_day_revenue,
+        'week_revenue_offline': week_revenue_offline,
+        'week_revenue_online': week_revenue_online,
+        'month_revenue_offline': month_revenue_offline,
+        'month_revenue_online': month_revenue_online,
+        'offline_revenue': offline_revenue,
+        'online_revenue': online_revenue,
+        'seven_day_points': seven_day_points,
         'offline_cash': total_cash_drawer,
+        'cash_in': cash_in,
+        'cash_out': cash_out,
         'total_inventory_count': total_inventory_count,
         'total_inventory_value': total_inventory_value,
+        'low_stock_count': low_stock_count,
+        'low_stock_books': low_stock_books,
         'pending_memberships': pending_memberships,
         'active_memberships': active_memberships,
         'overdue_borrows': overdue_borrows,
+        'currently_borrowed': currently_borrowed,
+        'pending_book_requests': pending_book_requests,
+        'attention_tasks_count': attention_tasks_count,
         'recent_orders': recent_orders,
         'recent_memberships': recent_memberships,
     }
@@ -305,6 +386,9 @@ def admin_membership_action(request, pk):
     else:
         messages.error(request, 'Unknown action.')
 
+    referer = request.META.get('HTTP_REFERER')
+    if referer and 'accounts/login' not in referer:
+        return redirect(referer)
     return redirect('admin_memberships')
 
 
@@ -459,6 +543,9 @@ def admin_order_action(request, pk):
     else:
         messages.error(request, 'Unknown action.')
 
+    referer = request.META.get('HTTP_REFERER')
+    if referer and 'accounts/login' not in referer:
+        return redirect(referer)
     return redirect('admin_orders')
 
 
@@ -788,7 +875,10 @@ def admin_approve_borrow(request, pk):
     order = get_object_or_404(Order, pk=pk, order_type=Order.ORDER_TYPE_BORROW)
     if order.order_status != Order.STATUS_PENDING:
         messages.warning(request, "This order is already processed.")
-        return redirect('admin_orders')
+        referer = request.META.get('HTTP_REFERER')
+    if referer and 'accounts/login' not in referer:
+        return redirect(referer)
+    return redirect('admin_orders')
 
     if request.method == 'POST':
         try:
@@ -805,7 +895,10 @@ def admin_approve_borrow(request, pk):
             request,
             f"Borrow request {order.order_number} approved! Due date: {order.due_date.strftime('%d %b %Y')} ({days_limit} days)."
         )
-        return redirect('admin_orders')
+        referer = request.META.get('HTTP_REFERER')
+    if referer and 'accounts/login' not in referer:
+        return redirect(referer)
+    return redirect('admin_orders')
 
     context = {
         'order': order,
