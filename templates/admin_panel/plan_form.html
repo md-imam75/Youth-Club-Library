@@ -1,63 +1,313 @@
 {% extends "admin_panel/base.html" %}
+{% load static %}
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl">
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-  <div class="flex items-center gap-4 mb-8">
-    <a href="{% url 'admin_plans' %}" class="w-9 h-9 rounded-xl flex items-center justify-center glass border dark:border-white/10 border-black/10 dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors">←</a>
-    <h2 class="text-xl font-bold dark:text-white text-slate-900">{{ page_title }}</h2>
+  <!-- ========================================================================= -->
+  <!-- 1. BREADCRUMB & HEADER                                                    -->
+  <!-- ========================================================================= -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'admin_plans' %}"
+       class="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center shadow-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    </a>
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span>Subscription Configuration</span>
+        <span class="text-slate-400 dark:text-slate-600">•</span>
+        <span class="font-mono text-purple-600 dark:text-purple-400">Pricing Tier Workstation</span>
+      </div>
+      <h1 class="text-xl lg:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5">
+        {{ page_title }}
+      </h1>
+    </div>
   </div>
 
-  <form method="post" class="space-y-6">
-    {% csrf_token %}
+  <!-- ========================================================================= -->
+  <!-- 2. TWO-COLUMN WORKSTATION (FORM + LIVE PREVIEW)                           -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-    <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-black/10 space-y-4">
+    <!-- ── FORM COLUMN (7 Cols) ───────────────────────────────────────────── -->
+    <div class="lg:col-span-7">
+      <form method="post" class="space-y-5" id="plan-form">
+        {% csrf_token %}
 
-      <div class="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Plan Name <span class="text-red-400">*</span></label>
-          {{ form.name }}
-          {% if form.name.errors %}<p class="text-red-400 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+        <div class="stat-card rounded-2xl p-6 border dark:border-white/5 border-slate-200 shadow-sm space-y-5">
+          
+          <!-- Plan Name & Price -->
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Plan Name <span class="text-rose-500">*</span>
+              </label>
+              {{ form.name }}
+              {% if form.name.errors %}
+                <p class="text-rose-500 text-xs mt-1">{{ form.name.errors|join:", " }}</p>
+              {% endif %}
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Price (৳ BDT) <span class="text-rose-500">*</span>
+              </label>
+              {{ form.price }}
+              {% if form.price.errors %}
+                <p class="text-rose-500 text-xs mt-1">{{ form.price.errors|join:", " }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Duration with Quick Preset Chips -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Validity Duration (Days) <span class="text-rose-500">*</span>
+              </label>
+              <span class="text-[11px] text-slate-400">Quick Presets:</span>
+            </div>
+
+            {{ form.duration_days }}
+            {% if form.duration_days.errors %}
+              <p class="text-rose-500 text-xs mt-1">{{ form.duration_days.errors|join:", " }}</p>
+            {% endif %}
+
+            <!-- Preset Buttons -->
+            <div class="flex flex-wrap gap-2 mt-2">
+              <button type="button" onclick="setDurationPreset(30, '1 Month')" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-600 dark:text-slate-400 font-mono text-xs transition-colors">
+                30 Days (1 Mo)
+              </button>
+              <button type="button" onclick="setDurationPreset(90, '3 Months')" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-600 dark:text-slate-400 font-mono text-xs transition-colors">
+                90 Days (3 Mo)
+              </button>
+              <button type="button" onclick="setDurationPreset(180, '6 Months')" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-600 dark:text-slate-400 font-mono text-xs transition-colors">
+                180 Days (6 Mo)
+              </button>
+              <button type="button" onclick="setDurationPreset(365, '1 Year')" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-600 dark:text-slate-400 font-mono text-xs transition-colors">
+                365 Days (1 Yr)
+              </button>
+            </div>
+          </div>
+
+          <!-- Sort Order -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Display Sort Order
+            </label>
+            {{ form.sort_order }}
+            <p class="text-[11px] text-slate-400 mt-1">Lower order numbers (e.g. 0, 1) appear first on the public pricing page.</p>
+          </div>
+
+          <!-- Plan Features (Textarea) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Plan Features & Privileges (One per line)
+            </label>
+            {{ form.features_text }}
+            <p class="text-[11px] text-slate-400 mt-1">Each line is rendered as an individual checkmark bullet on the patron subscription card.</p>
+          </div>
+
+          <!-- Toggles -->
+          <div class="grid sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
+            <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-cyan-500/40 transition-colors">
+              {{ form.is_active }}
+              <div>
+                <span class="text-xs font-bold text-slate-900 dark:text-white block">Active Tier</span>
+                <span class="text-[11px] text-slate-500">Visible for public reader signup</span>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-purple-500/40 transition-colors">
+              {{ form.is_popular }}
+              <div>
+                <span class="text-xs font-bold text-purple-600 dark:text-purple-400 block">Highlight "Most Popular"</span>
+                <span class="text-[11px] text-slate-500">Adds prominent gradient badge</span>
+              </div>
+            </label>
+          </div>
+
         </div>
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Price (৳) <span class="text-red-400">*</span></label>
-          {{ form.price }}
+
+        <!-- Submit & Actions -->
+        <div class="flex items-center gap-3 pt-2">
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-bold text-xs shadow-md shadow-purple-600/20 transition-all">
+            {{ action|default:"Save Plan" }}
+          </button>
+          <a href="{% url 'admin_plans' %}" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition-colors">
+            Cancel
+          </a>
         </div>
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Duration (days) <span class="text-red-400">*</span></label>
-          {{ form.duration_days }}
-          <p class="text-gray-600 text-xs mt-1">30 = 1 month, 90 = 3 months, 365 = 1 year</p>
-        </div>
-        <div>
-          <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Sort Order</label>
-          {{ form.sort_order }}
-          <p class="text-gray-600 text-xs mt-1">Lower number = shown first</p>
-        </div>
+      </form>
+    </div>
+
+    <!-- ── PREVIEW COLUMN (5 Cols): LIVE PRICING CARD PREVIEW ─────────────── -->
+    <div class="lg:col-span-5 space-y-4 sticky top-6">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Live Patron Card Preview
+        </span>
+        <span class="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
+          Real-time
+        </span>
       </div>
 
-      <div>
-        <label class="block text-xs dark:text-gray-400 text-slate-600 mb-1.5">Plan Features (one per line)</label>
-        {{ form.features_text }}
-        <p class="text-gray-600 text-xs mt-1">Each line becomes a bullet point on the pricing card.</p>
-      </div>
+      <!-- Live Pricing Card -->
+      <div class="stat-card rounded-2xl p-6 border relative transition-all shadow-lg" id="preview-card-wrapper">
+        
+        <!-- Popular Badge -->
+        <div id="preview-popular-badge" class="hidden absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full shadow-md">
+          Most Popular
+        </div>
 
-      <div class="flex flex-wrap gap-6 pt-2">
-        <label class="flex items-center gap-2 cursor-pointer">
-          {{ form.is_active }}
-          <span class="text-sm dark:text-gray-300 text-slate-700">Active (visible on pricing page)</span>
-        </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          {{ form.is_popular }}
-          <span class="text-sm dark:text-gray-300 text-slate-700">Mark as "Most Popular"</span>
-        </label>
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h3 id="preview-name" class="text-lg font-bold text-slate-900 dark:text-white">
+              Plan Name
+            </h3>
+            <p id="preview-duration-label" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
+              30 Days Validity
+            </p>
+          </div>
+          <span id="preview-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            Active
+          </span>
+        </div>
+
+        <!-- Price Display -->
+        <div class="mb-5 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div class="flex items-baseline gap-1">
+            <span class="text-3xl font-extrabold text-slate-900 dark:text-white font-mono" id="preview-price">
+              ৳ 0
+            </span>
+            <span class="text-xs text-slate-400 font-mono" id="preview-period-unit">
+              / month
+            </span>
+          </div>
+        </div>
+
+        <!-- Features Checklist -->
+        <div class="space-y-2 mb-6" id="preview-features-list">
+          <div class="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Borrow books according to plan limit</span>
+          </div>
+          <div class="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Reading hall access & WiFi</span>
+          </div>
+        </div>
+
+        <!-- Mock Subscribe Button -->
+        <div class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-xs text-center shadow-md shadow-purple-600/20">
+          Subscribe Now
+        </div>
       </div>
     </div>
 
-    <div class="flex items-center gap-4">
-      <button type="submit" class="btn-primary px-8 py-3 text-base">{{ action }}</button>
-      <a href="{% url 'admin_plans' %}" class="dark:text-gray-400 text-slate-600 hover:dark:text-white text-slate-900 transition-colors text-sm">Cancel</a>
-    </div>
-  </form>
+  </div>
+
 </div>
+
+<!-- Interactive Live Sync Script -->
+<script>
+  function updatePlanPreview() {
+    const nameInput = document.querySelector('input[name="name"]');
+    const priceInput = document.querySelector('input[name="price"]');
+    const durationInput = document.querySelector('input[name="duration_days"]');
+    const featuresInput = document.querySelector('textarea[name="features_text"]');
+    const activeCheckbox = document.querySelector('input[name="is_active"]');
+    const popularCheckbox = document.querySelector('input[name="is_popular"]');
+
+    // Name
+    const nameVal = nameInput ? nameInput.value.trim() : '';
+    document.getElementById('preview-name').innerText = nameVal || 'Plan Name';
+
+    // Price
+    const priceVal = priceInput ? parseFloat(priceInput.value) : 0;
+    document.getElementById('preview-price').innerText = '৳ ' + (isNaN(priceVal) ? '0' : priceVal.toFixed(0));
+
+    // Duration
+    const durationVal = durationInput ? parseInt(durationInput.value) : 30;
+    const durLabel = document.getElementById('preview-duration-label');
+    const durUnit = document.getElementById('preview-period-unit');
+    if (durationVal >= 360) {
+      durLabel.innerText = durationVal + ' Days (1 Year)';
+      durUnit.innerText = '/ year';
+    } else if (durationVal >= 80) {
+      durLabel.innerText = durationVal + ' Days (' + Math.round(durationVal/30) + ' Months)';
+      durUnit.innerText = '/' + Math.round(durationVal/30) + ' mo';
+    } else {
+      durLabel.innerText = (durationVal || 30) + ' Days Validity';
+      durUnit.innerText = '/ month';
+    }
+
+    // Popular badge & card glow
+    const isPop = popularCheckbox ? popularCheckbox.checked : false;
+    const popBadge = document.getElementById('preview-popular-badge');
+    const cardWrapper = document.getElementById('preview-card-wrapper');
+    if (isPop) {
+      popBadge.classList.remove('hidden');
+      cardWrapper.classList.add('border-purple-500/50', 'ring-1', 'ring-purple-500/20');
+      cardWrapper.classList.remove('border-slate-200', 'dark:border-white/5');
+    } else {
+      popBadge.classList.add('hidden');
+      cardWrapper.classList.remove('border-purple-500/50', 'ring-1', 'ring-purple-500/20');
+      cardWrapper.classList.add('border-slate-200', 'dark:border-white/5');
+    }
+
+    // Active status
+    const isActive = activeCheckbox ? activeCheckbox.checked : true;
+    const statusBadge = document.getElementById('preview-status-badge');
+    if (isActive) {
+      statusBadge.innerText = 'Active';
+      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
+    } else {
+      statusBadge.innerText = 'Inactive';
+      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20';
+    }
+
+    // Features
+    const featVal = featuresInput ? featuresInput.value.trim() : '';
+    const featContainer = document.getElementById('preview-features-list');
+    if (featVal) {
+      const lines = featVal.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      let html = '';
+      lines.forEach(line => {
+        html += `
+          <div class="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>${line}</span>
+          </div>
+        `;
+      });
+      featContainer.innerHTML = html;
+    } else {
+      featContainer.innerHTML = `
+        <div class="flex items-start gap-2 text-xs text-slate-400">
+          <svg class="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span>Plan features entered above appear here.</span>
+        </div>
+      `;
+    }
+  }
+
+  function setDurationPreset(days, label) {
+    const durInput = document.querySelector('input[name="duration_days"]');
+    if (durInput) {
+      durInput.value = days;
+      updatePlanPreview();
+    }
+  }
+
+  // Attach live listeners
+  document.querySelectorAll('#plan-form input, #plan-form textarea').forEach(el => {
+    el.addEventListener('input', updatePlanPreview);
+    el.addEventListener('change', updatePlanPreview);
+  });
+
+  // Run on mount
+  document.addEventListener('DOMContentLoaded', updatePlanPreview);
+</script>
 {% endblock %}

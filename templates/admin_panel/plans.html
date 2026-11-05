@@ -1,68 +1,134 @@
 {% extends "admin_panel/base.html" %}
+{% load static %}
 {% block title %}Membership Plans{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-  <div class="flex items-center justify-between">
+  <!-- ========================================================================= -->
+  <!-- 1. HEADER SECTION                                                         -->
+  <!-- ========================================================================= -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h2 class="text-xl font-bold dark:text-white text-slate-900">Membership Plans</h2>
-      <p class="dark:text-gray-500 text-slate-500 text-sm">{{ active_count }} active plan{{ active_count|pluralize }}</p>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+        <span>Subscription Configuration</span>
+        <span class="text-slate-400 dark:text-slate-600">•</span>
+        <span class="font-mono text-purple-600 dark:text-purple-400">Patron Tiers</span>
+      </div>
+      <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        Membership Plans
+      </h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        Configure subscription tiers, durations, prices, and borrowing privileges for patrons.
+      </p>
     </div>
-    <a href="{% url 'admin_plan_add' %}" class="btn-primary flex items-center gap-2">
-      <span class="text-lg leading-none">+</span> Add Plan
-    </a>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2.5">
+      <a href="{% url 'admin_memberships' %}"
+         class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm">
+        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        View Requests
+      </a>
+      <a href="{% url 'admin_plan_add' %}"
+         class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-semibold text-xs transition-all shadow-md shadow-purple-600/20 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Plan
+      </a>
+    </div>
   </div>
 
+  <!-- ========================================================================= -->
+  <!-- 2. PLANS GRID                                                             -->
+  <!-- ========================================================================= -->
   <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
     {% for plan in plans %}
-    <div class="stat-card rounded-2xl p-6 border {% if plan.is_popular %}border-sky-500/40{% else %}dark:border-white/5 border-black/10{% endif %} relative">
+    <div class="stat-card rounded-2xl p-6 border {% if plan.is_popular %}border-purple-500/50 ring-1 ring-purple-500/20{% else %}dark:border-white/5 border-slate-200{% endif %} relative flex flex-col justify-between shadow-sm">
+      
+      <!-- Most Popular Badge -->
       {% if plan.is_popular %}
-      <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white text-xs font-bold px-3 py-0.5 rounded-full">Most Popular</span>
+        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full shadow-md">
+          Most Popular
+        </span>
       {% endif %}
-      <div class="flex items-start justify-between mb-3">
-        <div>
-          <h3 class="dark:text-white text-slate-900 font-bold text-base">{{ plan.name }}</h3>
-          <p class="dark:text-gray-500 text-slate-500 text-xs">{{ plan.duration_label }}</p>
+
+      <div>
+        <!-- Card Header -->
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">{{ plan.name }}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">{{ plan.duration_label }}</p>
+          </div>
+          <div>
+            {% if plan.is_active %}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+              </span>
+            {% else %}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Inactive
+              </span>
+            {% endif %}
+          </div>
         </div>
-        <div class="flex items-center gap-1.5">
-          {% if plan.is_active %}
-          <span class="px-2 py-0.5 rounded-full text-xs font-medium badge-active">Active</span>
-          {% else %}
-          <span class="px-2 py-0.5 rounded-full text-xs font-medium badge-expired">Inactive</span>
-          {% endif %}
+
+        <!-- Price -->
+        <div class="mb-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div class="text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+            ৳ {{ plan.price|floatformat:0 }}
+            <span class="text-xs font-normal text-slate-400 font-sans">/ {{ plan.duration_label|lower }}</span>
+          </div>
+        </div>
+
+        <!-- Features Checklist -->
+        <ul class="space-y-2 mb-6">
+          {% for feature in plan.characteristics %}
+          <li class="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>{{ feature }}</span>
+          </li>
+          {% empty %}
+          <li class="text-xs text-slate-400 italic">No features listed for this tier</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Footer & Actions -->
+      <div class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+        <div class="flex items-center gap-2">
+          <a href="{% url 'admin_plan_edit' plan.pk %}"
+             class="flex-1 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs text-center transition-colors">
+            Edit
+          </a>
+          <a href="{% url 'admin_plan_delete' plan.pk %}"
+             class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-semibold text-xs text-center transition-colors border border-rose-500/20">
+            Delete
+          </a>
+        </div>
+        <div class="text-center text-[11px] text-slate-400 font-mono">
+          {{ plan.memberships.count }} member{{ plan.memberships.count|pluralize }} subscribed
         </div>
       </div>
 
-      <div class="text-3xl font-bold dark:text-white text-slate-900 mb-4">৳{{ plan.price|floatformat:0 }}
-        <span class="dark:text-gray-500 text-slate-500 text-sm font-normal">/ {{ plan.duration_label|lower }}</span>
-      </div>
-
-      <!-- Features -->
-      <ul class="space-y-1.5 mb-5">
-        {% for feature in plan.characteristics %}
-        <li class="flex items-start gap-2 text-xs dark:text-gray-400 text-slate-600">
-          <span class="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
-          {{ feature }}
-        </li>
-        {% empty %}
-        <li class="text-gray-600 text-xs">No features listed</li>
-        {% endfor %}
-      </ul>
-
-      <div class="flex gap-2 border-t dark:border-white/5 border-black/10 pt-4">
-        <a href="{% url 'admin_plan_edit' plan.pk %}" class="btn-warn flex-1 text-center">Edit</a>
-        <a href="{% url 'admin_plan_delete' plan.pk %}" class="btn-danger flex-1 text-center">Delete</a>
-      </div>
-      <div class="mt-2 text-center text-gray-600 text-xs">
-        {{ plan.memberships.count }} member{{ plan.memberships.count|pluralize }} on this plan
-      </div>
     </div>
     {% empty %}
-    <div class="col-span-3 text-center py-20 dark:text-gray-500 text-slate-500">
-      No plans yet. <a href="{% url 'admin_plan_add' %}" class="text-sky-400">Add your first plan →</a>
+    <div class="col-span-3 text-center py-20 text-slate-500">
+      <div class="max-w-xs mx-auto space-y-2">
+        <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 mx-auto">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        </div>
+        <div class="font-bold text-slate-700 dark:text-slate-300 text-sm">No membership plans created yet</div>
+        <p class="text-xs text-slate-400">
+          Create subscription tiers for patrons to borrow books from Youth Club Library.
+        </p>
+        <a href="{% url 'admin_plan_add' %}" class="inline-block mt-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold text-xs shadow">
+          Create First Plan
+        </a>
+      </div>
     </div>
     {% endfor %}
   </div>
+
 </div>
 {% endblock %}
