@@ -329,13 +329,27 @@ def admin_adjust_cash(request):
 @staff_required
 def admin_memberships(request):
     """List all membership applications. Approve / decline via POST."""
-    status_filter = request.GET.get('status', '')
+    status_filter = request.GET.get('status', '').strip()
+    q = request.GET.get('q', '').strip()
+
     qs = UserMembership.objects.select_related('user', 'plan').order_by('-created_at')
+
     if status_filter:
         qs = qs.filter(status=status_filter)
 
+    if q:
+        qs = qs.filter(
+            Q(user__first_name__icontains=q) |
+            Q(user__last_name__icontains=q) |
+            Q(user__username__icontains=q) |
+            Q(user__email__icontains=q) |
+            Q(user__phone__icontains=q) |
+            Q(unique_membership_id__icontains=q) |
+            Q(transaction_id__icontains=q)
+        )
+
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(qs, 15)
+    paginator = Paginator(qs, 20)
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -348,15 +362,18 @@ def admin_memberships(request):
         pending=Count('id', filter=Q(status='Pending')),
         active=Count('id', filter=Q(status='Active')),
         expired=Count('id', filter=Q(status='Expired')),
+        total=Count('id'),
     )
 
     context = {
         'page_title': 'Membership Requests',
         'memberships': page_obj,
         'status_filter': status_filter,
+        'q': q,
         'pending_count': counts['pending'] or 0,
         'active_count': counts['active'] or 0,
         'expired_count': counts['expired'] or 0,
+        'total_count': counts['total'] or 0,
     }
     return render(request, 'admin_panel/memberships.html', context)
 
